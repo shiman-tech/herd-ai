@@ -6,8 +6,11 @@ import 'package:image_picker/image_picker.dart';
 
 import 'models/cow_record.dart';
 import 'models/identification_result.dart';
+import 'services/app_auth_service.dart';
+import 'services/app_lock_controller.dart';
 import 'services/embedding_database.dart';
 import 'services/tflite_embedding_service.dart';
+import 'widgets/auth_gate.dart';
 import 'widgets/cow_detail_page.dart';
 
 const Color kFarmPrimary = Color(0xFF2D6A4F);
@@ -101,7 +104,7 @@ class HerdAiApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const HerdHomePage(),
+      home: const AuthGate(child: HerdHomePage()),
     );
   }
 }
@@ -116,6 +119,7 @@ class HerdHomePage extends StatefulWidget {
 class _HerdHomePageState extends State<HerdHomePage> {
   final ImagePicker _picker = ImagePicker();
   final TfliteEmbeddingService _embeddingService = TfliteEmbeddingService();
+  final AppAuthService _appAuthService = AppAuthService();
   final EmbeddingDatabase _database = EmbeddingDatabase();
   final TextEditingController _searchController = TextEditingController();
 
@@ -126,6 +130,23 @@ class _HerdHomePageState extends State<HerdHomePage> {
   String? _initializationError;
   String? _statusMessage;
   IdentificationResult? _result;
+
+  Widget _cowAvatar(String? imagePath) {
+    if (imagePath == null || !File(imagePath).existsSync()) {
+      return const DecoratedBox(
+        decoration: BoxDecoration(color: Color(0xFFECEEE8)),
+        child: Icon(Icons.pets),
+      );
+    }
+    return Image.file(
+      File(imagePath),
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => const DecoratedBox(
+        decoration: BoxDecoration(color: Color(0xFFECEEE8)),
+        child: Icon(Icons.pets),
+      ),
+    );
+  }
 
   void _showSnack(String message) {
     if (!mounted) {
@@ -185,18 +206,25 @@ class _HerdHomePageState extends State<HerdHomePage> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final XFile? image = await _picker.pickImage(
-      source: source,
-      imageQuality: 95,
-      maxWidth: 1600,
-    );
+    AppLockController.instance.suspendLock();
+    final XFile? image;
+    try {
+      image = await _picker.pickImage(
+        source: source,
+        imageQuality: 95,
+        maxWidth: 1600,
+      );
+    } finally {
+      AppLockController.instance.resumeLock();
+    }
 
     if (image == null) {
       return;
     }
+    final XFile selected = image;
 
     setState(() {
-      _selectedImage = File(image.path);
+      _selectedImage = File(selected.path);
       _result = null;
       _statusMessage = _isReady
           ? 'Photo added. Tap Identify Cow.'
@@ -384,6 +412,131 @@ class _HerdHomePageState extends State<HerdHomePage> {
     }
   }
 
+  void _showSettingsSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const ListTile(
+                title: Text(
+                  'Settings',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.lock_outline),
+                title: const Text('Change PIN'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _showChangePinDialog();
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showChangePinDialog() async {
+    final TextEditingController currentPinController = TextEditingController();
+    final TextEditingController newPinController = TextEditingController();
+    final TextEditingController confirmPinController = TextEditingController();
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Change PIN'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextField(
+                  controller: currentPinController,
+                  keyboardType: TextInputType.number,
+                  obscureText: true,
+                  maxLength: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Current PIN',
+                    counterText: '',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: newPinController,
+                  keyboardType: TextInputType.number,
+                  obscureText: true,
+                  maxLength: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'New PIN',
+                    counterText: '',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: confirmPinController,
+                  keyboardType: TextInputType.number,
+                  obscureText: true,
+                  maxLength: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Confirm new PIN',
+                    counterText: '',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final NavigatorState navigator = Navigator.of(context);
+                final String currentPin = currentPinController.text.trim();
+                final String newPin = newPinController.text.trim();
+                final String confirmPin = confirmPinController.text.trim();
+
+                if (!RegExp(r'^\d{4}$').hasMatch(currentPin) ||
+                    !RegExp(r'^\d{4}$').hasMatch(newPin) ||
+                    !RegExp(r'^\d{4}$').hasMatch(confirmPin)) {
+                  _showSnack('PIN must be exactly 4 digits');
+                  return;
+                }
+                if (newPin != confirmPin) {
+                  _showSnack('New PIN does not match');
+                  return;
+                }
+
+                final bool currentOk = await _appAuthService.verifyPin(
+                  currentPin,
+                );
+                if (!currentOk) {
+                  _showSnack('Current PIN is incorrect');
+                  return;
+                }
+
+                await _appAuthService.savePin(newPin);
+                if (!mounted) {
+                  return;
+                }
+                navigator.pop();
+                _showSnack('PIN changed successfully');
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildIdentifyTab(ThemeData theme) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -532,17 +685,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
                     child: SizedBox(
                       width: 48,
                       height: 48,
-                      child: (cow.profileImagePath != null)
-                          ? Image.file(
-                              File(cow.profileImagePath!),
-                              fit: BoxFit.cover,
-                            )
-                          : const DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: Color(0xFFECEEE8),
-                              ),
-                              child: Icon(Icons.pets),
-                            ),
+                      child: _cowAvatar(cow.profileImagePath),
                     ),
                   ),
                   title: Text(cow.id),
@@ -581,6 +724,14 @@ class _HerdHomePageState extends State<HerdHomePage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(_currentTab == 0 ? 'Identify Cow' : 'Your herd'),
+          actions: <Widget>[
+            if (_currentTab == 0)
+              IconButton(
+                onPressed: _showSettingsSheet,
+                icon: const Icon(Icons.settings_outlined),
+                tooltip: 'Settings',
+              ),
+          ],
         ),
         body: SafeArea(
           child: _currentTab == 0
