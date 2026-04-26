@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/cow_record.dart';
+import '../services/app_lock_controller.dart';
 import '../services/embedding_database.dart';
 
 const Color kFarmPrimary = Color(0xFF2D6A4F);
@@ -31,6 +32,33 @@ class _CowDetailPageState extends State<CowDetailPage> {
   }
 
   CowRecord? get _record => widget.database.getCow(_cowId);
+
+  Widget _imageOrPlaceholder(String? imagePath, {double size = 100}) {
+    if (imagePath == null || !File(imagePath).existsSync()) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: const DecoratedBox(
+          decoration: BoxDecoration(color: Color(0xFFECEEE8)),
+          child: Icon(Icons.pets),
+        ),
+      );
+    }
+    return Image.file(
+      File(imagePath),
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => SizedBox(
+        width: size,
+        height: size,
+        child: const DecoratedBox(
+          decoration: BoxDecoration(color: Color(0xFFECEEE8)),
+          child: Icon(Icons.pets),
+        ),
+      ),
+    );
+  }
 
   void _showSnack(String message) {
     if (!mounted) {
@@ -451,11 +479,17 @@ class _CowDetailPageState extends State<CowDetailPage> {
   }
 
   Future<void> _addImageToHistory() async {
-    final XFile? picked = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 95,
-      maxWidth: 1600,
-    );
+    AppLockController.instance.suspendLock();
+    final XFile? picked;
+    try {
+      picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 95,
+        maxWidth: 1600,
+      );
+    } finally {
+      AppLockController.instance.resumeLock();
+    }
     if (picked == null) {
       return;
     }
@@ -468,11 +502,17 @@ class _CowDetailPageState extends State<CowDetailPage> {
   }
 
   Future<void> _replaceImageAt(int index) async {
-    final XFile? picked = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 95,
-      maxWidth: 1600,
-    );
+    AppLockController.instance.suspendLock();
+    final XFile? picked;
+    try {
+      picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 95,
+        maxWidth: 1600,
+      );
+    } finally {
+      AppLockController.instance.resumeLock();
+    }
     if (picked == null) {
       return;
     }
@@ -699,15 +739,10 @@ class _CowDetailPageState extends State<CowDetailPage> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: record.profileImagePath == null
-                          ? const DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: Color(0xFFECEEE8),
-                              ),
-                              child: Icon(Icons.pets),
-                            )
-                          : Image.file(
-                              File(record.profileImagePath!),
-                              fit: BoxFit.cover,
+                          ? _imageOrPlaceholder(null, size: 120)
+                          : _imageOrPlaceholder(
+                              record.profileImagePath,
+                              size: 120,
                             ),
                     ),
                   ),
@@ -858,11 +893,9 @@ class _CowDetailPageState extends State<CowDetailPage> {
                           children: <Widget>[
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.file(
-                                File(record.images[index]),
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
+                              child: _imageOrPlaceholder(
+                                record.images[index],
+                                size: 100,
                               ),
                             ),
                             Positioned(
@@ -943,21 +976,37 @@ class _SectionCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                FilledButton.tonal(
-                  onPressed: onAdd,
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(0, 38),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                SizedBox(
+                  width: 176,
+                  height: 38,
+                  child: FilledButton(
+                    onPressed: onAdd,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFF3EDDE),
+                      foregroundColor: kFarmPrimary,
+                      minimumSize: const Size(176, 38),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        buttonLabel,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: kFarmPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
-                  child: Text(buttonLabel),
                 ),
               ],
             ),
