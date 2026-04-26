@@ -49,6 +49,8 @@
 	<string>Select cattle images from your library for offline identification.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Allow saving cattle registration data linked to selected images.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID to quickly unlock Herd AI.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 </dict>
