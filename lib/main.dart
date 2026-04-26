@@ -1,11 +1,19 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'models/cow_record.dart';
 import 'models/identification_result.dart';
 import 'services/embedding_database.dart';
 import 'services/tflite_embedding_service.dart';
+import 'widgets/cow_detail_page.dart';
+
+const Color kFarmPrimary = Color(0xFF2D6A4F);
+const Color kFarmSecondary = Color(0xFF95A97F);
+const Color kFarmBackground = Color(0xFFF4F1E6);
+const Color kFarmAccent = Color(0xFF8D6E63);
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,9 +29,77 @@ class HerdAiApp extends StatelessWidget {
       title: 'Herd AI',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2D6A4F)),
-        scaffoldBackgroundColor: const Color(0xFFF7F7F4),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: kFarmPrimary,
+          primary: kFarmPrimary,
+          secondary: kFarmSecondary,
+          surface: const Color(0xFFFBFAF4),
+        ),
+        scaffoldBackgroundColor: kFarmBackground,
         useMaterial3: true,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: kFarmBackground,
+          foregroundColor: kFarmPrimary,
+          elevation: 0,
+          centerTitle: false,
+          titleTextStyle: TextStyle(
+            color: kFarmPrimary,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        cardTheme: CardThemeData(
+          color: const Color(0xFFFFFEFA),
+          elevation: 2.5,
+          shadowColor: Color(0x14000000),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: kFarmPrimary,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(140, 50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: kFarmAccent,
+            side: const BorderSide(color: kFarmAccent),
+            minimumSize: const Size(140, 50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFFFFEFA),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFDFDAC8)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFDFDAC8)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: kFarmPrimary, width: 1.5),
+          ),
+        ),
       ),
       home: const HerdHomePage(),
     );
@@ -41,15 +117,30 @@ class _HerdHomePageState extends State<HerdHomePage> {
   final ImagePicker _picker = ImagePicker();
   final TfliteEmbeddingService _embeddingService = TfliteEmbeddingService();
   final EmbeddingDatabase _database = EmbeddingDatabase();
-  final TextEditingController _cowIdController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   File? _selectedImage;
+  int _currentTab = 0;
   bool _isBusy = false;
   bool _isReady = false;
   String? _initializationError;
   String? _statusMessage;
-  String? _modelInfo;
   IdentificationResult? _result;
+
+  void _showSnack(String message) {
+    if (!mounted) {
+      return;
+    }
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -62,7 +153,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       _isBusy = true;
       _isReady = false;
       _initializationError = null;
-      _statusMessage = 'Loading model and local database...';
+      _statusMessage = 'Getting your cattle notebook ready...';
     });
 
     try {
@@ -70,10 +161,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       await _database.load();
       setState(() {
         _isReady = true;
-        _modelInfo = _embeddingService.describeModel();
-        _statusMessage = _database.isEmpty
-            ? 'Ready. The database is empty, so the first cow will be predicted as Unknown until you register it.'
-            : 'Ready for offline identification.';
+        _statusMessage = 'Ready to identify cows and keep records.';
       });
     } catch (error) {
       setState(() {
@@ -91,7 +179,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
   @override
   void dispose() {
-    _cowIdController.dispose();
+    _searchController.dispose();
     _embeddingService.dispose();
     super.dispose();
   }
@@ -111,9 +199,9 @@ class _HerdHomePageState extends State<HerdHomePage> {
       _selectedImage = File(image.path);
       _result = null;
       _statusMessage = _isReady
-          ? 'Image selected. Tap "Identify Cow" to run inference.'
+          ? 'Photo added. Tap Identify Cow.'
           : (_initializationError ??
-                'Model is not loaded yet. Fix initialization before inference.');
+                'App setup is not complete yet. Please retry.');
     });
   }
 
@@ -127,8 +215,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
     setState(() {
       _isBusy = true;
-      _statusMessage =
-          'Generating embedding and comparing with local records...';
+      _statusMessage = 'Checking cow...';
     });
 
     try {
@@ -140,14 +227,12 @@ class _HerdHomePageState extends State<HerdHomePage> {
       setState(() {
         _result = result;
         _statusMessage = result.isKnown
-            ? 'Identification completed successfully.'
-            : _database.isEmpty
-            ? 'Database is empty. Register this cow to start building the local memory.'
-            : 'No stored embedding passed the similarity threshold.';
+            ? 'Cow identified.'
+            : 'No matching cow found.';
       });
     } catch (error) {
       setState(() {
-        _statusMessage = 'Identification failed: $error';
+        _statusMessage = 'Could not identify this cow right now.';
       });
     } finally {
       setState(() {
@@ -156,40 +241,94 @@ class _HerdHomePageState extends State<HerdHomePage> {
     }
   }
 
-  Future<void> _registerCow() async {
-    final String cowId = _cowIdController.text.trim();
+  Future<void> _showRegisterDialog() async {
     if (!_isReady || _selectedImage == null) {
-      setState(() {
-        _statusMessage = 'Select an image before registering a cow.';
-      });
       return;
     }
-    if (cowId.isEmpty) {
-      setState(() {
-        _statusMessage = 'Enter a cow ID to save the embedding.';
-      });
+
+    final TextEditingController idController = TextEditingController();
+    final TextEditingController noteController = TextEditingController();
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add this cow'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: idController,
+                decoration: const InputDecoration(labelText: 'Cow ID'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: noteController,
+                decoration: const InputDecoration(
+                  labelText: 'Note (optional)',
+                  hintText: 'e.g. Pregnant',
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (idController.text.trim().isEmpty) {
+                  return;
+                }
+                Navigator.of(context).pop();
+                await _registerCow(
+                  idController.text.trim(),
+                  note: noteController.text.trim(),
+                );
+              },
+              child: const Text('Add cow'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _registerCow(String cowId, {String? note}) async {
+    if (!_isReady || _selectedImage == null) {
       return;
     }
 
     setState(() {
       _isBusy = true;
-      _statusMessage = 'Extracting embedding and saving it locally...';
+      _statusMessage = 'Saving cow details...';
     });
 
     try {
       final List<double> embedding = await _embeddingService.getEmbedding(
         _selectedImage!,
       );
-      await _database.registerCow(cowId: cowId, embedding: embedding);
-      _cowIdController.clear();
+      await _database.registerCow(
+        cowId: cowId,
+        embedding: embedding,
+        imagePath: _selectedImage!.path,
+        note: note,
+      );
       setState(() {
-        _statusMessage =
-            'Saved embedding for "$cowId". Future images can now match against it.';
+        _statusMessage = '$cowId added to your herd.';
+        _result = const IdentificationResult(
+          predictedCowId: 'Registered',
+          similarity: 0,
+          isKnown: true,
+        );
       });
+      _showSnack('$cowId added successfully');
     } catch (error) {
       setState(() {
-        _statusMessage = 'Registration failed: $error';
+        _statusMessage = 'Could not add this cow right now.';
       });
+      _showSnack('Could not add cow');
     } finally {
       setState(() {
         _isBusy = false;
@@ -197,88 +336,270 @@ class _HerdHomePageState extends State<HerdHomePage> {
     }
   }
 
+  Future<void> _openCowDetail(String cowId) async {
+    final String? eventMessage = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => CowDetailPage(cowId: cowId, database: _database),
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+    if (eventMessage != null && eventMessage.isNotEmpty) {
+      _showSnack(eventMessage);
+    }
+    setState(() {});
+  }
+
+  Future<void> _handleBackNavigation() async {
+    if (_currentTab == 1) {
+      setState(() {
+        _currentTab = 0;
+      });
+      return;
+    }
+
+    final bool? shouldExit = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Exit app'),
+          content: const Text('Do you want to close the app?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('No'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldExit == true) {
+      await SystemNavigator.pop();
+    }
+  }
+
+  Widget _buildIdentifyTab(ThemeData theme) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          _HeaderCard(
+            statusMessage: _statusMessage,
+            cowCount: _database.totalCows,
+            isReady: _isReady,
+            initializationError: _initializationError,
+            onRetry: _isBusy ? null : _initialize,
+          ),
+          const SizedBox(height: 16),
+          _ImagePreviewCard(imageFile: _selectedImage),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: <Widget>[
+              FilledButton.icon(
+                onPressed: _isBusy
+                    ? null
+                    : () => _pickImage(ImageSource.camera),
+                icon: const Icon(Icons.photo_camera_outlined),
+                label: const Text('Capture Image'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _isBusy
+                    ? null
+                    : () => _pickImage(ImageSource.gallery),
+                icon: const Icon(Icons.photo_library_outlined),
+                label: const Text('Upload Image'),
+              ),
+              FilledButton.tonalIcon(
+                onPressed: (_isBusy || !_isReady) ? null : _identifyCow,
+                icon: const Icon(Icons.search),
+                label: const Text('Identify Cow'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Identification result',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: kFarmAccent,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _PredictionCard(result: _result),
+          if ((_result?.isKnown == false) &&
+              _selectedImage != null) ...<Widget>[
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: (_isBusy || !_isReady) ? null : _showRegisterDialog,
+              icon: const Icon(Icons.app_registration),
+              label: const Text('Add this cow'),
+            ),
+          ],
+          if (_isBusy) ...<Widget>[
+            const SizedBox(height: 16),
+            const Center(child: CircularProgressIndicator()),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMyCowsTab(ThemeData theme) {
+    final String query = _searchController.text.trim().toLowerCase();
+    final List<CowRecord> cows = _database
+        .getAllCows()
+        .where((CowRecord cow) => cow.id.toLowerCase().contains(query))
+        .toList();
+    if (cows.isEmpty) {
+      return Column(
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: 'Search your herd',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                suffixIcon: query.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                        icon: const Icon(Icons.close),
+                      ),
+              ),
+            ),
+          ),
+          const Expanded(
+            child: Center(
+              child: Text('No cows yet.\nUse Identify to add your first cow.'),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+          child: TextField(
+            controller: _searchController,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              hintText: 'Search your herd',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              suffixIcon: query.isEmpty
+                  ? null
+                  : IconButton(
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() {});
+                      },
+                      icon: const Icon(Icons.close),
+                    ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.all(12),
+            itemBuilder: (BuildContext context, int index) {
+              final CowRecord cow = cows[index];
+              return Card(
+                child: ListTile(
+                  onTap: () => _openCowDetail(cow.id),
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: (cow.profileImagePath != null)
+                          ? Image.file(
+                              File(cow.profileImagePath!),
+                              fit: BoxFit.cover,
+                            )
+                          : const DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Color(0xFFECEEE8),
+                              ),
+                              child: Icon(Icons.pets),
+                            ),
+                    ),
+                  ),
+                  title: Text(cow.id),
+                  subtitle: Text(
+                    'Health: ${cow.healthRecords.length} • '
+                    'Vaccines: ${cow.vaccinations.length} • '
+                    'Notes: ${cow.notes.length}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                ),
+              );
+            },
+            separatorBuilder: (_, __) => const SizedBox(height: 4),
+            itemCount: cows.length,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Livestock Identifier')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              _HeaderCard(
-                modelInfo: _modelInfo,
-                statusMessage: _statusMessage,
-                databaseCount: _database.totalEmbeddings,
-                cowCount: _database.totalCows,
-                isReady: _isReady,
-                initializationError: _initializationError,
-                onRetry: _isBusy ? null : _initialize,
-              ),
-              const SizedBox(height: 16),
-              _ImagePreviewCard(imageFile: _selectedImage),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: <Widget>[
-                  FilledButton.icon(
-                    onPressed: _isBusy
-                        ? null
-                        : () => _pickImage(ImageSource.camera),
-                    icon: const Icon(Icons.photo_camera_outlined),
-                    label: const Text('Capture Image'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: _isBusy
-                        ? null
-                        : () => _pickImage(ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library_outlined),
-                    label: const Text('Upload Image'),
-                  ),
-                  FilledButton.tonalIcon(
-                    onPressed: (_isBusy || !_isReady) ? null : _identifyCow,
-                    icon: const Icon(Icons.search),
-                    label: const Text('Identify Cow'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Text('Prediction', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 8),
-              _PredictionCard(result: _result),
-              const SizedBox(height: 24),
-              Text('Register New Cow', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _cowIdController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Cow ID',
-                  hintText: 'e.g. Cow_014',
-                ),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: (_isBusy || !_isReady) ? null : _registerCow,
-                icon: const Icon(Icons.save_alt_outlined),
-                label: const Text('Register New Cow'),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Threshold: ${_database.similarityThreshold.toStringAsFixed(2)}'
-                ' cosine similarity',
-                style: theme.textTheme.bodySmall,
-              ),
-              if (_isBusy) ...<Widget>[
-                const SizedBox(height: 16),
-                const Center(child: CircularProgressIndicator()),
-              ],
-            ],
-          ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) {
+          return;
+        }
+        _handleBackNavigation();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_currentTab == 0 ? 'Identify Cow' : 'Your herd'),
+        ),
+        body: SafeArea(
+          child: _currentTab == 0
+              ? _buildIdentifyTab(theme)
+              : _buildMyCowsTab(theme),
+        ),
+        bottomNavigationBar: NavigationBar(
+          backgroundColor: const Color(0xFFFFFDF7),
+          indicatorColor: kFarmSecondary.withValues(alpha: 0.35),
+          selectedIndex: _currentTab,
+          onDestinationSelected: (int index) {
+            setState(() {
+              _currentTab = index;
+            });
+          },
+          destinations: const <NavigationDestination>[
+            NavigationDestination(icon: Icon(Icons.search), label: 'Identify'),
+            NavigationDestination(icon: Icon(Icons.list_alt), label: 'My Cows'),
+          ],
         ),
       ),
     );
@@ -287,18 +608,14 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
 class _HeaderCard extends StatelessWidget {
   const _HeaderCard({
-    required this.modelInfo,
     required this.statusMessage,
-    required this.databaseCount,
     required this.cowCount,
     required this.isReady,
     required this.initializationError,
     required this.onRetry,
   });
 
-  final String? modelInfo;
   final String? statusMessage;
-  final int databaseCount;
   final int cowCount;
   final bool isReady;
   final String? initializationError;
@@ -306,9 +623,7 @@ class _HeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accent = isReady
-        ? const Color(0xFF2D6A4F)
-        : Colors.orange.shade700;
+    final Color accent = isReady ? kFarmPrimary : kFarmAccent;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -316,37 +631,39 @@ class _HeaderCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              'On-device pipeline',
+              'Welcome to your cattle notebook',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             const Text(
-              'Image -> TFLite embedding -> cosine similarity -> prediction',
-            ),
-            const SizedBox(height: 12),
-            Text(
-              modelInfo ??
-                  'Expected model: assets/models/cow_identifier.tflite',
-              style: TextStyle(color: accent),
+              'Take or upload a photo to identify a cow and keep simple records.',
             ),
             const SizedBox(height: 8),
-            const Text(
-              'This app does not classify fixed identities. It only creates embeddings and compares them with the local database.',
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: kFarmSecondary.withValues(alpha: 0.22),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Registered cows: $cowCount',
+                style: TextStyle(color: accent, fontWeight: FontWeight.w700),
+              ),
             ),
-            const SizedBox(height: 8),
-            Text('Registered cows: $cowCount'),
-            Text('Stored embeddings: $databaseCount'),
             if (initializationError != null) ...<Widget>[
               const SizedBox(height: 10),
               Text(
-                initializationError!,
-                style: TextStyle(color: Colors.red.shade700),
+                'Something went wrong while opening the app.',
+                style: TextStyle(
+                  color: kFarmAccent,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry model initialization'),
+                label: const Text('Try again'),
               ),
             ],
             if (statusMessage != null) ...<Widget>[
@@ -372,7 +689,7 @@ class _ImagePreviewCard extends StatelessWidget {
       child: SizedBox(
         height: 260,
         child: imageFile == null
-            ? const Center(child: Text('No image selected'))
+            ? const Center(child: Text('No photo selected'))
             : Image.file(imageFile!, fit: BoxFit.cover),
       ),
     );
@@ -390,7 +707,7 @@ class _PredictionCard extends StatelessWidget {
       return const Card(
         child: Padding(
           padding: EdgeInsets.all(16),
-          child: Text('Run identification to view the prediction.'),
+          child: Text('Identify a cow to see the result here.'),
         ),
       );
     }
@@ -406,12 +723,14 @@ class _PredictionCard extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
-            Text('Similarity: ${result!.similarity.toStringAsFixed(4)}'),
-            const SizedBox(height: 4),
+            Text(
+              'Match confidence: ${(result!.similarity * 100).toStringAsFixed(1)}%',
+            ),
+            const SizedBox(height: 6),
             Text(
               result!.isKnown
-                  ? 'Matched local embedding database.'
-                  : 'No close embedding found, so this image is treated as unknown.',
+                  ? 'This cow is already in your herd.'
+                  : 'No matching cow found. Add this cow to save it.',
             ),
           ],
         ),
