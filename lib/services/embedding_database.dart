@@ -10,6 +10,7 @@ import 'tflite_embedding_service.dart';
 
 class EmbeddingDatabase {
   static const String _localFileName = 'cow_records.json';
+  static const String _imageDirName = 'cow_images';
 
   final Map<String, CowRecord> _recordsByCow = <String, CowRecord>{};
 
@@ -42,6 +43,8 @@ class EmbeddingDatabase {
     if (await localFile.exists()) {
       final String content = await localFile.readAsString();
       _decodeIntoMemory(content);
+      _repairImagePaths();
+      await _persist();
       return;
     }
 
@@ -61,8 +64,9 @@ class EmbeddingDatabase {
     );
     record.embeddings.add(normalized);
     if (imagePath != null && imagePath.isNotEmpty) {
-      record.profileImagePath ??= imagePath;
-      record.images.add(imagePath);
+      final String savedPath = await _persistImage(imagePath);
+      record.profileImagePath ??= savedPath;
+      record.images.add(savedPath);
     }
     if (note != null && note.trim().isNotEmpty) {
       record.notes.add(note.trim());
@@ -210,8 +214,9 @@ class EmbeddingDatabase {
     if (record == null || imagePath.isEmpty) {
       return;
     }
-    record.profileImagePath ??= imagePath;
-    record.images.add(imagePath);
+    final String savedPath = await _persistImage(imagePath);
+    record.profileImagePath ??= savedPath;
+    record.images.add(savedPath);
     await _persist();
   }
 
@@ -227,8 +232,9 @@ class EmbeddingDatabase {
         imagePath.isEmpty) {
       return;
     }
-    record.images[index] = imagePath;
-    record.profileImagePath ??= imagePath;
+    final String savedPath = await _persistImage(imagePath);
+    record.images[index] = savedPath;
+    record.profileImagePath ??= savedPath;
     await _persist();
   }
 
@@ -318,6 +324,19 @@ class EmbeddingDatabase {
     }
   }
 
+  void _repairImagePaths() {
+    for (final CowRecord record in _recordsByCow.values) {
+      record.images.removeWhere((String path) => !File(path).existsSync());
+      if (record.profileImagePath != null &&
+          !File(record.profileImagePath!).existsSync()) {
+        record.profileImagePath = null;
+      }
+      if (record.profileImagePath == null && record.images.isNotEmpty) {
+        record.profileImagePath = record.images.first;
+      }
+    }
+  }
+
   Future<void> _persist() async {
     final File file = await _getLocalFile();
     final Map<String, dynamic> payload = <String, dynamic>{
@@ -334,5 +353,28 @@ class EmbeddingDatabase {
   Future<File> _getLocalFile() async {
     final Directory directory = await getApplicationDocumentsDirectory();
     return File('${directory.path}${Platform.pathSeparator}$_localFileName');
+  }
+
+  Future<String> _persistImage(String sourcePath) async {
+    final File source = File(sourcePath);
+    if (!await source.exists()) {
+      return sourcePath;
+    }
+    final Directory docs = await getApplicationDocumentsDirectory();
+    final Directory imageDir = Directory(
+      '${docs.path}${Platform.pathSeparator}$_imageDirName',
+    );
+    if (!await imageDir.exists()) {
+      await imageDir.create(recursive: true);
+    }
+    final String extension = source.path.contains('.')
+        ? source.path.substring(source.path.lastIndexOf('.'))
+        : '.jpg';
+    final String fileName =
+        'cow_${DateTime.now().microsecondsSinceEpoch}$extension';
+    final String targetPath =
+        '${imageDir.path}${Platform.pathSeparator}$fileName';
+    await source.copy(targetPath);
+    return targetPath;
   }
 }
