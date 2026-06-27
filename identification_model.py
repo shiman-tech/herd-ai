@@ -1,6 +1,6 @@
 
 #dataset 2 : frontol view ( 50 cows - around 2500 images - 50 images/cow)
-
+'''
 !git clone https://github.com/aideep1400/Cattely-Cattle-Face-Images-Dataset.git
 
 !rm -rf /content/Cattely-Cattle-Face-Images-Dataset/.git
@@ -8,7 +8,7 @@
 !rm -rf /content/Cattely-Cattle-Face-Images-Dataset/README.md
 !rm -rf /content/Cattely-Cattle-Face-Images-Dataset/README.roboflow.txt
 !rm -rf /content/Cattely-Cattle-Face-Images-Dataset/data.yaml
-
+'''
 
 
 import tensorflow as tf
@@ -27,7 +27,7 @@ for item in os.listdir(base_path):
 
 print(f"Dataset Size: {count}")
 
-!rm -rf /content/dataset_subset
+#!rm -rf /content/dataset_subset
 
 import os
 import shutil
