@@ -10,6 +10,7 @@ import 'models/identification_result.dart';
 import 'services/app_auth_service.dart';
 import 'services/app_lock_controller.dart';
 import 'services/embedding_database.dart';
+import 'services/tflite_breed_service.dart';
 import 'services/tflite_embedding_service.dart';
 import 'widgets/auth_gate.dart';
 import 'widgets/cow_detail_page.dart';
@@ -120,6 +121,7 @@ class HerdHomePage extends StatefulWidget {
 class _HerdHomePageState extends State<HerdHomePage> {
   final ImagePicker _picker = ImagePicker();
   final TfliteEmbeddingService _embeddingService = TfliteEmbeddingService();
+  final TfliteBreedService _breedService = TfliteBreedService();
   final AppAuthService _appAuthService = AppAuthService();
   final EmbeddingDatabase _database = EmbeddingDatabase();
   final TextEditingController _searchController = TextEditingController();
@@ -180,6 +182,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
     try {
       await _embeddingService.loadModel();
+      await _breedService.loadModel();
       await _database.load();
       setState(() {
         _isReady = true;
@@ -203,6 +206,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
   void dispose() {
     _searchController.dispose();
     _embeddingService.dispose();
+    _breedService.dispose();
     super.dispose();
   }
 
@@ -601,6 +605,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
           cowId: cowId,
           database: _database,
           embeddingService: _embeddingService,
+          breedService: _breedService,
         ),
       ),
     );

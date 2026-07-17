@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../models/breed_prediction.dart';
 import '../models/cow_image.dart';
 import '../models/cow_record.dart';
 import '../models/embedding_reference.dart';
@@ -16,7 +17,7 @@ class EmbeddingDatabase {
   static const String _dbFileName = 'herd_ai.db';
   static const String _legacyJsonFileName = 'cow_records.json';
   static const String _imageDirName = 'cow_images';
-  static const int _dbVersion = 4;
+  static const int _dbVersion = 5;
 
   /// Scores at or above this (but below [similarityThreshold]) trigger a
   /// pre-registration warning because the photo may match an existing cow.
@@ -94,6 +95,23 @@ class EmbeddingDatabase {
             'ALTER TABLE embeddings ADD COLUMN image_id INTEGER',
           );
         }
+        if (oldVersion < 5) {
+          await db.execute(
+            'ALTER TABLE cows ADD COLUMN breed_name TEXT',
+          );
+          await db.execute(
+            'ALTER TABLE cows ADD COLUMN breed_confidence REAL',
+          );
+          await db.execute(
+            'ALTER TABLE cows ADD COLUMN breed_alternatives_json TEXT',
+          );
+          await db.execute(
+            'ALTER TABLE cows ADD COLUMN confirmed_breed TEXT',
+          );
+          await db.execute(
+            'ALTER TABLE cows ADD COLUMN breed_confirmed_by_user INTEGER NOT NULL DEFAULT 0',
+          );
+        }
       },
     );
   }
@@ -104,7 +122,12 @@ class EmbeddingDatabase {
       CREATE TABLE IF NOT EXISTS cows (
         id TEXT PRIMARY KEY,
         registration_date TEXT NOT NULL,
-        profile_image_path TEXT
+        profile_image_path TEXT,
+        breed_name TEXT,
+        breed_confidence REAL,
+        breed_alternatives_json TEXT,
+        confirmed_breed TEXT,
+        breed_confirmed_by_user INTEGER NOT NULL DEFAULT 0
       )
     ''');
     batch.execute('''
@@ -300,14 +323,21 @@ class EmbeddingDatabase {
     final List<Map<String, Object?>> cowRows = await db.query('cows');
     for (final Map<String, Object?> row in cowRows) {
       final String cowId = row['id']! as String;
-      _recordsByCow[cowId] = CowRecord(
+      final CowRecord record = CowRecord(
         id: cowId,
         registrationDate: DateTime.tryParse(
               row['registration_date'] as String? ?? '',
             ) ??
             DateTime.now(),
         profileImagePath: row['profile_image_path'] as String?,
+        breedName: row['breed_name'] as String?,
+        breedConfidence: (row['breed_confidence'] as num?)?.toDouble(),
+        breedAlternativesJson: row['breed_alternatives_json'] as String?,
+        confirmedBreed: row['confirmed_breed'] as String?,
+        breedConfirmedByUser:
+            ((row['breed_confirmed_by_user'] as int?) ?? 0) == 1,
       );
+      _recordsByCow[cowId] = record;
     }
 
     final List<Map<String, Object?>> healthRows = await db.query(
@@ -1040,6 +1070,11 @@ class EmbeddingDatabase {
       vaccinations: existing.vaccinations,
       notes: existing.notes,
       images: existing.images,
+      breedName: existing.breedName,
+      breedConfidence: existing.breedConfidence,
+      breedAlternativesJson: existing.breedAlternativesJson,
+      confirmedBreed: existing.confirmedBreed,
+      breedConfirmedByUser: existing.breedConfirmedByUser,
     );
 
     final Database db = _db!;
@@ -1052,6 +1087,11 @@ class EmbeddingDatabase {
           'registration_date':
               updated.registrationDate.toIso8601String(),
           'profile_image_path': updated.profileImagePath,
+          'breed_name': updated.breedName,
+          'breed_confidence': updated.breedConfidence,
+          'breed_alternatives_json': updated.breedAlternativesJson,
+          'confirmed_breed': updated.confirmedBreed,
+          'breed_confirmed_by_user': updated.breedConfirmedByUser ? 1 : 0,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -1084,6 +1124,75 @@ class EmbeddingDatabase {
 
     _recordsByCow.remove(oldCowId);
     _recordsByCow[trimmedId] = updated;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Breed Classification
+  // ---------------------------------------------------------------------------
+
+  /// Saves the breed classification result for [cowId] in memory and in SQLite.
+  ///
+  /// Calling this always resets any prior user confirmation so the user can
+  /// review the new result and re-confirm if they wish.
+  Future<void> saveBreedResult({
+    required String cowId,
+    required String breedName,
+    required double breedConfidence,
+    required List<BreedPrediction> alternatives,
+  }) async {
+    final CowRecord? record = _recordsByCow[cowId];
+    if (record == null) {
+      return;
+    }
+
+    final String alternativesJson = jsonEncode(
+      alternatives.map((BreedPrediction p) => p.toJson()).toList(),
+    );
+
+    record.breedName = breedName;
+    record.breedConfidence = breedConfidence;
+    record.breedAlternativesJson = alternativesJson;
+    record.confirmedBreed = null;
+    record.breedConfirmedByUser = false;
+
+    await _db!.update(
+      'cows',
+      <String, Object?>{
+        'breed_name': breedName,
+        'breed_confidence': breedConfidence,
+        'breed_alternatives_json': alternativesJson,
+        'confirmed_breed': null,
+        'breed_confirmed_by_user': 0,
+      },
+      where: 'id = ?',
+      whereArgs: <Object?>[cowId],
+    );
+  }
+
+  /// Saves the user-chosen breed override for [cowId].
+  ///
+  /// This does NOT clear the model prediction — both can coexist.
+  Future<void> confirmBreed({
+    required String cowId,
+    required String confirmedBreed,
+  }) async {
+    final CowRecord? record = _recordsByCow[cowId];
+    if (record == null) {
+      return;
+    }
+
+    record.confirmedBreed = confirmedBreed;
+    record.breedConfirmedByUser = true;
+
+    await _db!.update(
+      'cows',
+      <String, Object?>{
+        'confirmed_breed': confirmedBreed,
+        'breed_confirmed_by_user': 1,
+      },
+      where: 'id = ?',
+      whereArgs: <Object?>[cowId],
+    );
   }
 
   Future<void> deleteCow(String cowId) async {

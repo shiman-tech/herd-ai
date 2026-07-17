@@ -1,12 +1,15 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../models/breed_prediction.dart';
 import '../models/cow_image.dart';
 import '../models/cow_record.dart';
 import '../services/app_lock_controller.dart';
 import '../services/embedding_database.dart';
+import '../services/tflite_breed_service.dart';
 import '../services/tflite_embedding_service.dart';
 
 const Color kFarmPrimary = Color(0xFF2D6A4F);
@@ -19,11 +22,13 @@ class CowDetailPage extends StatefulWidget {
     required this.cowId,
     required this.database,
     required this.embeddingService,
+    required this.breedService,
   });
 
   final String cowId;
   final EmbeddingDatabase database;
   final TfliteEmbeddingService embeddingService;
+  final TfliteBreedService breedService;
 
   @override
   State<CowDetailPage> createState() => _CowDetailPageState();
@@ -619,6 +624,265 @@ class _CowDetailPageState extends State<CowDetailPage> {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Breed Classification
+  // ---------------------------------------------------------------------------
+
+  List<BreedPrediction> _parseAlternatives(String? json) {
+    if (json == null || json.isEmpty) {
+      return <BreedPrediction>[];
+    }
+    try {
+      final dynamic decoded = jsonDecode(json);
+      if (decoded is List<dynamic>) {
+        return decoded
+            .map(
+              (dynamic e) =>
+                  BreedPrediction.fromJson(e as Map<String, dynamic>),
+            )
+            .toList();
+      }
+    } catch (_) {
+      // Ignore malformed JSON.
+    }
+    return <BreedPrediction>[];
+  }
+
+  Future<void> _classifyBreed() async {
+    if (_isBusy) {
+      return;
+    }
+
+    // Let the user pick a source (camera or gallery).
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const ListTile(
+                title: Text(
+                  'Classify breed',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text(
+                  'Take or choose a clear full-body photo of this cow.',
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Take photo'),
+                onTap: () => Navigator.of(context).pop(ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Choose from gallery'),
+                onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+    if (source == null) {
+      return;
+    }
+
+    AppLockController.instance.suspendLock();
+    final XFile? picked;
+    try {
+      picked = await _picker.pickImage(
+        source: source,
+        imageQuality: 95,
+        maxWidth: 1600,
+      );
+    } finally {
+      AppLockController.instance.resumeLock();
+    }
+    if (picked == null || !mounted) {
+      return;
+    }
+    final File selectedImage = File(picked.path);
+
+    // Show a confirmation preview before running inference.
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Classify this photo?'),
+          content: SizedBox(
+            width: 280,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    height: 180,
+                    width: 280,
+                    child: Image.file(selectedImage, fit: BoxFit.cover),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'A clear, well-lit full-body photo gives the best breed '
+                  'prediction.',
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Classify'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    setState(() => _isBusy = true);
+    try {
+      final List<BreedPrediction> predictions =
+          await widget.breedService.classifyBreed(selectedImage);
+      if (predictions.isEmpty) {
+        if (mounted) {
+          _showSnack('No breed predictions returned');
+        }
+        return;
+      }
+      await widget.database.saveBreedResult(
+        cowId: _cowId,
+        breedName: predictions.first.name,
+        breedConfidence: predictions.first.confidence,
+        alternatives: predictions,
+      );
+      if (mounted) {
+        setState(() {});
+        _showSnack('Breed classified');
+      }
+    } catch (error) {
+      if (mounted) {
+        _showSnack('Could not classify breed');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isBusy = false);
+      }
+    }
+  }
+
+  Future<void> _confirmBreed(String breedName) async {
+    await widget.database.confirmBreed(
+      cowId: _cowId,
+      confirmedBreed: breedName,
+    );
+    if (mounted) {
+      setState(() {});
+      _showSnack('Breed confirmed: $breedName');
+    }
+  }
+
+  Future<void> _chooseDifferentBreed() async {
+    final CowRecord? record = _record;
+    if (record == null) {
+      return;
+    }
+    final List<BreedPrediction> alternatives =
+        _parseAlternatives(record.breedAlternativesJson);
+    final List<String> breedNames = alternatives
+        .map((BreedPrediction p) => p.name)
+        .toList();
+
+    // Ensure the existing top-1 is in the list so we never lose it.
+    if (record.breedName != null && !breedNames.contains(record.breedName)) {
+      breedNames.insert(0, record.breedName!);
+    }
+
+    final TextEditingController customController = TextEditingController();
+
+    final String? chosen = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Choose breed'),
+          content: SizedBox(
+            width: 280,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  ...breedNames.map(
+                    (String name) => ListTile(
+                      title: Text(name),
+                      trailing: name == record.confirmedBreed
+                          ? const Icon(Icons.check, color: kFarmPrimary)
+                          : null,
+                      onTap: () => Navigator.of(context).pop(name),
+                    ),
+                  ),
+                  const Divider(),
+                  const Text(
+                    'Or type a breed name:',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: customController,
+                    decoration: const InputDecoration(
+                      hintText: 'e.g. Jersey Cross',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  FilledButton(
+                    onPressed: () {
+                      final String text = customController.text.trim();
+                      if (text.isNotEmpty) {
+                        Navigator.of(context).pop(text);
+                      }
+                    },
+                    child: const Text('Confirm custom breed'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+    if (chosen != null && chosen.isNotEmpty && mounted) {
+      await _confirmBreed(chosen);
+    }
+  }
+
+  Future<void> _setUnknownBreed() async {
+    await widget.database.confirmBreed(
+      cowId: _cowId,
+      confirmedBreed: 'Unknown / Mixed',
+    );
+    if (mounted) {
+      setState(() {});
+      _showSnack('Breed set to Unknown / Mixed');
+    }
+  }
+
   Future<void> _replaceImageAt(int index) async {
     AppLockController.instance.suspendLock();
     final XFile? picked;
@@ -913,6 +1177,109 @@ class _CowDetailPageState extends State<CowDetailPage> {
                   ),
                 ],
               ),
+            ),
+          ),
+          _SectionCard(
+            title: 'Breed Classification',
+            buttonLabel: record.displayBreed == null
+                ? 'Classify Breed'
+                : 'Re-classify',
+            onAdd: _classifyBreed,
+            child: Builder(
+              builder: (BuildContext context) {
+                if (record.displayBreed == null &&
+                    record.breedAlternativesJson == null) {
+                  return const Text(
+                    'No breed classification yet. Take a full-body photo.',
+                  );
+                }
+
+                final List<BreedPrediction> alternatives =
+                    _parseAlternatives(record.breedAlternativesJson);
+
+                if (record.breedConfirmedByUser) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'Confirmed Breed: ${record.confirmedBreed}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  );
+                }
+
+                final double topConfidence = record.breedConfidence ??
+                    (alternatives.isNotEmpty
+                        ? alternatives.first.confidence
+                        : 0.0);
+
+                if (topConfidence < 0.40) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const Text(
+                        'Low confidence — try a clearer full-body photo.',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: <Widget>[
+                          OutlinedButton(
+                            onPressed: _chooseDifferentBreed,
+                            child: const Text('Set Manually'),
+                          ),
+                          OutlinedButton(
+                            onPressed: _setUnknownBreed,
+                            child: const Text('Unknown / Mixed'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Text('Likely breeds (visual estimate):'),
+                    const SizedBox(height: 8),
+                    ...alternatives.take(3).map((BreedPrediction p) {
+                      final int percent = (p.confidence * 100).round();
+                      return Text('• ${p.name} — $percent%');
+                    }),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: <Widget>[
+                        if (alternatives.isNotEmpty)
+                          FilledButton(
+                            onPressed: () =>
+                                _confirmBreed(alternatives.first.name),
+                            child: Text('Confirm ${alternatives.first.name}'),
+                          ),
+                        OutlinedButton(
+                          onPressed: _chooseDifferentBreed,
+                          child: const Text('Choose different'),
+                        ),
+                        OutlinedButton(
+                          onPressed: _setUnknownBreed,
+                          child: const Text('Unknown / Mixed'),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
             ),
           ),
           _SectionCard(

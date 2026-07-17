@@ -1,3 +1,4 @@
+import 'breed_prediction.dart';
 import 'cow_image.dart';
 import 'embedding_reference.dart';
 
@@ -11,6 +12,11 @@ class CowRecord {
     List<VaccinationRecord>? vaccinations,
     List<String>? notes,
     List<CowImage>? images,
+    this.breedName,
+    this.breedConfidence,
+    this.breedAlternativesJson,
+    this.confirmedBreed,
+    this.breedConfirmedByUser = false,
   }) : embeddings = embeddings ?? <EmbeddingReference>[],
        healthRecords = healthRecords ?? <HealthRecord>[],
        vaccinations = vaccinations ?? <VaccinationRecord>[],
@@ -25,6 +31,29 @@ class CowRecord {
   final List<VaccinationRecord> vaccinations;
   final List<String> notes;
   final List<CowImage> images;
+
+  // ---------------------------------------------------------------------------
+  // Breed classification fields (mutable — set by EmbeddingDatabase)
+  // ---------------------------------------------------------------------------
+
+  /// Top-1 breed name from the classifier (e.g. "Gir").
+  String? breedName;
+
+  /// Top-1 confidence in [0.0, 1.0].
+  double? breedConfidence;
+
+  /// JSON-encoded list of top-N [BreedPrediction] alternatives.
+  /// Use [breedAlternatives] getter for the decoded list.
+  String? breedAlternativesJson;
+
+  /// Breed set explicitly by the user, overriding the model prediction.
+  String? confirmedBreed;
+
+  /// True when the user has actively confirmed or manually set the breed.
+  bool breedConfirmedByUser;
+
+  /// The effective breed to display: user-confirmed takes precedence.
+  String? get displayBreed => confirmedBreed ?? breedName;
 
   List<CowImage> get imagesNewestFirst {
     final List<CowImage> sorted = List<CowImage>.from(images);
@@ -50,6 +79,11 @@ class CowRecord {
           .toList(),
       'notes': notes,
       'images': images.map((CowImage item) => item.toJson()).toList(),
+      'breedName': breedName,
+      'breedConfidence': breedConfidence,
+      'breedAlternativesJson': breedAlternativesJson,
+      'confirmedBreed': confirmedBreed,
+      'breedConfirmedByUser': breedConfirmedByUser,
     };
   }
 
@@ -77,6 +111,11 @@ class CowRecord {
           .map((dynamic item) => item.toString())
           .toList()),
       images: _parseImages(json['images']),
+      breedName: json['breedName'] as String?,
+      breedConfidence: (json['breedConfidence'] as num?)?.toDouble(),
+      breedAlternativesJson: json['breedAlternativesJson'] as String?,
+      confirmedBreed: json['confirmedBreed'] as String?,
+      breedConfirmedByUser: (json['breedConfirmedByUser'] as bool?) ?? false,
     );
   }
 
