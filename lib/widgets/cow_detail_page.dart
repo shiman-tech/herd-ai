@@ -3,19 +3,27 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../models/cow_image.dart';
 import '../models/cow_record.dart';
 import '../services/app_lock_controller.dart';
 import '../services/embedding_database.dart';
+import '../services/tflite_embedding_service.dart';
 
 const Color kFarmPrimary = Color(0xFF2D6A4F);
 const Color kFarmSecondary = Color(0xFF95A97F);
 const Color kFarmAccent = Color(0xFF8D6E63);
 
 class CowDetailPage extends StatefulWidget {
-  const CowDetailPage({super.key, required this.cowId, required this.database});
+  const CowDetailPage({
+    super.key,
+    required this.cowId,
+    required this.database,
+    required this.embeddingService,
+  });
 
   final String cowId;
   final EmbeddingDatabase database;
+  final TfliteEmbeddingService embeddingService;
 
   @override
   State<CowDetailPage> createState() => _CowDetailPageState();
@@ -24,6 +32,7 @@ class CowDetailPage extends StatefulWidget {
 class _CowDetailPageState extends State<CowDetailPage> {
   final ImagePicker _picker = ImagePicker();
   late String _cowId;
+  bool _isBusy = false;
 
   @override
   void initState() {
@@ -479,11 +488,49 @@ class _CowDetailPageState extends State<CowDetailPage> {
   }
 
   Future<void> _addImageToHistory() async {
+    if (_isBusy) {
+      return;
+    }
+
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const ListTile(
+                title: Text(
+                  'Add photo',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text('Take or choose a clear photo of this cow.'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Take photo'),
+                onTap: () => Navigator.of(context).pop(ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Choose from gallery'),
+                onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+    if (source == null) {
+      return;
+    }
+
     AppLockController.instance.suspendLock();
     final XFile? picked;
     try {
       picked = await _picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         imageQuality: 95,
         maxWidth: 1600,
       );
@@ -493,12 +540,83 @@ class _CowDetailPageState extends State<CowDetailPage> {
     if (picked == null) {
       return;
     }
-    await widget.database.addImage(_cowId, picked.path);
+    final XFile selectedImage = picked;
+
     if (!mounted) {
       return;
     }
-    setState(() {});
-    _showSnack('Image added');
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add photo to $_cowId?'),
+          content: SizedBox(
+            width: 280,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    height: 160,
+                    width: 280,
+                    child: Image.file(
+                      File(selectedImage.path),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'This photo will be saved with today\'s date so you can track '
+                  'how this cow looks over time. It will also help identify '
+                  'this cow in the future.',
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Add photo'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) {
+      return;
+    }
+
+    setState(() => _isBusy = true);
+    try {
+      final List<double> embedding = await widget.embeddingService.getEmbedding(
+        File(selectedImage.path),
+      );
+      await widget.database.addCowPhoto(
+        cowId: _cowId,
+        embedding: embedding,
+        imagePath: selectedImage.path,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {});
+      _showSnack('Photo added');
+    } catch (error) {
+      if (mounted) {
+        _showSnack('Could not add photo');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isBusy = false);
+      }
+    }
   }
 
   Future<void> _replaceImageAt(int index) async {
@@ -516,16 +634,61 @@ class _CowDetailPageState extends State<CowDetailPage> {
     if (picked == null) {
       return;
     }
-    await widget.database.updateImage(
-      cowId: _cowId,
-      index: index,
-      imagePath: picked.path,
-    );
+    final XFile selectedImage = picked;
+
     if (!mounted) {
       return;
     }
-    setState(() {});
-    _showSnack('Image updated');
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Replace this photo?'),
+          content: const Text(
+            'The old photo will be removed and replaced with the new one.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Replace'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) {
+      return;
+    }
+
+    setState(() => _isBusy = true);
+    try {
+      final List<double> embedding = await widget.embeddingService.getEmbedding(
+        File(selectedImage.path),
+      );
+      await widget.database.replaceCowPhoto(
+        cowId: _cowId,
+        index: index,
+        embedding: embedding,
+        imagePath: selectedImage.path,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {});
+      _showSnack('Photo updated');
+    } catch (error) {
+      if (mounted) {
+        _showSnack('Could not update photo');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isBusy = false);
+      }
+    }
   }
 
   Future<void> _confirmDeleteHealthRecord(int index) async {
@@ -626,8 +789,10 @@ class _CowDetailPageState extends State<CowDetailPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete image'),
-          content: const Text('Delete this image from history?'),
+          title: const Text('Delete photo'),
+          content: const Text(
+            'Delete this photo? It will also be removed from cow identification.',
+          ),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -649,7 +814,7 @@ class _CowDetailPageState extends State<CowDetailPage> {
       return;
     }
     setState(() {});
-    _showSnack('Image deleted');
+    _showSnack('Photo deleted');
   }
 
   Future<void> _confirmDeleteCow() async {
@@ -879,53 +1044,81 @@ class _CowDetailPageState extends State<CowDetailPage> {
                   ),
           ),
           _SectionCard(
-            title: 'Images',
-            buttonLabel: 'Add Image',
+            title: 'Photos',
+            buttonLabel: 'Add Photo',
             onAdd: _addImageToHistory,
-            child: record.images.isEmpty
-                ? const Text('No images in history.')
-                : SizedBox(
-                    height: 100,
+            buttonEnabled: !_isBusy,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const Text(
+                  'Track how this cow looks over time. Newest photos appear first.',
+                ),
+                if (_isBusy) ...<Widget>[
+                  const SizedBox(height: 10),
+                  const LinearProgressIndicator(),
+                ],
+                const SizedBox(height: 10),
+                if (record.images.isEmpty && !_isBusy)
+                  const Text('No photos yet.')
+                else if (record.images.isNotEmpty)
+                  SizedBox(
+                    height: 132,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      itemBuilder: (BuildContext context, int index) {
-                        return Stack(
+                      itemBuilder: (BuildContext context, int displayIndex) {
+                        final CowImage image =
+                            record.imagesNewestFirst[displayIndex];
+                        final int index = record.images.indexWhere(
+                          (CowImage item) => item.path == image.path,
+                        );
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: _imageOrPlaceholder(
-                                record.images[index],
-                                size: 100,
-                              ),
-                            ),
-                            Positioned(
-                              right: 2,
-                              top: 2,
-                              child: PopupMenuButton<String>(
-                                icon: const Icon(
-                                  Icons.more_vert,
-                                  color: Colors.white,
+                            Stack(
+                              children: <Widget>[
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: _imageOrPlaceholder(
+                                    image.path,
+                                    size: 100,
+                                  ),
                                 ),
-                                color: const Color(0xFFFFFEFA),
-                                onSelected: (String action) {
-                                  if (action == 'edit') {
-                                    _replaceImageAt(index);
-                                  } else {
-                                    _confirmDeleteImage(index);
-                                  }
-                                },
-                                itemBuilder: (_) =>
-                                    const <PopupMenuEntry<String>>[
-                                      PopupMenuItem<String>(
-                                        value: 'edit',
-                                        child: Text('Replace'),
-                                      ),
-                                      PopupMenuItem<String>(
-                                        value: 'delete',
-                                        child: Text('Delete'),
-                                      ),
-                                    ],
-                              ),
+                                Positioned(
+                                  right: 2,
+                                  top: 2,
+                                  child: PopupMenuButton<String>(
+                                    icon: const Icon(
+                                      Icons.more_vert,
+                                      color: Colors.white,
+                                    ),
+                                    color: const Color(0xFFFFFEFA),
+                                    onSelected: (String action) {
+                                      if (action == 'edit') {
+                                        _replaceImageAt(index);
+                                      } else {
+                                        _confirmDeleteImage(index);
+                                      }
+                                    },
+                                    itemBuilder: (_) =>
+                                        const <PopupMenuEntry<String>>[
+                                          PopupMenuItem<String>(
+                                            value: 'edit',
+                                            child: Text('Replace'),
+                                          ),
+                                          PopupMenuItem<String>(
+                                            value: 'delete',
+                                            child: Text('Delete'),
+                                          ),
+                                        ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _formatDate(image.uploadedAt),
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
                         );
@@ -934,6 +1127,8 @@ class _CowDetailPageState extends State<CowDetailPage> {
                       itemCount: record.images.length,
                     ),
                   ),
+              ],
+            ),
           ),
         ],
       ),
@@ -947,12 +1142,14 @@ class _SectionCard extends StatelessWidget {
     required this.buttonLabel,
     required this.onAdd,
     required this.child,
+    this.buttonEnabled = true,
   });
 
   final String title;
   final String buttonLabel;
   final VoidCallback onAdd;
   final Widget child;
+  final bool buttonEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -980,7 +1177,7 @@ class _SectionCard extends StatelessWidget {
                   width: 176,
                   height: 38,
                   child: FilledButton(
-                    onPressed: onAdd,
+                    onPressed: buttonEnabled ? onAdd : null,
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFFF3EDDE),
                       foregroundColor: kFarmPrimary,
