@@ -1,34 +1,47 @@
+import 'cow_image.dart';
+import 'embedding_reference.dart';
+
 class CowRecord {
   CowRecord({
     required this.id,
     required this.registrationDate,
     this.profileImagePath,
-    List<List<double>>? embeddings,
+    List<EmbeddingReference>? embeddings,
     List<HealthRecord>? healthRecords,
     List<VaccinationRecord>? vaccinations,
     List<String>? notes,
-    List<String>? images,
-  }) : embeddings = embeddings ?? <List<double>>[],
+    List<CowImage>? images,
+  }) : embeddings = embeddings ?? <EmbeddingReference>[],
        healthRecords = healthRecords ?? <HealthRecord>[],
        vaccinations = vaccinations ?? <VaccinationRecord>[],
        notes = notes ?? <String>[],
-       images = images ?? <String>[];
+       images = images ?? <CowImage>[];
 
   final String id;
   final DateTime registrationDate;
   String? profileImagePath;
-  final List<List<double>> embeddings;
+  final List<EmbeddingReference> embeddings;
   final List<HealthRecord> healthRecords;
   final List<VaccinationRecord> vaccinations;
   final List<String> notes;
-  final List<String> images;
+  final List<CowImage> images;
+
+  List<CowImage> get imagesNewestFirst {
+    final List<CowImage> sorted = List<CowImage>.from(images);
+    sorted.sort(
+      (CowImage a, CowImage b) => b.uploadedAt.compareTo(a.uploadedAt),
+    );
+    return sorted;
+  }
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'id': id,
       'registrationDate': registrationDate.toIso8601String(),
       'profileImagePath': profileImagePath,
-      'embeddings': embeddings,
+      'embeddings': embeddings
+          .map((EmbeddingReference item) => item.toJson())
+          .toList(),
       'healthRecords': healthRecords
           .map((HealthRecord item) => item.toJson())
           .toList(),
@@ -36,7 +49,7 @@ class CowRecord {
           .map((VaccinationRecord item) => item.toJson())
           .toList(),
       'notes': notes,
-      'images': images,
+      'images': images.map((CowImage item) => item.toJson()).toList(),
     };
   }
 
@@ -47,13 +60,7 @@ class CowRecord {
           DateTime.tryParse(json['registrationDate'] as String? ?? '') ??
           DateTime.now(),
       profileImagePath: json['profileImagePath'] as String?,
-      embeddings: ((json['embeddings'] as List<dynamic>? ?? <dynamic>[])
-          .map(
-            (dynamic row) => (row as List<dynamic>)
-                .map((dynamic value) => (value as num).toDouble())
-                .toList(),
-          )
-          .toList()),
+      embeddings: _parseEmbeddings(json['embeddings']),
       healthRecords: (json['healthRecords'] as List<dynamic>? ?? <dynamic>[])
           .map(
             (dynamic item) =>
@@ -69,10 +76,53 @@ class CowRecord {
       notes: ((json['notes'] as List<dynamic>? ?? <dynamic>[])
           .map((dynamic item) => item.toString())
           .toList()),
-      images: ((json['images'] as List<dynamic>? ?? <dynamic>[])
-          .map((dynamic item) => item.toString())
-          .toList()),
+      images: _parseImages(json['images']),
     );
+  }
+
+  static List<CowImage> _parseImages(dynamic raw) {
+    if (raw is! List<dynamic>) {
+      return <CowImage>[];
+    }
+    if (raw.isEmpty) {
+      return <CowImage>[];
+    }
+    if (raw.first is String) {
+      return raw
+          .map(
+            (dynamic item) => CowImage.fromLegacyPath(item as String),
+          )
+          .toList();
+    }
+    return raw
+        .map((dynamic item) => CowImage.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  static List<EmbeddingReference> _parseEmbeddings(dynamic raw) {
+    if (raw is! List<dynamic>) {
+      return <EmbeddingReference>[];
+    }
+    if (raw.isEmpty) {
+      return <EmbeddingReference>[];
+    }
+    if (raw.first is List<dynamic>) {
+      return raw
+          .map(
+            (dynamic row) => EmbeddingReference.fromLegacyVector(
+              (row as List<dynamic>)
+                  .map((dynamic value) => (value as num).toDouble())
+                  .toList(),
+            ),
+          )
+          .toList();
+    }
+    return raw
+        .map(
+          (dynamic item) =>
+              EmbeddingReference.fromJson(item as Map<String, dynamic>),
+        )
+        .toList();
   }
 }
 
