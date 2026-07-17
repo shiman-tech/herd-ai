@@ -106,7 +106,7 @@ class TfliteBreedService {
         _inputSize,
         (int y) => List<List<double>>.generate(_inputSize, (int x) {
           final img.Pixel pixel = resized.getPixel(x, y);
-          return <double>[pixel.r / 255.0, pixel.g / 255.0, pixel.b / 255.0];
+          return <double>[pixel.r.toDouble(), pixel.g.toDouble(), pixel.b.toDouble()];
         }),
       ),
     ];

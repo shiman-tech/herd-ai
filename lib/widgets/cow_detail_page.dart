@@ -753,8 +753,8 @@ class _CowDetailPageState extends State<CowDetailPage> {
 
     setState(() => _isBusy = true);
     try {
-      final List<BreedPrediction> predictions =
-          await widget.breedService.classifyBreed(selectedImage);
+      final List<BreedPrediction> predictions = await widget.breedService
+          .classifyBreed(selectedImage);
       if (predictions.isEmpty) {
         if (mounted) {
           _showSnack('No breed predictions returned');
@@ -798,8 +798,9 @@ class _CowDetailPageState extends State<CowDetailPage> {
     if (record == null) {
       return;
     }
-    final List<BreedPrediction> alternatives =
-        _parseAlternatives(record.breedAlternativesJson);
+    final List<BreedPrediction> alternatives = _parseAlternatives(
+      record.breedAlternativesJson,
+    );
     final List<String> breedNames = alternatives
         .map((BreedPrediction p) => p.name)
         .toList();
@@ -1194,8 +1195,9 @@ class _CowDetailPageState extends State<CowDetailPage> {
                   );
                 }
 
-                final List<BreedPrediction> alternatives =
-                    _parseAlternatives(record.breedAlternativesJson);
+                final List<BreedPrediction> alternatives = _parseAlternatives(
+                  record.breedAlternativesJson,
+                );
 
                 if (record.breedConfirmedByUser) {
                   return Column(
@@ -1212,7 +1214,8 @@ class _CowDetailPageState extends State<CowDetailPage> {
                   );
                 }
 
-                final double topConfidence = record.breedConfidence ??
+                final double topConfidence =
+                    record.breedConfidence ??
                     (alternatives.isNotEmpty
                         ? alternatives.first.confidence
                         : 0.0);
