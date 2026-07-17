@@ -5,7 +5,9 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../models/cow_image.dart';
 import '../models/cow_record.dart';
+import '../models/embedding_reference.dart';
 import '../models/identification_result.dart';
 import '../utils/math_utils.dart';
 import 'tflite_embedding_service.dart';
@@ -14,7 +16,12 @@ class EmbeddingDatabase {
   static const String _dbFileName = 'herd_ai.db';
   static const String _legacyJsonFileName = 'cow_records.json';
   static const String _imageDirName = 'cow_images';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 4;
+
+  /// Scores at or above this (but below [similarityThreshold]) trigger a
+  /// pre-registration warning because the photo may match an existing cow.
+  static const double preRegistrationWarningThreshold =
+      IdentificationResult.borderlineThreshold;
 
   final Map<String, CowRecord> _recordsByCow = <String, CowRecord>{};
 
@@ -53,6 +60,9 @@ class EmbeddingDatabase {
     await _migrateFromJsonIfNeeded();
     await _loadAllIntoMemory();
     _repairImagePaths();
+    await _purgeEmbeddingsForMissingPhotos();
+    await _repairPhotoEmbeddingLinks();
+    await _removeOrphanEmbeddings();
   }
 
   Future<Database> _openDatabase() async {
@@ -63,6 +73,27 @@ class EmbeddingDatabase {
       version: _dbVersion,
       onCreate: (Database db, int version) async {
         await _createTables(db);
+      },
+      onUpgrade: (Database db, int oldVersion, int newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            'ALTER TABLE embeddings ADD COLUMN source_image_path TEXT',
+          );
+        }
+        if (oldVersion < 3) {
+          await db.execute(
+            'ALTER TABLE images ADD COLUMN uploaded_at TEXT',
+          );
+          await db.execute(
+            "UPDATE images SET uploaded_at = datetime('now') "
+            'WHERE uploaded_at IS NULL',
+          );
+        }
+        if (oldVersion < 4) {
+          await db.execute(
+            'ALTER TABLE embeddings ADD COLUMN image_id INTEGER',
+          );
+        }
       },
     );
   }
@@ -81,7 +112,10 @@ class EmbeddingDatabase {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         cow_id TEXT NOT NULL,
         vector TEXT NOT NULL,
-        FOREIGN KEY (cow_id) REFERENCES cows(id) ON DELETE CASCADE
+        source_image_path TEXT,
+        image_id INTEGER,
+        FOREIGN KEY (cow_id) REFERENCES cows(id) ON DELETE CASCADE,
+        FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE
       )
     ''');
     batch.execute('''
@@ -120,6 +154,7 @@ class EmbeddingDatabase {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         cow_id TEXT NOT NULL,
         path TEXT NOT NULL,
+        uploaded_at TEXT NOT NULL,
         FOREIGN KEY (cow_id) REFERENCES cows(id) ON DELETE CASCADE
       )
     ''');
@@ -162,10 +197,11 @@ class EmbeddingDatabase {
           conflictAlgorithm: ConflictAlgorithm.ignore,
         );
 
-        for (final List<double> embedding in cow.embeddings) {
+        for (final EmbeddingReference embedding in cow.embeddings) {
           await txn.insert('embeddings', <String, Object?>{
             'cow_id': cow.id,
-            'vector': jsonEncode(embedding),
+            'vector': jsonEncode(embedding.vector),
+            'source_image_path': embedding.sourceImagePath,
           });
         }
 
@@ -197,10 +233,11 @@ class EmbeddingDatabase {
           });
         }
 
-        for (final String imagePath in cow.images) {
+        for (final CowImage image in cow.images) {
           await txn.insert('images', <String, Object?>{
             'cow_id': cow.id,
-            'path': imagePath,
+            'path': image.path,
+            'uploaded_at': image.uploadedAt.toIso8601String(),
           });
         }
       }
@@ -233,13 +270,16 @@ class EmbeddingDatabase {
 
     // Backward compatibility with older "cowId -> embeddings" format.
     for (final MapEntry<String, dynamic> entry in decoded.entries) {
-      final List<List<double>> embeddings = (entry.value as List<dynamic>)
-          .map(
-            (dynamic row) => (row as List<dynamic>)
-                .map((dynamic value) => (value as num).toDouble())
-                .toList(),
-          )
-          .toList();
+      final List<EmbeddingReference> embeddings =
+          (entry.value as List<dynamic>)
+              .map(
+                (dynamic row) => EmbeddingReference.fromLegacyVector(
+                  (row as List<dynamic>)
+                      .map((dynamic value) => (value as num).toDouble())
+                      .toList(),
+                ),
+              )
+              .toList();
       result[entry.key] = CowRecord(
         id: entry.key,
         registrationDate: DateTime.now(),
@@ -268,22 +308,6 @@ class EmbeddingDatabase {
             DateTime.now(),
         profileImagePath: row['profile_image_path'] as String?,
       );
-    }
-
-    final List<Map<String, Object?>> embeddingRows = await db.query(
-      'embeddings',
-    );
-    for (final Map<String, Object?> row in embeddingRows) {
-      final String cowId = row['cow_id']! as String;
-      final CowRecord? record = _recordsByCow[cowId];
-      if (record == null) {
-        continue;
-      }
-      final List<double> vector = (jsonDecode(row['vector']! as String)
-              as List<dynamic>)
-          .map((dynamic v) => (v as num).toDouble())
-          .toList();
-      record.embeddings.add(vector);
     }
 
     final List<Map<String, Object?>> healthRows = await db.query(
@@ -342,7 +366,38 @@ class EmbeddingDatabase {
       if (record == null) {
         continue;
       }
-      record.images.add(row['path']! as String);
+      record.images.add(
+        CowImage(
+          id: row['id'] as int?,
+          path: row['path']! as String,
+          uploadedAt:
+              DateTime.tryParse(row['uploaded_at'] as String? ?? '') ??
+              DateTime.now(),
+        ),
+      );
+    }
+
+    final List<Map<String, Object?>> embeddingRows = await db.query(
+      'embeddings',
+    );
+    for (final Map<String, Object?> row in embeddingRows) {
+      final String cowId = row['cow_id']! as String;
+      final CowRecord? record = _recordsByCow[cowId];
+      if (record == null) {
+        continue;
+      }
+      final List<double> vector = (jsonDecode(row['vector']! as String)
+              as List<dynamic>)
+          .map((dynamic v) => (v as num).toDouble())
+          .toList();
+      record.embeddings.add(
+        EmbeddingReference(
+          id: row['id'] as int?,
+          imageId: row['image_id'] as int?,
+          vector: vector,
+          sourceImagePath: row['source_image_path'] as String?,
+        ),
+      );
     }
   }
 
@@ -375,22 +430,24 @@ class EmbeddingDatabase {
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
 
-    // Insert embedding.
-    record.embeddings.add(normalized);
-    await db.insert('embeddings', <String, Object?>{
-      'cow_id': cowId,
-      'vector': jsonEncode(normalized),
-    });
-
-    // Handle image.
+    String? savedImagePath;
+    int? imageId;
     if (imagePath != null && imagePath.isNotEmpty) {
-      final String savedPath = await _persistImage(imagePath);
-      record.profileImagePath ??= savedPath;
-      record.images.add(savedPath);
-      await db.insert('images', <String, Object?>{
+      final DateTime uploadedAt = DateTime.now();
+      savedImagePath = await _persistImage(imagePath);
+      imageId = await db.insert('images', <String, Object?>{
         'cow_id': cowId,
-        'path': savedPath,
+        'path': savedImagePath,
+        'uploaded_at': uploadedAt.toIso8601String(),
       });
+      record.profileImagePath ??= savedImagePath;
+      record.images.add(
+        CowImage(
+          id: imageId,
+          path: savedImagePath,
+          uploadedAt: uploadedAt,
+        ),
+      );
       await db.update(
         'cows',
         <String, Object?>{'profile_image_path': record.profileImagePath},
@@ -398,6 +455,21 @@ class EmbeddingDatabase {
         whereArgs: <Object?>[cowId],
       );
     }
+
+    final int embeddingId = await db.insert('embeddings', <String, Object?>{
+      'cow_id': cowId,
+      'vector': jsonEncode(normalized),
+      'source_image_path': savedImagePath,
+      'image_id': imageId,
+    });
+    record.embeddings.add(
+      EmbeddingReference(
+        id: embeddingId,
+        imageId: imageId,
+        vector: normalized,
+        sourceImagePath: savedImagePath,
+      ),
+    );
 
     // Handle note.
     if (note != null && note.trim().isNotEmpty) {
@@ -407,6 +479,161 @@ class EmbeddingDatabase {
         'content': note.trim(),
       });
     }
+  }
+
+  /// Saves a photo for [cowId], stores the upload date, and links an
+  /// embedding so the cow can be identified from this photo.
+  Future<void> addCowPhoto({
+    required String cowId,
+    required List<double> embedding,
+    required String imagePath,
+    DateTime? uploadedAt,
+  }) async {
+    final CowRecord? record = _recordsByCow[cowId];
+    if (record == null || imagePath.isEmpty) {
+      return;
+    }
+
+    final Database db = _db!;
+    final List<double> normalized = normalizeEmbedding(embedding);
+    final DateTime savedAt = uploadedAt ?? DateTime.now();
+    final String savedPath = await _persistImage(imagePath);
+
+    record.profileImagePath ??= savedPath;
+    final int imageId = await db.insert('images', <String, Object?>{
+      'cow_id': cowId,
+      'path': savedPath,
+      'uploaded_at': savedAt.toIso8601String(),
+    });
+    record.images.add(
+      CowImage(id: imageId, path: savedPath, uploadedAt: savedAt),
+    );
+    await db.update(
+      'cows',
+      <String, Object?>{'profile_image_path': record.profileImagePath},
+      where: 'id = ?',
+      whereArgs: <Object?>[cowId],
+    );
+
+    final int embeddingId = await db.insert('embeddings', <String, Object?>{
+      'cow_id': cowId,
+      'vector': jsonEncode(normalized),
+      'source_image_path': savedPath,
+      'image_id': imageId,
+    });
+    record.embeddings.add(
+      EmbeddingReference(
+        id: embeddingId,
+        imageId: imageId,
+        vector: normalized,
+        sourceImagePath: savedPath,
+      ),
+    );
+  }
+
+  Future<void> _deleteEmbeddingsLinkedToPhoto(
+    String cowId,
+    CowImage photo, {
+    required int photoIndexInRecord,
+  }) async {
+    final CowRecord? record = _recordsByCow[cowId];
+    if (record == null) {
+      return;
+    }
+
+    final Database db = _db!;
+    final Set<int> embeddingIdsToDelete = <int>{};
+
+    for (final EmbeddingReference ref in record.embeddings) {
+      final bool matchesPath = ref.sourceImagePath == photo.path;
+      final bool matchesImageId =
+          photo.id != null && ref.imageId == photo.id;
+      if (matchesPath || matchesImageId) {
+        if (ref.id != null) {
+          embeddingIdsToDelete.add(ref.id!);
+        }
+      }
+    }
+
+    if (embeddingIdsToDelete.isEmpty) {
+      final List<EmbeddingReference> unlinked = record.embeddings
+          .where((EmbeddingReference ref) => !_embeddingLinkedToLivePhoto(
+                record,
+                ref,
+              ))
+          .toList()
+        ..sort(
+          (EmbeddingReference a, EmbeddingReference b) =>
+              (a.id ?? 0).compareTo(b.id ?? 0),
+        );
+      if (photoIndexInRecord >= 0 &&
+          photoIndexInRecord < unlinked.length &&
+          unlinked[photoIndexInRecord].id != null) {
+        embeddingIdsToDelete.add(unlinked[photoIndexInRecord].id!);
+      }
+    }
+
+    await db.delete(
+      'embeddings',
+      where: 'cow_id = ? AND source_image_path = ?',
+      whereArgs: <Object?>[cowId, photo.path],
+    );
+    if (photo.id != null) {
+      await db.delete(
+        'embeddings',
+        where: 'cow_id = ? AND image_id = ?',
+        whereArgs: <Object?>[cowId, photo.id],
+      );
+    }
+    for (final int embeddingId in embeddingIdsToDelete) {
+      await db.delete(
+        'embeddings',
+        where: 'id = ? AND cow_id = ?',
+        whereArgs: <Object?>[embeddingId, cowId],
+      );
+    }
+
+    record.embeddings.removeWhere((EmbeddingReference ref) {
+      if (ref.sourceImagePath == photo.path) {
+        return true;
+      }
+      if (photo.id != null && ref.imageId == photo.id) {
+        return true;
+      }
+      if (ref.id != null && embeddingIdsToDelete.contains(ref.id)) {
+        return true;
+      }
+      return false;
+    });
+  }
+
+  SimilarityMatch? findBestSimilarCow(
+    List<double> queryEmbedding, {
+    String? excludeCowId,
+  }) {
+    final List<double> normalized = normalizeEmbedding(queryEmbedding);
+
+    String? bestCowId;
+    double bestScore = -1;
+
+    for (final CowRecord record in _recordsByCow.values) {
+      if (excludeCowId != null && record.id == excludeCowId) {
+        continue;
+      }
+      for (final EmbeddingReference reference in record.embeddings) {
+        final double score = cosineSimilarity(normalized, reference.vector);
+        if (score > bestScore) {
+          bestScore = score;
+          bestCowId = record.id;
+        }
+      }
+    }
+
+    if (bestCowId == null || bestScore < preRegistrationWarningThreshold) {
+      return null;
+    }
+
+    return SimilarityMatch(cowId: bestCowId, similarity: bestScore);
   }
 
   Future<IdentificationResult> predictCow(
@@ -421,8 +648,8 @@ class EmbeddingDatabase {
     double bestScore = -1;
 
     for (final CowRecord record in _recordsByCow.values) {
-      for (final List<double> storedEmbedding in record.embeddings) {
-        final double score = cosineSimilarity(queryEmbedding, storedEmbedding);
+      for (final EmbeddingReference reference in record.embeddings) {
+        final double score = cosineSimilarity(queryEmbedding, reference.vector);
         if (score > bestScore) {
           bestScore = score;
           bestCowId = record.id;
@@ -435,6 +662,7 @@ class EmbeddingDatabase {
         predictedCowId: 'Unknown',
         similarity: bestScore < 0 ? 0 : bestScore,
         isKnown: false,
+        suggestedCowId: bestScore >= 0 ? bestCowId : null,
       );
     }
 
@@ -644,29 +872,10 @@ class EmbeddingDatabase {
   // Images
   // ---------------------------------------------------------------------------
 
-  Future<void> addImage(String cowId, String imagePath) async {
-    final CowRecord? record = _recordsByCow[cowId];
-    if (record == null || imagePath.isEmpty) {
-      return;
-    }
-    final String savedPath = await _persistImage(imagePath);
-    record.profileImagePath ??= savedPath;
-    record.images.add(savedPath);
-    await _db!.insert('images', <String, Object?>{
-      'cow_id': cowId,
-      'path': savedPath,
-    });
-    await _db!.update(
-      'cows',
-      <String, Object?>{'profile_image_path': record.profileImagePath},
-      where: 'id = ?',
-      whereArgs: <Object?>[cowId],
-    );
-  }
-
-  Future<void> updateImage({
+  Future<void> replaceCowPhoto({
     required String cowId,
     required int index,
+    required List<double> embedding,
     required String imagePath,
   }) async {
     final CowRecord? record = _recordsByCow[cowId];
@@ -676,25 +885,85 @@ class EmbeddingDatabase {
         imagePath.isEmpty) {
       return;
     }
-    final String savedPath = await _persistImage(imagePath);
-    record.images[index] = savedPath;
-    record.profileImagePath ??= savedPath;
-    await _replaceChildRows(
-      cowId: cowId,
-      table: 'images',
-      rows: record.images
-          .map((String path) => <String, Object?>{
-                'cow_id': cowId,
-                'path': path,
-              })
-          .toList(),
+
+    final CowImage oldPhoto = record.images[index];
+    await _deleteEmbeddingsLinkedToPhoto(
+      cowId,
+      oldPhoto,
+      photoIndexInRecord: index,
     );
+
+    final DateTime uploadedAt = DateTime.now();
+    final String savedPath = await _persistImage(imagePath);
+    final int? imageId = oldPhoto.id;
+
+    if (imageId != null) {
+      await _db!.update(
+        'images',
+        <String, Object?>{
+          'path': savedPath,
+          'uploaded_at': uploadedAt.toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: <Object?>[imageId],
+      );
+    } else {
+      await _db!.delete(
+        'images',
+        where: 'cow_id = ? AND path = ?',
+        whereArgs: <Object?>[cowId, oldPhoto.path],
+      );
+      final int newImageId = await _db!.insert('images', <String, Object?>{
+        'cow_id': cowId,
+        'path': savedPath,
+        'uploaded_at': uploadedAt.toIso8601String(),
+      });
+      record.images[index] = CowImage(
+        id: newImageId,
+        path: savedPath,
+        uploadedAt: uploadedAt,
+      );
+    }
+
+    if (imageId != null) {
+      record.images[index] = CowImage(
+        id: imageId,
+        path: savedPath,
+        uploadedAt: uploadedAt,
+      );
+    }
+
+    if (record.profileImagePath == oldPhoto.path) {
+      record.profileImagePath = savedPath;
+    }
+
     await _db!.update(
       'cows',
       <String, Object?>{'profile_image_path': record.profileImagePath},
       where: 'id = ?',
       whereArgs: <Object?>[cowId],
     );
+
+    final List<double> normalized = normalizeEmbedding(embedding);
+    final int? linkedImageId = record.images[index].id;
+    final int embeddingId = await _db!.insert('embeddings', <String, Object?>{
+      'cow_id': cowId,
+      'vector': jsonEncode(normalized),
+      'source_image_path': savedPath,
+      'image_id': linkedImageId,
+    });
+    record.embeddings.add(
+      EmbeddingReference(
+        id: embeddingId,
+        imageId: linkedImageId,
+        vector: normalized,
+        sourceImagePath: savedPath,
+      ),
+    );
+
+    if (oldPhoto.path != savedPath && File(oldPhoto.path).existsSync()) {
+      await File(oldPhoto.path).delete();
+    }
   }
 
   Future<void> deleteImage(String cowId, int index) async {
@@ -702,28 +971,46 @@ class EmbeddingDatabase {
     if (record == null || index < 0 || index >= record.images.length) {
       return;
     }
-    final String removed = record.images.removeAt(index);
-    if (record.profileImagePath == removed) {
+
+    final CowImage removed = record.images[index];
+    await _deleteEmbeddingsLinkedToPhoto(
+      cowId,
+      removed,
+      photoIndexInRecord: index,
+    );
+
+    record.images.removeAt(index);
+
+    if (removed.id != null) {
+      await _db!.delete(
+        'images',
+        where: 'id = ?',
+        whereArgs: <Object?>[removed.id],
+      );
+    } else {
+      await _db!.delete(
+        'images',
+        where: 'cow_id = ? AND path = ?',
+        whereArgs: <Object?>[cowId, removed.path],
+      );
+    }
+
+    if (record.profileImagePath == removed.path) {
       record.profileImagePath = record.images.isNotEmpty
-          ? record.images.first
+          ? record.images.first.path
           : null;
     }
-    await _replaceChildRows(
-      cowId: cowId,
-      table: 'images',
-      rows: record.images
-          .map((String path) => <String, Object?>{
-                'cow_id': cowId,
-                'path': path,
-              })
-          .toList(),
-    );
+
     await _db!.update(
       'cows',
       <String, Object?>{'profile_image_path': record.profileImagePath},
       where: 'id = ?',
       whereArgs: <Object?>[cowId],
     );
+
+    if (File(removed.path).existsSync()) {
+      await File(removed.path).delete();
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -840,15 +1127,125 @@ class EmbeddingDatabase {
 
   void _repairImagePaths() {
     for (final CowRecord record in _recordsByCow.values) {
-      record.images.removeWhere((String path) => !File(path).existsSync());
+      record.images.removeWhere(
+        (CowImage image) => !File(image.path).existsSync(),
+      );
       if (record.profileImagePath != null &&
           !File(record.profileImagePath!).existsSync()) {
         record.profileImagePath = null;
       }
       if (record.profileImagePath == null && record.images.isNotEmpty) {
-        record.profileImagePath = record.images.first;
+        record.profileImagePath = record.images.first.path;
       }
     }
+  }
+
+  Future<void> _purgeEmbeddingsForMissingPhotos() async {
+    for (final CowRecord record in _recordsByCow.values) {
+      final List<EmbeddingReference> stale = record.embeddings
+          .where(
+            (EmbeddingReference ref) =>
+                !_embeddingLinkedToLivePhoto(record, ref),
+          )
+          .toList();
+      for (final EmbeddingReference ref in stale) {
+        record.embeddings.remove(ref);
+        if (ref.id != null) {
+          await _db!.delete(
+            'embeddings',
+            where: 'id = ?',
+            whereArgs: <Object?>[ref.id],
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _repairPhotoEmbeddingLinks() async {
+    final Database db = _db!;
+    for (final CowRecord record in _recordsByCow.values) {
+      final Set<String> pathsWithEmbedding = record.embeddings
+          .map((EmbeddingReference ref) => ref.sourceImagePath)
+          .whereType<String>()
+          .where((String path) => path.isNotEmpty)
+          .toSet();
+
+      final List<CowImage> photosNeedingLink = record.images
+          .where((CowImage img) => !pathsWithEmbedding.contains(img.path))
+          .toList()
+        ..sort(
+          (CowImage a, CowImage b) => (a.id ?? 0).compareTo(b.id ?? 0),
+        );
+
+      final List<int> unlinkedEmbeddingIndexes = <int>[];
+      for (int index = 0; index < record.embeddings.length; index++) {
+        if (!_embeddingLinkedToLivePhoto(record, record.embeddings[index])) {
+          unlinkedEmbeddingIndexes.add(index);
+        }
+      }
+
+      for (int index = 0;
+          index < photosNeedingLink.length &&
+          index < unlinkedEmbeddingIndexes.length;
+          index++) {
+        final CowImage photo = photosNeedingLink[index];
+        final int embeddingIndex = unlinkedEmbeddingIndexes[index];
+        final EmbeddingReference old = record.embeddings[embeddingIndex];
+        record.embeddings[embeddingIndex] = old.copyWith(
+          sourceImagePath: photo.path,
+          imageId: photo.id,
+        );
+        if (old.id != null) {
+          await db.update(
+            'embeddings',
+            <String, Object?>{
+              'source_image_path': photo.path,
+              'image_id': photo.id,
+            },
+            where: 'id = ?',
+            whereArgs: <Object?>[old.id],
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _removeOrphanEmbeddings() async {
+    for (final CowRecord record in _recordsByCow.values) {
+      final List<EmbeddingReference> orphans = record.embeddings
+          .where(
+            (EmbeddingReference ref) =>
+                !_embeddingLinkedToLivePhoto(record, ref),
+          )
+          .toList();
+      for (final EmbeddingReference ref in orphans) {
+        record.embeddings.remove(ref);
+        if (ref.id != null) {
+          await _db!.delete(
+            'embeddings',
+            where: 'id = ?',
+            whereArgs: <Object?>[ref.id],
+          );
+        }
+      }
+    }
+  }
+
+  bool _embeddingLinkedToLivePhoto(
+    CowRecord record,
+    EmbeddingReference ref,
+  ) {
+    if (ref.imageId != null &&
+        record.images.any((CowImage img) => img.id == ref.imageId)) {
+      return true;
+    }
+    final String? path = ref.sourceImagePath;
+    if (path != null &&
+        path.isNotEmpty &&
+        record.images.any((CowImage img) => img.path == path)) {
+      return true;
+    }
+    return false;
   }
 
   Future<String> _persistImage(String sourcePath) async {
