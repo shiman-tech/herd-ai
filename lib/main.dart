@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'models/cow_record.dart';
+import 'models/embedding_reference.dart';
 import 'models/identification_result.dart';
 import 'services/app_auth_service.dart';
 import 'services/app_lock_controller.dart';
@@ -256,8 +257,14 @@ class _HerdHomePageState extends State<HerdHomePage> {
         _result = result;
         _statusMessage = result.isKnown
             ? 'Cow identified.'
+            : result.hasBorderlineMatch
+            ? 'This looks like a cow you already have — see below.'
             : 'No matching cow found.';
       });
+
+      if (result.hasBorderlineMatch && mounted) {
+        await _showIdentifyBorderlineDialog(result);
+      }
     } catch (error) {
       setState(() {
         _statusMessage = 'Could not identify this cow right now.';
@@ -309,11 +316,10 @@ class _HerdHomePageState extends State<HerdHomePage> {
                 if (idController.text.trim().isEmpty) {
                   return;
                 }
+                final String cowId = idController.text.trim();
+                final String note = noteController.text.trim();
                 Navigator.of(context).pop();
-                await _registerCow(
-                  idController.text.trim(),
-                  note: noteController.text.trim(),
-                );
+                await _prepareRegistration(cowId, note: note);
               },
               child: const Text('Add cow'),
             ),
@@ -323,7 +329,232 @@ class _HerdHomePageState extends State<HerdHomePage> {
     );
   }
 
-  Future<void> _registerCow(String cowId, {String? note}) async {
+  Future<void> _prepareRegistration(String cowId, {String? note}) async {
+    if (!_isReady || _selectedImage == null) {
+      return;
+    }
+
+    setState(() {
+      _isBusy = true;
+      _statusMessage = 'Checking photo before registration...';
+    });
+
+    try {
+      final List<double> embedding = await _embeddingService.getEmbedding(
+        _selectedImage!,
+      );
+
+      if (_database.getCow(cowId) != null) {
+        final bool? addPhoto = await _showDuplicateCowDialog(cowId);
+        if (addPhoto == true) {
+          await _addPhotoToExistingCow(cowId, embedding: embedding);
+        }
+        return;
+      }
+
+      final SimilarityMatch? similarMatch = _database.findBestSimilarCow(
+        embedding,
+      );
+      if (similarMatch != null) {
+        final String? action = await _showSimilarCowDialog(similarMatch);
+        if (action == 'add_to_existing') {
+          await _addPhotoToExistingCow(
+            similarMatch.cowId,
+            embedding: embedding,
+          );
+          return;
+        }
+        if (action != 'create_new') {
+          setState(() {
+            _statusMessage = 'Cancelled.';
+          });
+          return;
+        }
+      }
+
+      await _registerCow(
+        cowId,
+        note: note,
+        embedding: embedding,
+      );
+    } catch (error) {
+      setState(() {
+        _statusMessage = 'Could not check this photo before registration.';
+      });
+      _showSnack('Could not prepare registration');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isBusy = false;
+        });
+      }
+    }
+  }
+
+  Future<bool?> _showDuplicateCowDialog(String cowId) {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('$cowId is already in your herd'),
+          content: Text(
+            'Add this photo to $cowId?',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('No'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Yes, add to $cowId'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showIdentifyBorderlineDialog(IdentificationResult result) async {
+    final String cowId = result.suggestedCowId!;
+    final CowRecord? matchedCow = _database.getCow(cowId);
+
+    final String? action = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('This looks like $cowId'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Text('Add this photo to that cow?'),
+              if (matchedCow?.profileImagePath != null) ...<Widget>[
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    height: 100,
+                    width: 100,
+                    child: _cowAvatar(matchedCow!.profileImagePath),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop('dismiss'),
+              child: const Text('No'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop('add_photo'),
+              child: Text('Yes, add to $cowId'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (action == 'add_photo' && mounted) {
+      await _addPhotoToExistingCow(cowId);
+    }
+  }
+
+  Future<String?> _showSimilarCowDialog(SimilarityMatch match) {
+    final CowRecord? matchedCow = _database.getCow(match.cowId);
+
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('This looks like ${match.cowId}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('Add this photo to ${match.cowId} instead?'),
+              if (matchedCow?.profileImagePath != null) ...<Widget>[
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    height: 100,
+                    width: 100,
+                    child: _cowAvatar(matchedCow!.profileImagePath),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop('cancel'),
+              child: const Text('No'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop('add_to_existing'),
+              child: Text('Yes, add to ${match.cowId}'),
+            ),
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).pop('create_new'),
+              child: const Text('Create new cow'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _addPhotoToExistingCow(
+    String cowId, {
+    List<double>? embedding,
+  }) async {
+    if (!_isReady || _selectedImage == null) {
+      return;
+    }
+
+    setState(() {
+      _isBusy = true;
+      _statusMessage = 'Saving photo...';
+    });
+
+    try {
+      final List<double> resolvedEmbedding = embedding ??
+          await _embeddingService.getEmbedding(_selectedImage!);
+      await _database.addCowPhoto(
+        cowId: cowId,
+        embedding: resolvedEmbedding,
+        imagePath: _selectedImage!.path,
+      );
+      setState(() {
+        _statusMessage = 'Photo added to $cowId.';
+        _result = IdentificationResult(
+          predictedCowId: cowId,
+          similarity: 1,
+          isKnown: true,
+        );
+      });
+      _showSnack('Photo added to $cowId');
+    } catch (error) {
+      setState(() {
+        _statusMessage = 'Could not save this photo.';
+      });
+      _showSnack('Could not add photo');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isBusy = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _registerCow(
+    String cowId, {
+    String? note,
+    List<double>? embedding,
+  }) async {
     if (!_isReady || _selectedImage == null) {
       return;
     }
@@ -334,12 +565,11 @@ class _HerdHomePageState extends State<HerdHomePage> {
     });
 
     try {
-      final List<double> embedding = await _embeddingService.getEmbedding(
-        _selectedImage!,
-      );
+      final List<double> resolvedEmbedding = embedding ??
+          await _embeddingService.getEmbedding(_selectedImage!);
       await _database.registerCow(
         cowId: cowId,
-        embedding: embedding,
+        embedding: resolvedEmbedding,
         imagePath: _selectedImage!.path,
         note: note,
       );
@@ -367,7 +597,11 @@ class _HerdHomePageState extends State<HerdHomePage> {
   Future<void> _openCowDetail(String cowId) async {
     final String? eventMessage = await Navigator.of(context).push<String>(
       MaterialPageRoute<String>(
-        builder: (_) => CowDetailPage(cowId: cowId, database: _database),
+        builder: (_) => CowDetailPage(
+          cowId: cowId,
+          database: _database,
+          embeddingService: _embeddingService,
+        ),
       ),
     );
     if (!mounted) {
@@ -587,7 +821,46 @@ class _HerdHomePageState extends State<HerdHomePage> {
             ),
           ),
           const SizedBox(height: 8),
-          _PredictionCard(result: _result),
+          _PredictionCard(
+            result: _result,
+            matchedCow: _result?.suggestedCowId == null
+                ? null
+                : _database.getCow(_result!.suggestedCowId!),
+            cowAvatarBuilder: _cowAvatar,
+          ),
+          if (_result?.hasBorderlineMatch == true &&
+              _selectedImage != null) ...<Widget>[
+            const SizedBox(height: 12),
+            Card(
+              color: const Color(0xFFFFF3E0),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'This looks like ${_result!.suggestedCowId}',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text('Add this photo to that cow?'),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: (_isBusy || !_isReady)
+                          ? null
+                          : () => _addPhotoToExistingCow(
+                                _result!.suggestedCowId!,
+                              ),
+                      icon: const Icon(Icons.add_a_photo_outlined),
+                      label: Text(
+                        'Yes, add to ${_result!.suggestedCowId}',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
           if ((_result?.isKnown == false) &&
               _selectedImage != null) ...<Widget>[
             const SizedBox(height: 12),
@@ -848,9 +1121,15 @@ class _ImagePreviewCard extends StatelessWidget {
 }
 
 class _PredictionCard extends StatelessWidget {
-  const _PredictionCard({required this.result});
+  const _PredictionCard({
+    required this.result,
+    required this.matchedCow,
+    required this.cowAvatarBuilder,
+  });
 
   final IdentificationResult? result;
+  final CowRecord? matchedCow;
+  final Widget Function(String? imagePath) cowAvatarBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -881,8 +1160,22 @@ class _PredictionCard extends StatelessWidget {
             Text(
               result!.isKnown
                   ? 'This cow is already in your herd.'
-                  : 'No matching cow found. Add this cow to save it.',
+                  : result!.hasBorderlineMatch
+                  ? 'This looks like a cow you already have. See below.'
+                  : 'No matching cow found. You can add this as a new cow.',
             ),
+            if (result!.hasBorderlineMatch &&
+                matchedCow?.profileImagePath != null) ...<Widget>[
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(
+                  height: 80,
+                  width: 80,
+                  child: cowAvatarBuilder(matchedCow!.profileImagePath),
+                ),
+              ),
+            ],
           ],
         ),
       ),
