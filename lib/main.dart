@@ -15,13 +15,17 @@ import 'services/tflite_embedding_service.dart';
 import 'widgets/auth_gate.dart';
 import 'widgets/cow_detail_page.dart';
 
+import 'l10n/app_localizations.dart';
+import 'services/app_language_service.dart';
+
 const Color kFarmPrimary = Color(0xFF2D6A4F);
 const Color kFarmSecondary = Color(0xFF95A97F);
 const Color kFarmBackground = Color(0xFFF4F1E6);
 const Color kFarmAccent = Color(0xFF8D6E63);
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppLanguageService.instance.loadLocale();
   runApp(const HerdAiApp());
 }
 
@@ -30,8 +34,14 @@ class HerdAiApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Herd AI',
+    return ListenableBuilder(
+      listenable: AppLanguageService.instance,
+      builder: (BuildContext context, _) {
+        return MaterialApp(
+          title: 'Herd AI',
+          locale: AppLanguageService.instance.locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -107,6 +117,8 @@ class HerdAiApp extends StatelessWidget {
         ),
       ),
       home: const AuthGate(child: HerdHomePage()),
+        );
+      },
     );
   }
 }
@@ -177,18 +189,24 @@ class _HerdHomePageState extends State<HerdHomePage> {
       _isBusy = true;
       _isReady = false;
       _initializationError = null;
-      _statusMessage = 'Getting your cattle notebook ready...';
+      _statusMessage = null;
     });
 
     try {
       await _embeddingService.loadModel();
       await _breedService.loadModel();
       await _database.load();
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isReady = true;
-        _statusMessage = 'Ready to identify cows and keep records.';
+        _statusMessage = AppLocalizations.of(context)!.readyToIdentify;
       });
     } catch (error) {
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _initializationError = error.toString();
         _statusMessage = _initializationError;
@@ -232,23 +250,23 @@ class _HerdHomePageState extends State<HerdHomePage> {
       _selectedImage = File(selected.path);
       _result = null;
       _statusMessage = _isReady
-          ? 'Photo added. Tap Identify Cow.'
+          ? AppLocalizations.of(context)!.tapIdentify
           : (_initializationError ??
-                'App setup is not complete yet. Please retry.');
+                AppLocalizations.of(context)!.notReady);
     });
   }
 
   Future<void> _identifyCow() async {
     if (!_isReady || _selectedImage == null) {
       setState(() {
-        _statusMessage = 'Select an image after the model finishes loading.';
+        _statusMessage = AppLocalizations.of(context)!.selectImage;
       });
       return;
     }
 
     setState(() {
       _isBusy = true;
-      _statusMessage = 'Checking cow...';
+      _statusMessage = AppLocalizations.of(context)!.checkingCow;
     });
 
     try {
@@ -260,10 +278,10 @@ class _HerdHomePageState extends State<HerdHomePage> {
       setState(() {
         _result = result;
         _statusMessage = result.isKnown
-            ? 'Cow identified.'
+            ? AppLocalizations.of(context)!.cowIdentified
             : result.hasBorderlineMatch
-            ? 'This looks like a cow you already have — see below.'
-            : 'No matching cow found.';
+            ? AppLocalizations.of(context)!.borderlineMatch
+            : AppLocalizations.of(context)!.noMatchingCow;
       });
 
       if (result.hasBorderlineMatch && mounted) {
@@ -271,7 +289,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       }
     } catch (error) {
       setState(() {
-        _statusMessage = 'Could not identify this cow right now.';
+        _statusMessage = AppLocalizations.of(context)!.couldNotIdentify;
       });
     } finally {
       setState(() {
@@ -291,20 +309,21 @@ class _HerdHomePageState extends State<HerdHomePage> {
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Add this cow'),
+          title: Text(localizations.addThisCow),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               TextField(
                 controller: idController,
-                decoration: const InputDecoration(labelText: 'Cow ID'),
+                decoration: InputDecoration(labelText: localizations.cowId),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: noteController,
-                decoration: const InputDecoration(
-                  labelText: 'Note (optional)',
+                decoration: InputDecoration(
+                  labelText: localizations.optionalNote,
                   hintText: 'e.g. Pregnant',
                 ),
               ),
@@ -313,7 +332,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(localizations.cancel),
             ),
             FilledButton(
               onPressed: () async {
@@ -325,7 +344,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
                 Navigator.of(context).pop();
                 await _prepareRegistration(cowId, note: note);
               },
-              child: const Text('Add cow'),
+              child: Text(localizations.addCow),
             ),
           ],
         );
@@ -340,7 +359,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
     setState(() {
       _isBusy = true;
-      _statusMessage = 'Checking photo before registration...';
+      _statusMessage = AppLocalizations.of(context)!.checkingPhotoBeforeReg;
     });
 
     try {
@@ -370,7 +389,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
         }
         if (action != 'create_new') {
           setState(() {
-            _statusMessage = 'Cancelled.';
+            _statusMessage = AppLocalizations.of(context)!.cancelled;
           });
           return;
         }
@@ -383,9 +402,9 @@ class _HerdHomePageState extends State<HerdHomePage> {
       );
     } catch (error) {
       setState(() {
-        _statusMessage = 'Could not check this photo before registration.';
+        _statusMessage = AppLocalizations.of(context)!.couldNotCheckPhoto;
       });
-      _showSnack('Could not prepare registration');
+      _showSnack(AppLocalizations.of(context)!.couldNotPrepareReg);
     } finally {
       if (mounted) {
         setState(() {
@@ -399,19 +418,20 @@ class _HerdHomePageState extends State<HerdHomePage> {
     return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text('$cowId is already in your herd'),
+          title: Text(localizations.alreadyInHerd(cowId)),
           content: Text(
-            'Add this photo to $cowId?',
+            localizations.addPhotoTo(cowId),
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('No'),
+              child: Text(localizations.no),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Yes, add to $cowId'),
+              child: Text(localizations.yesAddTo(cowId)),
             ),
           ],
         );
@@ -426,13 +446,14 @@ class _HerdHomePageState extends State<HerdHomePage> {
     final String? action = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text('This looks like $cowId'),
+          title: Text(localizations.looksLike(cowId)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              const Text('Add this photo to that cow?'),
+              Text(localizations.addPhotoToThat),
               if (matchedCow?.profileImagePath != null) ...<Widget>[
                 const SizedBox(height: 12),
                 ClipRRect(
@@ -449,11 +470,11 @@ class _HerdHomePageState extends State<HerdHomePage> {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop('dismiss'),
-              child: const Text('No'),
+              child: Text(localizations.no),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop('add_photo'),
-              child: Text('Yes, add to $cowId'),
+              child: Text(localizations.yesAddTo(cowId)),
             ),
           ],
         );
@@ -471,13 +492,14 @@ class _HerdHomePageState extends State<HerdHomePage> {
     return showDialog<String>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text('This looks like ${match.cowId}'),
+          title: Text(localizations.looksLike(match.cowId)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Add this photo to ${match.cowId} instead?'),
+              Text(localizations.addPhotoToThat),
               if (matchedCow?.profileImagePath != null) ...<Widget>[
                 const SizedBox(height: 12),
                 ClipRRect(
@@ -494,15 +516,15 @@ class _HerdHomePageState extends State<HerdHomePage> {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop('cancel'),
-              child: const Text('No'),
+              child: Text(localizations.no),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop('add_to_existing'),
-              child: Text('Yes, add to ${match.cowId}'),
+              child: Text(localizations.yesAddTo(match.cowId)),
             ),
             OutlinedButton(
               onPressed: () => Navigator.of(context).pop('create_new'),
-              child: const Text('Create new cow'),
+              child: Text(localizations.createNewCow),
             ),
           ],
         );
@@ -520,7 +542,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
     setState(() {
       _isBusy = true;
-      _statusMessage = 'Saving photo...';
+      _statusMessage = AppLocalizations.of(context)!.savingPhoto;
     });
 
     try {
@@ -532,19 +554,19 @@ class _HerdHomePageState extends State<HerdHomePage> {
         imagePath: _selectedImage!.path,
       );
       setState(() {
-        _statusMessage = 'Photo added to $cowId.';
+        _statusMessage = AppLocalizations.of(context)!.photoAddedTo(cowId);
         _result = IdentificationResult(
           predictedCowId: cowId,
           similarity: 1,
           isKnown: true,
         );
       });
-      _showSnack('Photo added to $cowId');
+      _showSnack(AppLocalizations.of(context)!.photoAddedTo(cowId));
     } catch (error) {
       setState(() {
-        _statusMessage = 'Could not save this photo.';
+        _statusMessage = AppLocalizations.of(context)!.couldNotSavePhoto;
       });
-      _showSnack('Could not add photo');
+      _showSnack(AppLocalizations.of(context)!.couldNotAddPhoto);
     } finally {
       if (mounted) {
         setState(() {
@@ -565,7 +587,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
     setState(() {
       _isBusy = true;
-      _statusMessage = 'Saving cow details...';
+      _statusMessage = AppLocalizations.of(context)!.savingCowDetails;
     });
 
     try {
@@ -578,19 +600,19 @@ class _HerdHomePageState extends State<HerdHomePage> {
         note: note,
       );
       setState(() {
-        _statusMessage = '$cowId added to your herd.';
+        _statusMessage = AppLocalizations.of(context)!.addedToHerd(cowId);
         _result = const IdentificationResult(
           predictedCowId: 'Registered',
           similarity: 0,
           isKnown: true,
         );
       });
-      _showSnack('$cowId added successfully');
+      _showSnack(AppLocalizations.of(context)!.addedSuccessfully(cowId));
     } catch (error) {
       setState(() {
-        _statusMessage = 'Could not add this cow right now.';
+        _statusMessage = AppLocalizations.of(context)!.couldNotIdentify;
       });
-      _showSnack('Could not add cow');
+      _showSnack(AppLocalizations.of(context)!.failedToRegister);
     } finally {
       setState(() {
         _isBusy = false;
@@ -629,17 +651,18 @@ class _HerdHomePageState extends State<HerdHomePage> {
     final bool? shouldExit = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Exit app'),
-          content: const Text('Do you want to close the app?'),
+          title: Text(localizations.exitApp),
+          content: Text(localizations.exitAppConfirm),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('No'),
+              child: Text(localizations.no),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Yes'),
+              child: Text(localizations.yes),
             ),
           ],
         );
@@ -655,27 +678,83 @@ class _HerdHomePageState extends State<HerdHomePage> {
     showModalBottomSheet<void>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const ListTile(
+              ListTile(
                 title: Text(
-                  'Settings',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  localizations.settings,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
               ListTile(
                 leading: const Icon(Icons.lock_outline),
-                title: const Text('Change PIN'),
+                title: Text(localizations.changePin),
                 onTap: () {
                   Navigator.of(context).pop();
                   _showChangePinDialog();
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.language_outlined),
+                title: Text(localizations.language),
+                trailing: Text(
+                  AppLanguageService.instance.locale.languageCode == 'en' ? 'English' : 'हिन्दी',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _showLanguageDialog();
+                },
+              ),
               const SizedBox(height: 8),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  void _showLanguageDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(localizations.selectLanguage),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                title: const Text('English'),
+                trailing: AppLanguageService.instance.locale.languageCode == 'en'
+                    ? const Icon(Icons.check, color: kFarmPrimary)
+                    : null,
+                onTap: () {
+                  AppLanguageService.instance.changeLanguage('en');
+                  Navigator.of(context).pop();
+                },
+              ),
+              ListTile(
+                title: const Text('हिन्दी'),
+                trailing: AppLanguageService.instance.locale.languageCode == 'hi'
+                    ? const Icon(Icons.check, color: kFarmPrimary)
+                    : null,
+                onTap: () {
+                  AppLanguageService.instance.changeLanguage('hi');
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(localizations.cancel),
+            ),
+          ],
         );
       },
     );
@@ -689,8 +768,9 @@ class _HerdHomePageState extends State<HerdHomePage> {
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Change PIN'),
+          title: Text(localizations.changePin),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -700,8 +780,8 @@ class _HerdHomePageState extends State<HerdHomePage> {
                   keyboardType: TextInputType.number,
                   obscureText: true,
                   maxLength: 4,
-                  decoration: const InputDecoration(
-                    labelText: 'Current PIN',
+                  decoration: InputDecoration(
+                    labelText: localizations.currentPin,
                     counterText: '',
                   ),
                 ),
@@ -711,8 +791,8 @@ class _HerdHomePageState extends State<HerdHomePage> {
                   keyboardType: TextInputType.number,
                   obscureText: true,
                   maxLength: 4,
-                  decoration: const InputDecoration(
-                    labelText: 'New PIN',
+                  decoration: InputDecoration(
+                    labelText: localizations.newPin,
                     counterText: '',
                   ),
                 ),
@@ -722,8 +802,8 @@ class _HerdHomePageState extends State<HerdHomePage> {
                   keyboardType: TextInputType.number,
                   obscureText: true,
                   maxLength: 4,
-                  decoration: const InputDecoration(
-                    labelText: 'Confirm new PIN',
+                  decoration: InputDecoration(
+                    labelText: localizations.confirmNewPin,
                     counterText: '',
                   ),
                 ),
@@ -733,7 +813,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(localizations.cancel),
             ),
             FilledButton(
               onPressed: () async {
@@ -745,11 +825,11 @@ class _HerdHomePageState extends State<HerdHomePage> {
                 if (!RegExp(r'^\d{4}$').hasMatch(currentPin) ||
                     !RegExp(r'^\d{4}$').hasMatch(newPin) ||
                     !RegExp(r'^\d{4}$').hasMatch(confirmPin)) {
-                  _showSnack('PIN must be exactly 4 digits');
+                  _showSnack(localizations.invalidPinLength);
                   return;
                 }
                 if (newPin != confirmPin) {
-                  _showSnack('New PIN does not match');
+                  _showSnack(localizations.pinsDoNotMatch);
                   return;
                 }
 
@@ -757,7 +837,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
                   currentPin,
                 );
                 if (!currentOk) {
-                  _showSnack('Current PIN is incorrect');
+                  _showSnack(localizations.wrongCurrentPin);
                   return;
                 }
 
@@ -766,9 +846,9 @@ class _HerdHomePageState extends State<HerdHomePage> {
                   return;
                 }
                 navigator.pop();
-                _showSnack('PIN changed successfully');
+                _showSnack(localizations.pinChanged);
               },
-              child: const Text('Save'),
+              child: Text(localizations.save),
             ),
           ],
         );
@@ -777,6 +857,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
   }
 
   Widget _buildIdentifyTab(ThemeData theme) {
+    final localizations = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -801,25 +882,25 @@ class _HerdHomePageState extends State<HerdHomePage> {
                     ? null
                     : () => _pickImage(ImageSource.camera),
                 icon: const Icon(Icons.photo_camera_outlined),
-                label: const Text('Capture Image'),
+                label: Text(localizations.captureImage),
               ),
               OutlinedButton.icon(
                 onPressed: _isBusy
                     ? null
                     : () => _pickImage(ImageSource.gallery),
                 icon: const Icon(Icons.photo_library_outlined),
-                label: const Text('Upload Image'),
+                label: Text(localizations.uploadImage),
               ),
               FilledButton.tonalIcon(
                 onPressed: (_isBusy || !_isReady) ? null : _identifyCow,
                 icon: const Icon(Icons.search),
-                label: const Text('Identify Cow'),
+                label: Text(localizations.identifyCow),
               ),
             ],
           ),
           const SizedBox(height: 20),
           Text(
-            'Identification result',
+            localizations.identificationResult,
             style: theme.textTheme.titleMedium?.copyWith(
               color: kFarmAccent,
               fontWeight: FontWeight.w700,
@@ -844,11 +925,11 @@ class _HerdHomePageState extends State<HerdHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'This looks like ${_result!.suggestedCowId}',
+                      localizations.looksLike(_result!.suggestedCowId!),
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 6),
-                    const Text('Add this photo to that cow?'),
+                    Text(localizations.addPhotoToThat),
                     const SizedBox(height: 12),
                     FilledButton.icon(
                       onPressed: (_isBusy || !_isReady)
@@ -858,7 +939,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
                               ),
                       icon: const Icon(Icons.add_a_photo_outlined),
                       label: Text(
-                        'Yes, add to ${_result!.suggestedCowId}',
+                        localizations.yesAddTo(_result!.suggestedCowId!),
                       ),
                     ),
                   ],
@@ -872,7 +953,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
             FilledButton.icon(
               onPressed: (_isBusy || !_isReady) ? null : _showRegisterDialog,
               icon: const Icon(Icons.app_registration),
-              label: const Text('Add this cow'),
+              label: Text(localizations.addThisCow),
             ),
           ],
           if (_isBusy) ...<Widget>[
@@ -885,6 +966,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
   }
 
   Widget _buildMyCowsTab(ThemeData theme) {
+    final localizations = AppLocalizations.of(context)!;
     final String query = _searchController.text.trim().toLowerCase();
     final List<CowRecord> cows = _database
         .getAllCows()
@@ -899,7 +981,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
               controller: _searchController,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                hintText: 'Search your herd',
+                hintText: localizations.searchHint,
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -916,9 +998,9 @@ class _HerdHomePageState extends State<HerdHomePage> {
               ),
             ),
           ),
-          const Expanded(
+          Expanded(
             child: Center(
-              child: Text('No cows yet.\nUse Identify to add your first cow.'),
+              child: Text(localizations.noCowsMessage),
             ),
           ),
         ],
@@ -933,7 +1015,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
             controller: _searchController,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              hintText: 'Search your herd',
+              hintText: localizations.searchHint,
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -968,9 +1050,11 @@ class _HerdHomePageState extends State<HerdHomePage> {
                   ),
                   title: Text(cow.id),
                   subtitle: Text(
-                    'Health: ${cow.healthRecords.length} • '
-                    'Vaccines: ${cow.vaccinations.length} • '
-                    'Notes: ${cow.notes.length}',
+                    localizations.cowSummarySubtitle(
+                      cow.healthRecords.length,
+                      cow.vaccinations.length,
+                      cow.notes.length,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     softWrap: false,
@@ -990,6 +1074,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context)!;
 
     return PopScope(
       canPop: false,
@@ -1001,13 +1086,13 @@ class _HerdHomePageState extends State<HerdHomePage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_currentTab == 0 ? 'Identify Cow' : 'Your herd'),
+          title: Text(_currentTab == 0 ? localizations.identifyCow : localizations.yourHerd),
           actions: <Widget>[
             if (_currentTab == 0)
               IconButton(
                 onPressed: _showSettingsSheet,
                 icon: const Icon(Icons.settings_outlined),
-                tooltip: 'Settings',
+                tooltip: localizations.settings,
               ),
           ],
         ),
@@ -1025,9 +1110,9 @@ class _HerdHomePageState extends State<HerdHomePage> {
               _currentTab = index;
             });
           },
-          destinations: const <NavigationDestination>[
-            NavigationDestination(icon: Icon(Icons.search), label: 'Identify'),
-            NavigationDestination(icon: Icon(Icons.list_alt), label: 'My Cows'),
+          destinations: <NavigationDestination>[
+            NavigationDestination(icon: const Icon(Icons.search), label: localizations.identifyTab),
+            NavigationDestination(icon: const Icon(Icons.list_alt), label: localizations.cowsTab),
           ],
         ),
       ),
@@ -1053,6 +1138,7 @@ class _HeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color accent = isReady ? kFarmPrimary : kFarmAccent;
+    final localizations = AppLocalizations.of(context)!;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1060,12 +1146,12 @@ class _HeaderCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              'Welcome to your cattle notebook',
+              localizations.welcomeNotebook,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Take or upload a photo to identify a cow and keep simple records.',
+            Text(
+              localizations.notebookDescription,
             ),
             const SizedBox(height: 8),
             Container(
@@ -1075,14 +1161,14 @@ class _HeaderCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                'Registered cows: $cowCount',
+                localizations.registeredCowsCount(cowCount),
                 style: TextStyle(color: accent, fontWeight: FontWeight.w700),
               ),
             ),
             if (initializationError != null) ...<Widget>[
               const SizedBox(height: 10),
               Text(
-                'Something went wrong while opening the app.',
+                localizations.initErrorOccurred,
                 style: TextStyle(
                   color: kFarmAccent,
                   fontWeight: FontWeight.w600,
@@ -1092,12 +1178,12 @@ class _HeaderCard extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Try again'),
+                label: Text(localizations.tryAgain),
               ),
             ],
-            if (statusMessage != null) ...<Widget>[
+            if (statusMessage != null || (!isReady && initializationError == null)) ...<Widget>[
               const SizedBox(height: 8),
-              Text(statusMessage!),
+              Text(statusMessage ?? localizations.initializingDb),
             ],
           ],
         ),
@@ -1113,12 +1199,13 @@ class _ImagePreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: SizedBox(
         height: 260,
         child: imageFile == null
-            ? const Center(child: Text('No photo selected'))
+            ? Center(child: Text(localizations.noPhotoSelected))
             : Image.file(imageFile!, fit: BoxFit.cover),
       ),
     );
@@ -1138,11 +1225,12 @@ class _PredictionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     if (result == null) {
-      return const Card(
+      return Card(
         child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('Identify a cow to see the result here.'),
+          padding: const EdgeInsets.all(16),
+          child: Text(localizations.identifyResultPlaceholder),
         ),
       );
     }
@@ -1154,20 +1242,24 @@ class _PredictionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              result!.predictedCowId,
+              result!.predictedCowId == 'Registered'
+                  ? localizations.cowRegistered
+                  : (result!.predictedCowId == 'Unknown Cow'
+                      ? localizations.unknownCow
+                      : result!.predictedCowId),
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
             Text(
-              'Match confidence: ${(result!.similarity * 100).toStringAsFixed(1)}%',
+              localizations.matchConfidence((result!.similarity * 100).toStringAsFixed(1)),
             ),
             const SizedBox(height: 6),
             Text(
               result!.isKnown
-                  ? 'This cow is already in your herd.'
+                  ? localizations.cowAlreadyInHerd
                   : result!.hasBorderlineMatch
-                  ? 'This looks like a cow you already have. See below.'
-                  : 'No matching cow found. You can add this as a new cow.',
+                  ? localizations.borderlineMatch
+                  : localizations.noMatchingCowRegisterHint,
             ),
             if (result!.hasBorderlineMatch &&
                 matchedCow?.profileImagePath != null) ...<Widget>[
