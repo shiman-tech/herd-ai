@@ -34,7 +34,7 @@ class CowDetailPage extends StatefulWidget {
   State<CowDetailPage> createState() => _CowDetailPageState();
 }
 
-class _CowDetailPageState extends State<CowDetailPage> {
+class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateMixin {
   final ImagePicker _picker = ImagePicker();
   late String _cowId;
   bool _isBusy = false;
@@ -1129,23 +1129,35 @@ class _CowDetailPageState extends State<CowDetailPage> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('${record.id} details'),
-        actions: <Widget>[
-          IconButton(
-            onPressed: _showBasicInfoDialog,
-            icon: const Icon(Icons.edit),
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('${record.id} details'),
+          actions: <Widget>[
+            IconButton(
+              onPressed: _showBasicInfoDialog,
+              icon: const Icon(Icons.edit),
+            ),
+            IconButton(
+              onPressed: _confirmDeleteCow,
+              icon: const Icon(Icons.delete_outline),
+            ),
+          ],
+          bottom: const TabBar(
+            tabs: <Widget>[
+              Tab(text: 'Overview'),
+              Tab(text: 'Medical'),
+              Tab(text: 'Gallery & Notes'),
+            ],
           ),
-          IconButton(
-            onPressed: _confirmDeleteCow,
-            icon: const Icon(Icons.delete_outline),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: <Widget>[
+        ),
+        body: TabBarView(
+          children: <Widget>[
+            // Overview Tab
+            ListView(
+              padding: const EdgeInsets.all(16),
+              children: <Widget>[
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -1285,6 +1297,12 @@ class _CowDetailPageState extends State<CowDetailPage> {
               },
             ),
           ),
+        ],
+      ),
+      // Medical Tab
+      ListView(
+        padding: const EdgeInsets.all(16),
+        children: <Widget>[
           _SectionCard(
             title: 'Health Records',
             buttonLabel: 'Add Health Record',
@@ -1373,6 +1391,12 @@ class _CowDetailPageState extends State<CowDetailPage> {
                     }).toList(),
                   ),
           ),
+        ],
+      ),
+      // Gallery & Notes Tab
+      ListView(
+        padding: const EdgeInsets.all(16),
+        children: <Widget>[
           _SectionCard(
             title: 'Notes',
             buttonLabel: 'Add Note',
@@ -1501,6 +1525,9 @@ class _CowDetailPageState extends State<CowDetailPage> {
             ),
           ),
         ],
+      ),
+          ],
+        ),
       ),
     );
   }
