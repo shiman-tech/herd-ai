@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/breed_prediction.dart';
@@ -183,6 +184,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       context: context,
       isScrollControlled: true,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return StatefulBuilder(
           builder:
               (
@@ -201,15 +203,15 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                     children: <Widget>[
                       TextField(
                         controller: diseaseController,
-                        decoration: const InputDecoration(
-                          labelText: 'Disease name',
+                        decoration: InputDecoration(
+                          labelText: localizations.diseaseNameLabel,
                         ),
                       ),
                       const SizedBox(height: 12),
                       Row(
                         children: <Widget>[
                           Expanded(
-                            child: Text('Date: ${_formatDate(selectedDate)}'),
+                            child: Text(localizations.dateLabel2(_formatDate(selectedDate))),
                           ),
                           TextButton(
                             onPressed: () async {
@@ -223,20 +225,20 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                                 setModalState(() => selectedDate = picked);
                               }
                             },
-                            child: const Text('Pick date'),
+                            child: Text(localizations.pickDate),
                           ),
                         ],
                       ),
                       DropdownButtonFormField<String>(
                         initialValue: selectedStatus,
-                        items: const <DropdownMenuItem<String>>[
+                        items: <DropdownMenuItem<String>>[
                           DropdownMenuItem<String>(
                             value: 'Ongoing',
-                            child: Text('Ongoing'),
+                            child: Text(localizations.ongoing),
                           ),
                           DropdownMenuItem<String>(
                             value: 'Recovered',
-                            child: Text('Recovered'),
+                            child: Text(localizations.recovered),
                           ),
                         ],
                         onChanged: (String? value) {
@@ -244,20 +246,20 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                             setModalState(() => selectedStatus = value);
                           }
                         },
-                        decoration: const InputDecoration(labelText: 'Status'),
+                        decoration: InputDecoration(labelText: localizations.status),
                       ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: symptomsController,
-                        decoration: const InputDecoration(
-                          labelText: 'Symptoms (optional)',
+                        decoration: InputDecoration(
+                          labelText: localizations.symptomsOptional,
                         ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: treatmentController,
-                        decoration: const InputDecoration(
-                          labelText: 'Treatment notes (optional)',
+                        decoration: InputDecoration(
+                          labelText: localizations.treatmentNotesOptional,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -295,14 +297,14 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                           navigator.pop();
                           _showSnack(
                             index == null
-                                ? 'Health record added'
-                                : 'Health record updated',
+                                ? localizations.healthRecordAdded
+                                : localizations.healthRecordUpdated,
                           );
                         },
                         child: Text(
                           index == null
-                              ? 'Save health record'
-                              : 'Update health record',
+                              ? localizations.saveHealthRecord
+                              : localizations.updateHealthRecord,
                         ),
                       ),
                     ],
@@ -333,6 +335,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       context: context,
       isScrollControlled: true,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return StatefulBuilder(
           builder:
               (
@@ -351,15 +354,15 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                     children: <Widget>[
                       TextField(
                         controller: vaccineController,
-                        decoration: const InputDecoration(
-                          labelText: 'Vaccine name',
+                        decoration: InputDecoration(
+                          labelText: localizations.vaccineNameLabel,
                         ),
                       ),
                       const SizedBox(height: 12),
                       Row(
                         children: <Widget>[
                           Expanded(
-                            child: Text('Given: ${_formatDate(givenDate)}'),
+                            child: Text(localizations.givenLabel2(_formatDate(givenDate))),
                           ),
                           TextButton(
                             onPressed: () async {
@@ -373,7 +376,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                                 setModalState(() => givenDate = picked);
                               }
                             },
-                            child: const Text('Pick date'),
+                            child: Text(localizations.pickDate),
                           ),
                         ],
                       ),
@@ -382,8 +385,8 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                           Expanded(
                             child: Text(
                               nextDueDate == null
-                                  ? 'Next due: Not set'
-                                  : 'Next due: ${_formatDate(nextDueDate!)}',
+                                  ? localizations.nextDueNotSet
+                                  : localizations.nextDueLabel2(_formatDate(nextDueDate!)),
                             ),
                           ),
                           TextButton(
@@ -398,14 +401,14 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                                 setModalState(() => nextDueDate = picked);
                               }
                             },
-                            child: const Text('Set next due'),
+                            child: Text(localizations.setNextDue),
                           ),
                         ],
                       ),
                       TextField(
                         controller: notesController,
-                        decoration: const InputDecoration(
-                          labelText: 'Notes (optional)',
+                        decoration: InputDecoration(
+                          labelText: localizations.notesOptional,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -442,14 +445,14 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                           navigator.pop();
                           _showSnack(
                             index == null
-                                ? 'Vaccination added'
-                                : 'Vaccination updated',
+                                ? localizations.vaccinationAdded
+                                : localizations.vaccinationUpdated,
                           );
                         },
                         child: Text(
                           index == null
-                              ? 'Save vaccination'
-                              : 'Update vaccination',
+                              ? localizations.saveVaccination
+                              : localizations.updateVaccination,
                         ),
                       ),
                     ],
@@ -472,8 +475,9 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Add a note'),
+          title: Text(localizations.addNoteDialogTitle),
           content: TextField(
             controller: noteController,
             decoration: const InputDecoration(
@@ -484,7 +488,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(localizations.cancel),
             ),
             FilledButton(
               onPressed: () async {
@@ -503,9 +507,9 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                 }
                 setState(() {});
                 navigator.pop();
-                _showSnack(index == null ? 'Note added' : 'Note updated');
+                _showSnack(index == null ? localizations.noteAdded : localizations.noteUpdated);
               },
-              child: const Text('Save'),
+              child: Text(localizations.save),
             ),
           ],
         );
@@ -521,25 +525,26 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     final ImageSource? source = await showModalBottomSheet<ImageSource>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const ListTile(
+              ListTile(
                 title: Text(
-                  'Add photo',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  localizations.addPhoto,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
-                subtitle: Text('Take or choose a clear photo of this cow.'),
+                subtitle: Text(localizations.takeOrChooseClear),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Take photo'),
+                title: Text(localizations.takePhoto),
                 onTap: () => Navigator.of(context).pop(ImageSource.camera),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Choose from gallery'),
+                title: Text(localizations.chooseFromGallery),
                 onTap: () => Navigator.of(context).pop(ImageSource.gallery),
               ),
               const SizedBox(height: 8),
@@ -574,8 +579,9 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text('Add photo to $_cowId?'),
+          title: Text(localizations.addPhotoTo(_cowId)),
           content: SizedBox(
             width: 280,
             child: Column(
@@ -594,22 +600,18 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'This photo will be saved with today\'s date so you can track '
-                  'how this cow looks over time. It will also help identify '
-                  'this cow in the future.',
-                ),
+                Text(localizations.addPhotoConfirm),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(localizations.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Add photo'),
+              child: Text(localizations.addPhoto),
             ),
           ],
         );
@@ -633,10 +635,10 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
         return;
       }
       setState(() {});
-      _showSnack('Photo added');
+      _showSnack(AppLocalizations.of(context)!.photoAdded);
     } catch (error) {
       if (mounted) {
-        _showSnack('Could not add photo');
+        _showSnack(AppLocalizations.of(context)!.couldNotAddPhoto);
       }
     } finally {
       if (mounted) {
@@ -678,27 +680,28 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     final ImageSource? source = await showModalBottomSheet<ImageSource>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const ListTile(
+              ListTile(
                 title: Text(
-                  'Classify breed',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  localizations.classifyBreed,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 subtitle: Text(
-                  'Take or choose a clear full-body photo of this cow.',
+                  localizations.takeOrChooseFullBody,
                 ),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Take photo'),
+                title: Text(localizations.takePhoto),
                 onTap: () => Navigator.of(context).pop(ImageSource.camera),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Choose from gallery'),
+                title: Text(localizations.chooseFromGallery),
                 onTap: () => Navigator.of(context).pop(ImageSource.gallery),
               ),
               const SizedBox(height: 8),
@@ -731,8 +734,9 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Classify this photo?'),
+          title: Text(localizations.classifyThisPhoto),
           content: SizedBox(
             width: 280,
             child: Column(
@@ -748,21 +752,18 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'A clear, well-lit full-body photo gives the best breed '
-                  'prediction.',
-                ),
+                Text(localizations.classifyThisPhotoConfirm),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(localizations.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Classify'),
+              child: Text(localizations.classify),
             ),
           ],
         );
@@ -778,7 +779,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
           .classifyBreed(selectedImage);
       if (predictions.isEmpty) {
         if (mounted) {
-          _showSnack('No breed predictions returned');
+          _showSnack(AppLocalizations.of(context)!.noBreedPredictions);
         }
         return;
       }
@@ -790,11 +791,11 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       );
       if (mounted) {
         setState(() {});
-        _showSnack('Breed classified');
+        _showSnack(AppLocalizations.of(context)!.breedClassified);
       }
     } catch (error) {
       if (mounted) {
-        _showSnack('Could not classify breed');
+        _showSnack(AppLocalizations.of(context)!.couldNotClassify);
       }
     } finally {
       if (mounted) {
@@ -810,7 +811,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     );
     if (mounted) {
       setState(() {});
-      _showSnack('Breed confirmed: $breedName');
+      _showSnack(AppLocalizations.of(context)!.breedConfirmed(breedName));
     }
   }
 
@@ -836,8 +837,9 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     final String? chosen = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Choose breed'),
+          title: Text(localizations.chooseBreed),
           content: SizedBox(
             width: 280,
             child: SingleChildScrollView(
@@ -855,15 +857,15 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                     ),
                   ),
                   const Divider(),
-                  const Text(
-                    'Or type a breed name:',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  Text(
+                    localizations.orTypeBreedName,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: customController,
-                    decoration: const InputDecoration(
-                      hintText: 'e.g. Jersey Cross',
+                    decoration: InputDecoration(
+                      hintText: localizations.customBreedHint,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -874,7 +876,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                         Navigator.of(context).pop(text);
                       }
                     },
-                    child: const Text('Confirm custom breed'),
+                    child: Text(localizations.confirmCustomBreed),
                   ),
                 ],
               ),
@@ -883,7 +885,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(localizations.cancel),
             ),
           ],
         );
@@ -901,7 +903,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     );
     if (mounted) {
       setState(() {});
-      _showSnack('Breed set to Unknown / Mixed');
+      _showSnack(AppLocalizations.of(context)!.breedSetUnknown);
     }
   }
 
@@ -928,19 +930,18 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Replace this photo?'),
-          content: const Text(
-            'The old photo will be removed and replaced with the new one.',
-          ),
+          title: Text(localizations.replacePhoto),
+          content: Text(localizations.replacePhotoConfirm),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(localizations.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Replace'),
+              child: Text(localizations.replace),
             ),
           ],
         );
@@ -965,10 +966,10 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
         return;
       }
       setState(() {});
-      _showSnack('Photo updated');
+      _showSnack(AppLocalizations.of(context)!.photoUpdated);
     } catch (error) {
       if (mounted) {
-        _showSnack('Could not update photo');
+        _showSnack(AppLocalizations.of(context)!.couldNotUpdatePhoto);
       }
     } finally {
       if (mounted) {
@@ -981,17 +982,18 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Delete health record'),
-          content: const Text('Delete this health record?'),
+          title: Text(localizations.deleteHealthRecord),
+          content: Text(localizations.deleteHealthRecordConfirm),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(localizations.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: Text(localizations.delete),
             ),
           ],
         );
@@ -1005,24 +1007,25 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       return;
     }
     setState(() {});
-    _showSnack('Health record deleted');
+    _showSnack(AppLocalizations.of(context)!.healthRecordDeleted);
   }
 
   Future<void> _confirmDeleteVaccinationRecord(int index) async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Delete vaccination'),
-          content: const Text('Delete this vaccination record?'),
+          title: Text(localizations.deleteVaccination),
+          content: Text(localizations.deleteVaccinationConfirm),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(localizations.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: Text(localizations.delete),
             ),
           ],
         );
@@ -1036,24 +1039,25 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       return;
     }
     setState(() {});
-    _showSnack('Vaccination deleted');
+    _showSnack(AppLocalizations.of(context)!.vaccinationDeleted);
   }
 
   Future<void> _confirmDeleteNote(int index) async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Delete note'),
-          content: const Text('Delete this note?'),
+          title: Text(localizations.deleteNote),
+          content: Text(localizations.deleteNoteConfirm),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(localizations.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: Text(localizations.delete),
             ),
           ],
         );
@@ -1067,26 +1071,25 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       return;
     }
     setState(() {});
-    _showSnack('Note deleted');
+    _showSnack(AppLocalizations.of(context)!.noteDeleted);
   }
 
   Future<void> _confirmDeleteImage(int index) async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Delete photo'),
-          content: const Text(
-            'Delete this photo? It will also be removed from cow identification.',
-          ),
+          title: Text(localizations.deletePhoto),
+          content: Text(localizations.deletePhotoConfirm),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(localizations.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: Text(localizations.delete),
             ),
           ],
         );
@@ -1100,7 +1103,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       return;
     }
     setState(() {});
-    _showSnack('Photo deleted');
+    _showSnack(AppLocalizations.of(context)!.photoDeleted);
   }
 
   Future<void> _confirmDeleteCow() async {
@@ -1112,17 +1115,18 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     final bool? shouldDelete = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Delete Cow Record'),
-          content: Text('Delete ${record.id} and all related records?'),
+          title: Text(localizations.deleteCowRecord),
+          content: Text(localizations.deleteCowRecordConfirm(record.id)),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(localizations.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: Text(localizations.delete),
             ),
           ],
         );
@@ -1137,16 +1141,17 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     if (!mounted) {
       return;
     }
-    Navigator.of(context).pop('Cow record deleted');
+    Navigator.of(context).pop(AppLocalizations.of(context)!.cowRecordDeleted);
   }
 
   @override
   Widget build(BuildContext context) {
     final CowRecord? record = _record;
+    final localizations = AppLocalizations.of(context)!;
     if (record == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Cow details')),
-        body: const Center(child: Text('Cow record not found.')),
+        appBar: AppBar(title: Text(localizations.cowDetails)),
+        body: Center(child: Text(localizations.cowNotFound)),
       );
     }
 
@@ -1154,7 +1159,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('${record.id} details'),
+          title: Text(localizations.detailsHeader(record.id)),
           actions: <Widget>[
             IconButton(
               onPressed: _showBasicInfoDialog,
@@ -1165,11 +1170,11 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
               icon: const Icon(Icons.delete_outline),
             ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: <Widget>[
-              Tab(text: 'Overview'),
-              Tab(text: 'Medical'),
-              Tab(text: 'Gallery & Notes'),
+              Tab(text: localizations.tabOverview),
+              Tab(text: localizations.tabMedical),
+              Tab(text: localizations.tabGalleryNotes),
             ],
           ),
         ),
@@ -1186,15 +1191,15 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    'Basic info',
+                    localizations.basicInfo,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: kFarmAccent,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Text('Cow ID: ${record.id}'),
-                  Text('Registered: ${_formatDate(record.registrationDate)}'),
+                  Text(localizations.cowIdLabel(record.id)),
+                  Text(localizations.registeredLabel(_formatDate(record.registrationDate))),
                   const SizedBox(height: 10),
                   SizedBox(
                     height: 120,
@@ -1217,17 +1222,17 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
             ),
           ),
           _SectionCard(
-            title: 'Breed Classification',
+            title: localizations.breedClassification,
             buttonLabel: record.displayBreed == null
-                ? 'Classify Breed'
-                : 'Re-classify',
+                ? localizations.classifyBreed
+                : localizations.reClassify,
             onAdd: _classifyBreed,
             child: Builder(
               builder: (BuildContext context) {
                 if (record.displayBreed == null &&
                     record.breedAlternativesJson == null) {
-                  return const Text(
-                    'No breed classification yet. Take a full-body photo.',
+                  return Text(
+                    localizations.noBreedClassificationYet,
                   );
                 }
 
@@ -1240,7 +1245,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        'Confirmed Breed: ${record.confirmedBreed}',
+                        localizations.confirmedBreed(record.confirmedBreed ?? ''),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1260,9 +1265,9 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const Text(
-                        'Low confidence — try a clearer full-body photo.',
-                        style: TextStyle(
+                      Text(
+                        localizations.lowConfidenceWarning,
+                        style: const TextStyle(
                           color: Colors.orange,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1274,11 +1279,11 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                         children: <Widget>[
                           OutlinedButton(
                             onPressed: _chooseDifferentBreed,
-                            child: const Text('Set Manually'),
+                            child: Text(localizations.setManually),
                           ),
                           OutlinedButton(
                             onPressed: _setUnknownBreed,
-                            child: const Text('Unknown / Mixed'),
+                            child: Text(localizations.unknownMixed),
                           ),
                         ],
                       ),
@@ -1289,7 +1294,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const Text('Likely breeds (visual estimate):'),
+                    Text(localizations.likelyBreedsVisual),
                     const SizedBox(height: 8),
                     ...alternatives.take(3).map((BreedPrediction p) {
                       final int percent = (p.confidence * 100).round();
@@ -1304,15 +1309,15 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                           FilledButton(
                             onPressed: () =>
                                 _confirmBreed(alternatives.first.name),
-                            child: Text('Confirm ${alternatives.first.name}'),
+                            child: Text(localizations.confirmBreed(alternatives.first.name)),
                           ),
                         OutlinedButton(
                           onPressed: _chooseDifferentBreed,
-                          child: const Text('Choose different'),
+                          child: Text(localizations.chooseDifferent),
                         ),
                         OutlinedButton(
                           onPressed: _setUnknownBreed,
-                          child: const Text('Unknown / Mixed'),
+                          child: Text(localizations.unknownMixed),
                         ),
                       ],
                     ),
@@ -1328,24 +1333,29 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
         padding: const EdgeInsets.all(16),
         children: <Widget>[
           _SectionCard(
-            title: 'Health Records',
-            buttonLabel: 'Add Health Record',
+            title: localizations.healthRecords,
+            buttonLabel: localizations.addHealthRecord,
             onAdd: _addHealthRecord,
             child: record.healthRecords.isEmpty
-                ? const Text('No health records yet.')
+                ? Text(localizations.noHealthRecords)
                 : Column(
                     children: record.healthRecords.asMap().entries.map((
                       MapEntry<int, HealthRecord> entry,
                     ) {
                       final int index = entry.key;
                       final HealthRecord item = entry.value;
+                      final String statusLabel = item.status == 'Ongoing'
+                          ? localizations.ongoing
+                          : (item.status == 'Recovered'
+                              ? localizations.recovered
+                              : item.status);
                       return ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.medical_services_outlined),
                         title: Text(item.diseaseName),
                         subtitle: Text(
-                          '${item.status} • ${_formatDate(item.date)}\n'
-                          '${item.symptoms.isEmpty ? 'No symptoms noted' : item.symptoms}',
+                          '$statusLabel • ${_formatDate(item.date)}\n'
+                          '${item.symptoms.isEmpty ? localizations.noSymptomsNoted : item.symptoms}',
                         ),
                         trailing: PopupMenuButton<String>(
                           icon: const Icon(Icons.more_vert),
@@ -1356,14 +1366,14 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                               _confirmDeleteHealthRecord(index);
                             }
                           },
-                          itemBuilder: (_) => const <PopupMenuEntry<String>>[
+                          itemBuilder: (_) => <PopupMenuEntry<String>>[
                             PopupMenuItem<String>(
                               value: 'edit',
-                              child: Text('Edit'),
+                              child: Text(localizations.edit),
                             ),
                             PopupMenuItem<String>(
                               value: 'delete',
-                              child: Text('Delete'),
+                              child: Text(localizations.delete),
                             ),
                           ],
                         ),
@@ -1372,11 +1382,11 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                   ),
           ),
           _SectionCard(
-            title: 'Vaccination Records',
-            buttonLabel: 'Add Vaccination',
+            title: localizations.vaccinationRecords,
+            buttonLabel: localizations.addVaccination,
             onAdd: _addVaccinationRecord,
             child: record.vaccinations.isEmpty
-                ? const Text('No vaccination records yet.')
+                ? Text(localizations.noVaccinationRecords)
                 : Column(
                     children: record.vaccinations.asMap().entries.map((
                       MapEntry<int, VaccinationRecord> entry,
@@ -1388,8 +1398,8 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                         leading: const Icon(Icons.vaccines_outlined),
                         title: Text(item.vaccineName),
                         subtitle: Text(
-                          'Given: ${_formatDate(item.dateGiven)}'
-                          '${item.nextDueDate == null ? '' : '\nNext due: ${_formatDate(item.nextDueDate!)}'}',
+                          '${localizations.givenLabel2(_formatDate(item.dateGiven))}'
+                          '${item.nextDueDate == null ? '' : '\n${localizations.nextDueLabel2(_formatDate(item.nextDueDate!))}'}',
                         ),
                         trailing: PopupMenuButton<String>(
                           icon: const Icon(Icons.more_vert),
@@ -1400,14 +1410,14 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                               _confirmDeleteVaccinationRecord(index);
                             }
                           },
-                          itemBuilder: (_) => const <PopupMenuEntry<String>>[
+                          itemBuilder: (_) => <PopupMenuEntry<String>>[
                             PopupMenuItem<String>(
                               value: 'edit',
-                              child: Text('Edit'),
+                              child: Text(localizations.edit),
                             ),
                             PopupMenuItem<String>(
                               value: 'delete',
-                              child: Text('Delete'),
+                              child: Text(localizations.delete),
                             ),
                           ],
                         ),
@@ -1422,11 +1432,11 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
         padding: const EdgeInsets.all(16),
         children: <Widget>[
           _SectionCard(
-            title: 'Notes',
-            buttonLabel: 'Add Note',
+            title: localizations.notes,
+            buttonLabel: localizations.addNote,
             onAdd: _addNote,
             child: record.notes.isEmpty
-                ? const Text('No notes added.')
+                ? Text(localizations.noNotes)
                 : Column(
                     children: record.notes.asMap().entries.map((
                       MapEntry<int, String> entry,
@@ -1446,14 +1456,14 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                               _confirmDeleteNote(index);
                             }
                           },
-                          itemBuilder: (_) => const <PopupMenuEntry<String>>[
+                          itemBuilder: (_) => <PopupMenuEntry<String>>[
                             PopupMenuItem<String>(
                               value: 'edit',
-                              child: Text('Edit'),
+                              child: Text(localizations.edit),
                             ),
                             PopupMenuItem<String>(
                               value: 'delete',
-                              child: Text('Delete'),
+                              child: Text(localizations.delete),
                             ),
                           ],
                         ),
@@ -1462,15 +1472,15 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                   ),
           ),
           _SectionCard(
-            title: 'Photos',
-            buttonLabel: 'Add Photo',
+            title: localizations.photos,
+            buttonLabel: localizations.addPhoto,
             onAdd: _addImageToHistory,
             buttonEnabled: !_isBusy,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Text(
-                  'Track how this cow looks over time. Newest photos appear first.',
+                Text(
+                  localizations.photoDesc,
                 ),
                 if (_isBusy) ...<Widget>[
                   const SizedBox(height: 10),
@@ -1478,7 +1488,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                 ],
                 const SizedBox(height: 10),
                 if (record.images.isEmpty && !_isBusy)
-                  const Text('No photos yet.')
+                  Text(localizations.noPhotos)
                 else if (record.images.isNotEmpty)
                   SizedBox(
                     height: 132,
@@ -1522,14 +1532,14 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                                       }
                                     },
                                     itemBuilder: (_) =>
-                                        const <PopupMenuEntry<String>>[
+                                        <PopupMenuEntry<String>>[
                                           PopupMenuItem<String>(
                                             value: 'edit',
-                                            child: Text('Replace'),
+                                            child: Text(localizations.replace),
                                           ),
                                           PopupMenuItem<String>(
                                             value: 'delete',
-                                            child: Text('Delete'),
+                                            child: Text(localizations.delete),
                                           ),
                                         ],
                                   ),
