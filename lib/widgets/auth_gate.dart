@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 import '../services/app_auth_service.dart';
 import '../services/app_lock_controller.dart';
@@ -23,7 +24,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
   final AppAuthService _authService = AppAuthService();
 
   _AuthMode _mode = _AuthMode.loading;
-  String _message = 'Preparing secure access...';
+  String _messageKey = 'preparingSecureAccess';
   String _pinEntry = '';
   String _firstPin = '';
   bool _confirmingPin = false;
@@ -85,7 +86,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
     if (!hasPin) {
       setState(() {
         _mode = _AuthMode.createPin;
-        _message = 'Create a 4-digit PIN';
+        _messageKey = 'createPin';
       });
       return;
     }
@@ -106,7 +107,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
 
     setState(() {
       _mode = _AuthMode.enterPin;
-      _message = 'Enter your PIN';
+      _messageKey = 'enterPin';
     });
   }
 
@@ -129,7 +130,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
 
     setState(() {
       _mode = _AuthMode.loading;
-      _message = 'Unlock your app';
+      _messageKey = 'unlockApp';
       _pinEntry = '';
     });
 
@@ -148,7 +149,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
     }
     setState(() {
       _mode = _AuthMode.enterPin;
-      _message = 'Enter your PIN';
+      _messageKey = 'enterPin';
     });
   }
 
@@ -174,7 +175,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
           _firstPin = pin;
           _confirmingPin = true;
           _pinEntry = '';
-          _message = 'Confirm your PIN';
+          _messageKey = 'confirmPin';
         });
         return;
       }
@@ -184,9 +185,9 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
           _pinEntry = '';
           _firstPin = '';
           _confirmingPin = false;
-          _message = 'PIN did not match. Try again';
+          _messageKey = 'pinDidNotMatchTryAgain';
         });
-        _showSnack('PIN did not match');
+        _showSnack(AppLocalizations.of(context)!.pinDidNotMatch);
         return;
       }
 
@@ -199,7 +200,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
         _pinEntry = '';
         _lastUnlockAt = DateTime.now();
       });
-      _showSnack('PIN created');
+      _showSnack(AppLocalizations.of(context)!.pinCreated);
       return;
     }
 
@@ -214,13 +215,13 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
           _pinEntry = '';
           _lastUnlockAt = DateTime.now();
         });
-        _showSnack('Unlocked');
+        _showSnack(AppLocalizations.of(context)!.unlocked);
       } else {
         setState(() {
           _pinEntry = '';
-          _message = 'Wrong PIN. Try again';
+          _messageKey = 'wrongPinTryAgain';
         });
-        _showSnack('Wrong PIN');
+        _showSnack(AppLocalizations.of(context)!.wrongPin);
       }
     }
   }
@@ -266,9 +267,9 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
         _mode = _AuthMode.unlocked;
         _lastUnlockAt = DateTime.now();
       });
-      _showSnack('Unlocked');
+      _showSnack(AppLocalizations.of(context)!.unlocked);
     } else {
-      _showSnack('Use PIN to unlock');
+      _showSnack(AppLocalizations.of(context)!.usePinToUnlock);
     }
   }
 
@@ -276,6 +277,34 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     if (_mode == _AuthMode.unlocked) {
       return widget.child;
+    }
+
+    final localizations = AppLocalizations.of(context)!;
+    final String message;
+    switch (_messageKey) {
+      case 'preparingSecureAccess':
+        message = localizations.preparingSecureAccess;
+        break;
+      case 'createPin':
+        message = localizations.createPin;
+        break;
+      case 'confirmPin':
+        message = localizations.confirmPin;
+        break;
+      case 'pinDidNotMatchTryAgain':
+        message = localizations.pinDidNotMatchTryAgain;
+        break;
+      case 'enterPin':
+        message = localizations.enterPin;
+        break;
+      case 'wrongPinTryAgain':
+        message = localizations.wrongPinTryAgain;
+        break;
+      case 'unlockApp':
+        message = localizations.unlockApp;
+        break;
+      default:
+        message = _messageKey;
     }
 
     return Scaffold(
@@ -288,7 +317,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Text(
-                  'Herd AI',
+                  localizations.appName,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: kFarmPrimary,
                     fontWeight: FontWeight.w800,
@@ -297,7 +326,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Your cattle notebook',
+                  localizations.appSubtitle,
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: kFarmAccent),
@@ -309,9 +338,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
                     child: Column(
                       children: <Widget>[
                         Text(
-                          _mode == _AuthMode.loading
-                              ? 'Unlock your app'
-                              : _message,
+                          message,
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
@@ -329,7 +356,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
                             OutlinedButton.icon(
                               onPressed: _retryBiometric,
                               icon: const Icon(Icons.fingerprint),
-                              label: const Text('Try fingerprint/face'),
+                              label: Text(localizations.tryFingerprintFace),
                             ),
                             const SizedBox(height: 8),
                           ],
