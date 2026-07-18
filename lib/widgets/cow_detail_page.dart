@@ -89,6 +89,27 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     );
   }
 
+  void _showFullScreenImage(String imagePath) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          return Scaffold(
+            backgroundColor: Colors.black,
+            appBar: AppBar(
+              backgroundColor: Colors.black,
+              iconTheme: const IconThemeData(color: Colors.white),
+            ),
+            body: Center(
+              child: InteractiveViewer(
+                child: Image.file(File(imagePath)),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/'
         '${date.month.toString().padLeft(2, '0')}/${date.year}';
@@ -1182,9 +1203,12 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                       borderRadius: BorderRadius.circular(10),
                       child: record.profileImagePath == null
                           ? _imageOrPlaceholder(null, size: 120)
-                          : _imageOrPlaceholder(
-                              record.profileImagePath,
-                              size: 120,
+                          : GestureDetector(
+                              onTap: () => _showFullScreenImage(record.profileImagePath!),
+                              child: _imageOrPlaceholder(
+                                record.profileImagePath,
+                                size: 120,
+                              ),
                             ),
                     ),
                   ),
@@ -1471,11 +1495,14 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                           children: <Widget>[
                             Stack(
                               children: <Widget>[
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: _imageOrPlaceholder(
-                                    image.path,
-                                    size: 100,
+                                GestureDetector(
+                                  onTap: () => _showFullScreenImage(image.path),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: _imageOrPlaceholder(
+                                      image.path,
+                                      size: 100,
+                                    ),
                                   ),
                                 ),
                                 Positioned(
