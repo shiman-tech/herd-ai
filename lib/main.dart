@@ -145,6 +145,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
   String? _initializationError;
   String? _statusMessage;
   IdentificationResult? _result;
+  bool _ignoreSimilarWarning = false;
 
   Widget _cowAvatar(String? imagePath) {
     if (imagePath == null || !File(imagePath).existsSync()) {
@@ -249,6 +250,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
     setState(() {
       _selectedImage = File(selected.path);
       _result = null;
+      _ignoreSimilarWarning = false;
       _statusMessage = _isReady
           ? AppLocalizations.of(context)!.tapIdentify
           : (_initializationError ??
@@ -375,23 +377,26 @@ class _HerdHomePageState extends State<HerdHomePage> {
         return;
       }
 
-      final SimilarityMatch? similarMatch = _database.findBestSimilarCow(
-        embedding,
-      );
-      if (similarMatch != null) {
-        final String? action = await _showSimilarCowDialog(similarMatch);
-        if (action == 'add_to_existing') {
-          await _addPhotoToExistingCow(
-            similarMatch.cowId,
-            embedding: embedding,
-          );
-          return;
-        }
-        if (action != 'create_new') {
-          setState(() {
-            _statusMessage = AppLocalizations.of(context)!.cancelled;
-          });
-          return;
+      if (!_ignoreSimilarWarning) {
+        final SimilarityMatch? similarMatch = _database.findBestSimilarCow(
+          embedding,
+        );
+        if (similarMatch != null) {
+          final String? action = await _showSimilarCowDialog(similarMatch);
+          if (action == 'add_to_existing') {
+            await _addPhotoToExistingCow(
+              similarMatch.cowId,
+              embedding: embedding,
+            );
+            return;
+          }
+          if (action != 'create_new') {
+            _ignoreSimilarWarning = true;
+            setState(() {
+              _statusMessage = AppLocalizations.of(context)!.cancelled;
+            });
+            return;
+          }
         }
       }
 
