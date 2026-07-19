@@ -143,7 +143,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
   bool _isBusy = false;
   bool _isReady = false;
   String? _initializationError;
-  String? _statusMessage;
+  String? Function(BuildContext)? _statusResolver;
   IdentificationResult? _result;
   bool _ignoreSimilarWarning = false;
 
@@ -190,7 +190,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       _isBusy = true;
       _isReady = false;
       _initializationError = null;
-      _statusMessage = null;
+      _statusResolver = null;
     });
 
     try {
@@ -202,7 +202,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       }
       setState(() {
         _isReady = true;
-        _statusMessage = AppLocalizations.of(context)!.readyToIdentify;
+        _statusResolver = (context) => AppLocalizations.of(context)!.readyToIdentify;
       });
     } catch (error) {
       if (!mounted) {
@@ -210,7 +210,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       }
       setState(() {
         _initializationError = error.toString();
-        _statusMessage = _initializationError;
+        _statusResolver = (context) => _initializationError;
       });
     } finally {
       if (mounted) {
@@ -251,7 +251,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       _selectedImage = File(selected.path);
       _result = null;
       _ignoreSimilarWarning = false;
-      _statusMessage = _isReady
+      _statusResolver = (context) => _isReady
           ? AppLocalizations.of(context)!.tapIdentify
           : (_initializationError ??
                 AppLocalizations.of(context)!.notReady);
@@ -261,14 +261,14 @@ class _HerdHomePageState extends State<HerdHomePage> {
   Future<void> _identifyCow() async {
     if (!_isReady || _selectedImage == null) {
       setState(() {
-        _statusMessage = AppLocalizations.of(context)!.selectImage;
+        _statusResolver = (context) => AppLocalizations.of(context)!.selectImage;
       });
       return;
     }
 
     setState(() {
       _isBusy = true;
-      _statusMessage = AppLocalizations.of(context)!.checkingCow;
+      _statusResolver = (context) => AppLocalizations.of(context)!.checkingCow;
     });
 
     try {
@@ -279,11 +279,15 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
       setState(() {
         _result = result;
-        _statusMessage = result.isKnown
-            ? AppLocalizations.of(context)!.cowIdentified
-            : result.hasBorderlineMatch
-            ? AppLocalizations.of(context)!.borderlineMatch
-            : AppLocalizations.of(context)!.noMatchingCow;
+        _statusResolver = (context) {
+          if (result.isKnown) {
+            return AppLocalizations.of(context)!.cowIdentified;
+          } else if (result.hasBorderlineMatch) {
+            return AppLocalizations.of(context)!.borderlineMatch;
+          } else {
+            return AppLocalizations.of(context)!.noMatchingCow;
+          }
+        };
       });
 
       if (result.hasBorderlineMatch && mounted) {
@@ -291,7 +295,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       }
     } catch (error) {
       setState(() {
-        _statusMessage = AppLocalizations.of(context)!.couldNotIdentify;
+        _statusResolver = (context) => AppLocalizations.of(context)!.couldNotIdentify;
       });
     } finally {
       setState(() {
@@ -361,7 +365,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
     setState(() {
       _isBusy = true;
-      _statusMessage = AppLocalizations.of(context)!.checkingPhotoBeforeReg;
+      _statusResolver = (context) => AppLocalizations.of(context)!.checkingPhotoBeforeReg;
     });
 
     try {
@@ -393,7 +397,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
           if (action != 'create_new') {
             _ignoreSimilarWarning = true;
             setState(() {
-              _statusMessage = AppLocalizations.of(context)!.cancelled;
+              _statusResolver = (context) => AppLocalizations.of(context)!.cancelled;
             });
             return;
           }
@@ -407,7 +411,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       );
     } catch (error) {
       setState(() {
-        _statusMessage = AppLocalizations.of(context)!.couldNotCheckPhoto;
+        _statusResolver = (context) => AppLocalizations.of(context)!.couldNotCheckPhoto;
       });
       _showSnack(AppLocalizations.of(context)!.couldNotPrepareReg);
     } finally {
@@ -549,7 +553,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
     setState(() {
       _isBusy = true;
-      _statusMessage = AppLocalizations.of(context)!.savingPhoto;
+      _statusResolver = (context) => AppLocalizations.of(context)!.savingPhoto;
     });
 
     try {
@@ -561,7 +565,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
         imagePath: _selectedImage!.path,
       );
       setState(() {
-        _statusMessage = AppLocalizations.of(context)!.photoAddedTo(cowId);
+        _statusResolver = (context) => AppLocalizations.of(context)!.photoAddedTo(cowId);
         _result = IdentificationResult(
           predictedCowId: cowId,
           similarity: 1,
@@ -571,7 +575,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       _showSnack(AppLocalizations.of(context)!.photoAddedTo(cowId));
     } catch (error) {
       setState(() {
-        _statusMessage = AppLocalizations.of(context)!.couldNotSavePhoto;
+        _statusResolver = (context) => AppLocalizations.of(context)!.couldNotSavePhoto;
       });
       _showSnack(AppLocalizations.of(context)!.couldNotAddPhoto);
     } finally {
@@ -594,7 +598,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
     setState(() {
       _isBusy = true;
-      _statusMessage = AppLocalizations.of(context)!.savingCowDetails;
+      _statusResolver = (context) => AppLocalizations.of(context)!.savingCowDetails;
     });
 
     try {
@@ -607,7 +611,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
         note: note,
       );
       setState(() {
-        _statusMessage = AppLocalizations.of(context)!.addedToHerd(cowId);
+        _statusResolver = (context) => AppLocalizations.of(context)!.addedToHerd(cowId);
         _result = const IdentificationResult(
           predictedCowId: 'Registered',
           similarity: 0,
@@ -617,7 +621,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       _showSnack(AppLocalizations.of(context)!.addedSuccessfully(cowId));
     } catch (error) {
       setState(() {
-        _statusMessage = AppLocalizations.of(context)!.couldNotIdentify;
+        _statusResolver = (context) => AppLocalizations.of(context)!.couldNotIdentify;
       });
       _showSnack(AppLocalizations.of(context)!.failedToRegister);
     } finally {
@@ -708,7 +712,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
                 leading: const Icon(Icons.language_outlined),
                 title: Text(localizations.language),
                 trailing: Text(
-                  AppLanguageService.instance.locale.languageCode == 'en' ? 'English' : 'हिन्दी',
+                  _localeDisplayName(AppLanguageService.instance.locale.languageCode),
                   style: const TextStyle(color: Colors.grey),
                 ),
                 onTap: () {
@@ -724,37 +728,62 @@ class _HerdHomePageState extends State<HerdHomePage> {
     );
   }
 
+  String _localeDisplayName(String code) {
+    switch (code) {
+      case 'en':
+        return 'English';
+      case 'hi':
+        return 'हिन्दी (Hindi)';
+      case 'bn':
+        return 'বাংলা (Bengali)';
+      case 'gu':
+        return 'ગુજરાતી (Gujarati)';
+      case 'kn':
+        return 'ಕನ್ನಡ (Kannada)';
+      case 'mr':
+        return 'मराठी (Marathi)';
+      case 'or':
+        return 'ଓଡ଼ିଆ (Odia)';
+      case 'ta':
+        return 'தமிழ் (Tamil)';
+      case 'te':
+        return 'తెలుగు (Telugu)';
+      case 'ur':
+        return 'اردو (Urdu)';
+      default:
+        return code;
+    }
+  }
+
   void _showLanguageDialog() {
     showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         final localizations = AppLocalizations.of(context)!;
+        final currentLanguageCode = AppLanguageService.instance.locale.languageCode;
         return AlertDialog(
           title: Text(localizations.selectLanguage),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              ListTile(
-                title: const Text('English'),
-                trailing: AppLanguageService.instance.locale.languageCode == 'en'
-                    ? const Icon(Icons.check, color: kFarmPrimary)
-                    : null,
-                onTap: () {
-                  AppLanguageService.instance.changeLanguage('en');
-                  Navigator.of(context).pop();
-                },
-              ),
-              ListTile(
-                title: const Text('हिन्दी'),
-                trailing: AppLanguageService.instance.locale.languageCode == 'hi'
-                    ? const Icon(Icons.check, color: kFarmPrimary)
-                    : null,
-                onTap: () {
-                  AppLanguageService.instance.changeLanguage('hi');
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: AppLocalizations.supportedLocales.length,
+              itemBuilder: (BuildContext context, int index) {
+                final locale = AppLocalizations.supportedLocales[index];
+                final code = locale.languageCode;
+                final displayName = _localeDisplayName(code);
+                return ListTile(
+                  title: Text(displayName),
+                  trailing: currentLanguageCode == code
+                      ? const Icon(Icons.check, color: kFarmPrimary)
+                      : null,
+                  onTap: () {
+                    AppLanguageService.instance.changeLanguage(code);
+                    Navigator.of(context).pop();
+                  },
+                );
+              },
+            ),
           ),
           actions: <Widget>[
             TextButton(
@@ -871,7 +900,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           _HeaderCard(
-            statusMessage: _statusMessage,
+            statusMessage: _statusResolver?.call(context),
             cowCount: _database.totalCows,
             isReady: _isReady,
             initializationError: _initializationError,
