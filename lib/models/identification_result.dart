@@ -19,5 +19,5 @@ class IdentificationResult {
       suggestedCowId != null &&
       similarity >= IdentificationResult.borderlineThreshold;
 
-  static const double borderlineThreshold = 0.55;
+  static const double borderlineThreshold = 0.70;
 }
