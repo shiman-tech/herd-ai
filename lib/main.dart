@@ -488,6 +488,8 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
     if (action == 'add_photo' && mounted) {
       await _addPhotoToExistingCow(cowId);
+    } else {
+      _ignoreSimilarWarning = true;
     }
   }
 
