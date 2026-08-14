@@ -23,11 +23,26 @@ class AppAuthService {
   }
 
   Future<void> savePin(String pin) async {
-    await _secureStorage.write(key: _pinKey, value: _hashPin(pin));
+    try {
+      await _secureStorage.write(key: _pinKey, value: _hashPin(pin));
+    } catch (_) {
+      try {
+        await _secureStorage.delete(key: _pinKey);
+        await _secureStorage.write(key: _pinKey, value: _hashPin(pin));
+      } catch (_) {}
+    }
   }
 
   Future<String?> getPin() async {
-    return _secureStorage.read(key: _pinKey);
+    try {
+      return await _secureStorage.read(key: _pinKey);
+    } catch (_) {
+      // Handle key store corruption/re-installation cipher mismatch
+      try {
+        await _secureStorage.delete(key: _pinKey);
+      } catch (_) {}
+      return null;
+    }
   }
 
   Future<bool> hasPin() async {
