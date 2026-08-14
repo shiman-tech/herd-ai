@@ -1,0 +1,32 @@
+{
+  "device": {
+    "manufacturer": "samsung",
+    "model": "SM-M325F",
+    "androidVersion": "13",
+    "cpuAbi": "arm64-v8a",
+    "totalRamMb": 3643,
+    "availableRamMb": 1346
+  },
+  "embeddingModel": {
+    "model": "MobileNetV2",
+    "tflite_size_mb": 9.08,
+    "load_time_ms": 72,
+    "additional_memory_mb": 29.23,
+    "peak_memory_mb": 151.83,
+    "avg_inference_ms": 462.31,
+    "min_inference_ms": 344.58,
+    "max_inference_ms": 544.81,
+    "std_dev_ms": 51.78
+  },
+  "breedModel": {
+    "model": "EfficientNet-B0",
+    "tflite_size_mb": 16.57,
+    "load_time_ms": 36,
+    "additional_memory_mb": 24.38,
+    "peak_memory_mb": 179.09,
+    "avg_inference_ms": 593.86,
+    "min_inference_ms": 498.17,
+    "max_inference_ms": 626.03,
+    "std_dev_ms": 28.4
+  }
+}
