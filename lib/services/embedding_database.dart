@@ -518,6 +518,7 @@ class EmbeddingDatabase {
     required List<double> embedding,
     required String imagePath,
     DateTime? uploadedAt,
+    bool isIdentity = true,
   }) async {
     final CowRecord? record = _recordsByCow[cowId];
     if (record == null || imagePath.isEmpty) {
@@ -545,20 +546,22 @@ class EmbeddingDatabase {
       whereArgs: <Object?>[cowId],
     );
 
-    final int embeddingId = await db.insert('embeddings', <String, Object?>{
-      'cow_id': cowId,
-      'vector': jsonEncode(normalized),
-      'source_image_path': savedPath,
-      'image_id': imageId,
-    });
-    record.embeddings.add(
-      EmbeddingReference(
-        id: embeddingId,
-        imageId: imageId,
-        vector: normalized,
-        sourceImagePath: savedPath,
-      ),
-    );
+    if (isIdentity) {
+      final int embeddingId = await db.insert('embeddings', <String, Object?>{
+        'cow_id': cowId,
+        'vector': jsonEncode(normalized),
+        'source_image_path': savedPath,
+        'image_id': imageId,
+      });
+      record.embeddings.add(
+        EmbeddingReference(
+          id: embeddingId,
+          imageId: imageId,
+          vector: normalized,
+          sourceImagePath: savedPath,
+        ),
+      );
+    }
   }
 
   Future<void> _deleteEmbeddingsLinkedToPhoto(
