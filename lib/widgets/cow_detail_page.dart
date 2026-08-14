@@ -12,6 +12,7 @@ import '../services/app_lock_controller.dart';
 import '../services/embedding_database.dart';
 import '../services/tflite_breed_service.dart';
 import '../services/tflite_embedding_service.dart';
+import '../utils/math_utils.dart';
 
 const Color kFarmPrimary = Color(0xFF2D6A4F);
 const Color kFarmSecondary = Color(0xFF95A97F);
@@ -517,12 +518,8 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     );
   }
 
-  Future<void> _addImageToHistory() async {
-    if (_isBusy) {
-      return;
-    }
-
-    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+  Future<ImageSource?> _pickImageSource(String title) async {
+    return showModalBottomSheet<ImageSource>(
       context: context,
       builder: (BuildContext context) {
         final localizations = AppLocalizations.of(context)!;
@@ -532,10 +529,9 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
             children: <Widget>[
               ListTile(
                 title: Text(
-                  localizations.addPhoto,
+                  title,
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
-                subtitle: Text(localizations.takeOrChooseClear),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined),
@@ -553,9 +549,19 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
         );
       },
     );
-    if (source == null) {
-      return;
-    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Cattle Identification Photos (facial, adds embedding)
+  // ---------------------------------------------------------------------------
+
+  Future<void> _addIdentityPhoto() async {
+    if (_isBusy) return;
+
+    final ImageSource? source = await _pickImageSource(
+      AppLocalizations.of(context)!.cattleIdentification,
+    );
+    if (source == null) return;
 
     AppLockController.instance.suspendLock();
     final XFile? picked;
@@ -568,14 +574,10 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     } finally {
       AppLockController.instance.resumeLock();
     }
-    if (picked == null) {
-      return;
-    }
+    if (picked == null) return;
     final XFile selectedImage = picked;
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -593,10 +595,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                   child: SizedBox(
                     height: 160,
                     width: 280,
-                    child: Image.file(
-                      File(selectedImage.path),
-                      fit: BoxFit.cover,
-                    ),
+                    child: Image.file(File(selectedImage.path), fit: BoxFit.cover),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -617,9 +616,130 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
         );
       },
     );
-    if (confirmed != true) {
-      return;
+    if (confirmed != true) return;
+
+    setState(() => _isBusy = true);
+    try {
+      final List<double> embedding = await widget.embeddingService.getEmbedding(
+        File(selectedImage.path),
+      );
+
+      final CowRecord? record = _record;
+      if (record != null && record.embeddings.isNotEmpty) {
+        double maxSimilarity = -1.0;
+        for (final ref in record.embeddings) {
+          final double sim = cosineSimilarity(embedding, ref.vector);
+          if (sim > maxSimilarity) maxSimilarity = sim;
+        }
+        if (maxSimilarity < 0.75 && mounted) {
+          final bool? proceed = await showDialog<bool>(
+            context: context,
+            builder: (BuildContext context) {
+              final localizations = AppLocalizations.of(context)!;
+              return AlertDialog(
+                title: Text(localizations.lowConfidenceWarning),
+                content: const Text(
+                  "This doesn't look like the same cow. Add it anyway?",
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text(localizations.cancel),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text(localizations.addPhoto),
+                  ),
+                ],
+              );
+            },
+          );
+          if (proceed != true) return;
+        }
+      }
+
+      await widget.database.addCowPhoto(
+        cowId: _cowId,
+        embedding: embedding,
+        imagePath: selectedImage.path,
+        isIdentity: true,
+      );
+      if (!mounted) return;
+      setState(() {});
+      _showSnack(AppLocalizations.of(context)!.photoAdded);
+    } catch (error) {
+      if (mounted) _showSnack(AppLocalizations.of(context)!.couldNotAddPhoto);
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Photo Gallery (appearance tracking, no embedding)
+  // ---------------------------------------------------------------------------
+
+  Future<void> _addGalleryPhoto() async {
+    if (_isBusy) return;
+
+    final ImageSource? source = await _pickImageSource(
+      AppLocalizations.of(context)!.photos,
+    );
+    if (source == null) return;
+
+    AppLockController.instance.suspendLock();
+    final XFile? picked;
+    try {
+      picked = await _picker.pickImage(
+        source: source,
+        imageQuality: 95,
+        maxWidth: 1600,
+      );
+    } finally {
+      AppLockController.instance.resumeLock();
+    }
+    if (picked == null) return;
+    final XFile selectedImage = picked;
+
+    if (!mounted) return;
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        final localizations = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(localizations.addPhotoTo(_cowId)),
+          content: SizedBox(
+            width: 280,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    height: 160,
+                    width: 280,
+                    child: Image.file(File(selectedImage.path), fit: BoxFit.cover),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(localizations.galleryPhotoConfirm),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(localizations.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(localizations.addPhoto),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) return;
 
     setState(() => _isBusy = true);
     try {
@@ -630,20 +750,15 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
         cowId: _cowId,
         embedding: embedding,
         imagePath: selectedImage.path,
+        isIdentity: false,
       );
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       setState(() {});
       _showSnack(AppLocalizations.of(context)!.photoAdded);
     } catch (error) {
-      if (mounted) {
-        _showSnack(AppLocalizations.of(context)!.couldNotAddPhoto);
-      }
+      if (mounted) _showSnack(AppLocalizations.of(context)!.couldNotAddPhoto);
     } finally {
-      if (mounted) {
-        setState(() => _isBusy = false);
-      }
+      if (mounted) setState(() => _isBusy = false);
     }
   }
 
@@ -1472,31 +1587,37 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                   ),
           ),
           _SectionCard(
-            title: localizations.photos,
-            buttonLabel: localizations.addPhoto,
-            onAdd: _addImageToHistory,
+            title: localizations.cattleIdentification,
+            buttonLabel: localizations.addFacialPhoto,
+            onAdd: _addIdentityPhoto,
             buttonEnabled: !_isBusy,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  localizations.photoDesc,
-                ),
+                Text(localizations.cattleIdentificationDesc),
                 if (_isBusy) ...<Widget>[
                   const SizedBox(height: 10),
                   const LinearProgressIndicator(),
                 ],
                 const SizedBox(height: 10),
-                if (record.images.isEmpty && !_isBusy)
-                  Text(localizations.noPhotos)
-                else if (record.images.isNotEmpty)
-                  SizedBox(
+                Builder(builder: (context) {
+                  // Identity photos are those linked to an embedding.
+                  final identityPaths = record.embeddings
+                      .map((e) => e.sourceImagePath)
+                      .whereType<String>()
+                      .toSet();
+                  final identityImages = record.imagesNewestFirst
+                      .where((img) => identityPaths.contains(img.path))
+                      .toList();
+                  if (identityImages.isEmpty && !_isBusy) {
+                    return Text(localizations.noIdentityPhotos);
+                  }
+                  return SizedBox(
                     height: 132,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemBuilder: (BuildContext context, int displayIndex) {
-                        final CowImage image =
-                            record.imagesNewestFirst[displayIndex];
+                        final CowImage image = identityImages[displayIndex];
                         final int index = record.images.indexWhere(
                           (CowImage item) => item.path == image.path,
                         );
@@ -1509,20 +1630,14 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                                   onTap: () => _showFullScreenImage(image.path),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
-                                    child: _imageOrPlaceholder(
-                                      image.path,
-                                      size: 100,
-                                    ),
+                                    child: _imageOrPlaceholder(image.path, size: 100),
                                   ),
                                 ),
                                 Positioned(
                                   right: 2,
                                   top: 2,
                                   child: PopupMenuButton<String>(
-                                    icon: const Icon(
-                                      Icons.more_vert,
-                                      color: Colors.white,
-                                    ),
+                                    icon: const Icon(Icons.more_vert, color: Colors.white),
                                     color: const Color(0xFFFFFEFA),
                                     onSelected: (String action) {
                                       if (action == 'edit') {
@@ -1531,17 +1646,16 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                                         _confirmDeleteImage(index);
                                       }
                                     },
-                                    itemBuilder: (_) =>
-                                        <PopupMenuEntry<String>>[
-                                          PopupMenuItem<String>(
-                                            value: 'edit',
-                                            child: Text(localizations.replace),
-                                          ),
-                                          PopupMenuItem<String>(
-                                            value: 'delete',
-                                            child: Text(localizations.delete),
-                                          ),
-                                        ],
+                                    itemBuilder: (_) => <PopupMenuEntry<String>>[
+                                      PopupMenuItem<String>(
+                                        value: 'edit',
+                                        child: Text(localizations.replace),
+                                      ),
+                                      PopupMenuItem<String>(
+                                        value: 'delete',
+                                        child: Text(localizations.delete),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -1555,9 +1669,100 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                         );
                       },
                       separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemCount: record.images.length,
+                      itemCount: identityImages.length,
                     ),
-                  ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          _SectionCard(
+            title: localizations.photos,
+            buttonLabel: localizations.addPhoto,
+            onAdd: _addGalleryPhoto,
+            buttonEnabled: !_isBusy,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(localizations.photoDesc),
+                if (_isBusy) ...<Widget>[
+                  const SizedBox(height: 10),
+                  const LinearProgressIndicator(),
+                ],
+                const SizedBox(height: 10),
+                Builder(builder: (context) {
+                  // Gallery photos are those NOT linked to an embedding.
+                  final identityPaths = record.embeddings
+                      .map((e) => e.sourceImagePath)
+                      .whereType<String>()
+                      .toSet();
+                  final galleryImages = record.imagesNewestFirst
+                      .where((img) => !identityPaths.contains(img.path))
+                      .toList();
+                  if (galleryImages.isEmpty && !_isBusy) {
+                    return Text(localizations.noPhotos);
+                  }
+                  return SizedBox(
+                    height: 132,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemBuilder: (BuildContext context, int displayIndex) {
+                        final CowImage image = galleryImages[displayIndex];
+                        final int index = record.images.indexWhere(
+                          (CowImage item) => item.path == image.path,
+                        );
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Stack(
+                              children: <Widget>[
+                                GestureDetector(
+                                  onTap: () => _showFullScreenImage(image.path),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: _imageOrPlaceholder(image.path, size: 100),
+                                  ),
+                                ),
+                                Positioned(
+                                  right: 2,
+                                  top: 2,
+                                  child: PopupMenuButton<String>(
+                                    icon: const Icon(Icons.more_vert, color: Colors.white),
+                                    color: const Color(0xFFFFFEFA),
+                                    onSelected: (String action) {
+                                      if (action == 'edit') {
+                                        _replaceImageAt(index);
+                                      } else {
+                                        _confirmDeleteImage(index);
+                                      }
+                                    },
+                                    itemBuilder: (_) => <PopupMenuEntry<String>>[
+                                      PopupMenuItem<String>(
+                                        value: 'edit',
+                                        child: Text(localizations.replace),
+                                      ),
+                                      PopupMenuItem<String>(
+                                        value: 'delete',
+                                        child: Text(localizations.delete),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _formatDate(image.uploadedAt),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        );
+                      },
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemCount: galleryImages.length,
+                    ),
+                  );
+                }),
               ],
             ),
           ),
