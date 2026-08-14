@@ -483,7 +483,7 @@ abstract class AppLocalizations {
   /// No description provided for @lowConfidenceWarning.
   ///
   /// In en, this message translates to:
-  /// **'Low confidence — try a clearer full-body photo.'**
+  /// **'Low Confidence'**
   String get lowConfidenceWarning;
 
   /// No description provided for @setManually.
@@ -768,10 +768,34 @@ abstract class AppLocalizations {
   /// **'Note saved'**
   String get noteSaved;
 
+  /// No description provided for @cattleIdentification.
+  ///
+  /// In en, this message translates to:
+  /// **'Cattle Identification'**
+  String get cattleIdentification;
+
+  /// No description provided for @cattleIdentificationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add facial photos used to recognize this cow.'**
+  String get cattleIdentificationDesc;
+
+  /// No description provided for @noIdentityPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'No facial photos added yet.'**
+  String get noIdentityPhotos;
+
+  /// No description provided for @addFacialPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Photo'**
+  String get addFacialPhoto;
+
   /// No description provided for @photos.
   ///
   /// In en, this message translates to:
-  /// **'Photos'**
+  /// **'Photo Gallery'**
   String get photos;
 
   /// No description provided for @addPhoto.
@@ -783,7 +807,7 @@ abstract class AppLocalizations {
   /// No description provided for @photoDesc.
   ///
   /// In en, this message translates to:
-  /// **'Track how this cow looks over time. Newest photos appear first.'**
+  /// **'Add photos to track this cow\'s appearance over time.'**
   String get photoDesc;
 
   /// No description provided for @noPhotos.
@@ -849,8 +873,14 @@ abstract class AppLocalizations {
   /// No description provided for @addPhotoConfirm.
   ///
   /// In en, this message translates to:
-  /// **'This photo will be saved with today\'s date so you can track how this cow looks over time. It will also help identify this cow in the future.'**
+  /// **'This photo will be saved and can be used to identify this cow later.'**
   String get addPhotoConfirm;
+
+  /// No description provided for @galleryPhotoConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This photo will be saved to track this cow\'s appearance over time.'**
+  String get galleryPhotoConfirm;
 
   /// No description provided for @photoAdded.
   ///

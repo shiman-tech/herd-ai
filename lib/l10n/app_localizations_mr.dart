@@ -352,6 +352,19 @@ class AppLocalizationsMr extends AppLocalizations {
   String get noteSaved => 'टीप जतन केली';
 
   @override
+  String get cattleIdentification => 'Cattle Identification';
+
+  @override
+  String get cattleIdentificationDesc =>
+      'Add facial photos used to recognize this cow.';
+
+  @override
+  String get noIdentityPhotos => 'No facial photos added yet.';
+
+  @override
+  String get addFacialPhoto => 'Add Photo';
+
+  @override
   String get photos => 'फोटो';
 
   @override
@@ -398,6 +411,10 @@ class AppLocalizationsMr extends AppLocalizations {
   @override
   String get addPhotoConfirm =>
       'ही गाय वेळेनुसार कशी दिसते याचा मागोवा घेण्यासाठी हा फोटो आजच्या तारखेसह जतन केला जाईल. भविष्यात गाय ओळखण्यासही याची मदत होईल.';
+
+  @override
+  String get galleryPhotoConfirm =>
+      'This photo will be saved to track this cow\'s appearance over time.';
 
   @override
   String get photoAdded => 'फोटो जोडला गेला';

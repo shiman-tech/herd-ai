@@ -202,8 +202,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get lowConfidenceWarning =>
-      'Low confidence — try a clearer full-body photo.';
+  String get lowConfidenceWarning => 'Low Confidence';
 
   @override
   String get setManually => 'Set Manually';
@@ -351,14 +350,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noteSaved => 'Note saved';
 
   @override
-  String get photos => 'Photos';
+  String get cattleIdentification => 'Cattle Identification';
+
+  @override
+  String get cattleIdentificationDesc =>
+      'Add facial photos used to recognize this cow.';
+
+  @override
+  String get noIdentityPhotos => 'No facial photos added yet.';
+
+  @override
+  String get addFacialPhoto => 'Add Photo';
+
+  @override
+  String get photos => 'Photo Gallery';
 
   @override
   String get addPhoto => 'Add Photo';
 
   @override
   String get photoDesc =>
-      'Track how this cow looks over time. Newest photos appear first.';
+      'Add photos to track this cow\'s appearance over time.';
 
   @override
   String get noPhotos => 'No photos yet.';
@@ -396,7 +408,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addPhotoConfirm =>
-      'This photo will be saved with today\'s date so you can track how this cow looks over time. It will also help identify this cow in the future.';
+      'This photo will be saved and can be used to identify this cow later.';
+
+  @override
+  String get galleryPhotoConfirm =>
+      'This photo will be saved to track this cow\'s appearance over time.';
 
   @override
   String get photoAdded => 'Photo added';

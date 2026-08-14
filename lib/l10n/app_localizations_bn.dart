@@ -351,6 +351,19 @@ class AppLocalizationsBn extends AppLocalizations {
   String get noteSaved => 'Note saved';
 
   @override
+  String get cattleIdentification => 'Cattle Identification';
+
+  @override
+  String get cattleIdentificationDesc =>
+      'Add facial photos used to recognize this cow.';
+
+  @override
+  String get noIdentityPhotos => 'No facial photos added yet.';
+
+  @override
+  String get addFacialPhoto => 'Add Photo';
+
+  @override
   String get photos => 'Photos';
 
   @override
@@ -397,6 +410,10 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get addPhotoConfirm =>
       'This photo will be saved with today\'s date so you can track how this cow looks over time. It will also help identify this cow in the future.';
+
+  @override
+  String get galleryPhotoConfirm =>
+      'This photo will be saved to track this cow\'s appearance over time.';
 
   @override
   String get photoAdded => 'Photo added';

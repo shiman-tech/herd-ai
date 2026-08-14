@@ -357,6 +357,19 @@ class AppLocalizationsKn extends AppLocalizations {
   String get noteSaved => 'ಟಿಪ್ಪಣಿಯನ್ನು ಉಳಿಸಲಾಗಿದೆ';
 
   @override
+  String get cattleIdentification => 'Cattle Identification';
+
+  @override
+  String get cattleIdentificationDesc =>
+      'Add facial photos used to recognize this cow.';
+
+  @override
+  String get noIdentityPhotos => 'No facial photos added yet.';
+
+  @override
+  String get addFacialPhoto => 'Add Photo';
+
+  @override
   String get photos => 'ಫೋಟೋಗಳು';
 
   @override
@@ -403,6 +416,10 @@ class AppLocalizationsKn extends AppLocalizations {
   @override
   String get addPhotoConfirm =>
       'ಕಾಲಕ್ರಮೇಣ ಈ ಹಸು ಹೇಗೆ ಕಾಣುತ್ತದೆ ಎಂಬುದನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಲು ಈ ಫೋಟೋವನ್ನು ಇಂದಿನ ದಿನಾಂಕದೊಂದಿಗೆ ಉಳಿಸಲಾಗುತ್ತದೆ. ಇದು ಭವಿಷ್ಯದಲ್ಲಿ ಹಸುವನ್ನು ಗುರುತಿಸಲು ಸಹಾಯ ಮಾಡುತ್ತದೆ.';
+
+  @override
+  String get galleryPhotoConfirm =>
+      'This photo will be saved to track this cow\'s appearance over time.';
 
   @override
   String get photoAdded => 'ಫೋಟೋ ಸೇರಿಸಲಾಗಿದೆ';
