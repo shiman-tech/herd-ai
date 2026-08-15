@@ -6,8 +6,8 @@ import '../l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/breed_prediction.dart';
-import '../models/cow_image.dart';
-import '../models/cow_record.dart';
+import '../models/cattle_image.dart';
+import '../models/cattle_record.dart';
 import '../services/app_lock_controller.dart';
 import '../services/embedding_database.dart';
 import '../services/tflite_breed_service.dart';
@@ -18,36 +18,36 @@ const Color kFarmPrimary = Color(0xFF2D6A4F);
 const Color kFarmSecondary = Color(0xFF95A97F);
 const Color kFarmAccent = Color(0xFF8D6E63);
 
-class CowDetailPage extends StatefulWidget {
-  const CowDetailPage({
+class CattleDetailPage extends StatefulWidget {
+  const CattleDetailPage({
     super.key,
-    required this.cowId,
+    required this.cattleId,
     required this.database,
     required this.embeddingService,
     required this.breedService,
   });
 
-  final String cowId;
+  final String cattleId;
   final EmbeddingDatabase database;
   final TfliteEmbeddingService embeddingService;
   final TfliteBreedService breedService;
 
   @override
-  State<CowDetailPage> createState() => _CowDetailPageState();
+  State<CattleDetailPage> createState() => _CattleDetailPageState();
 }
 
-class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateMixin {
+class _CattleDetailPageState extends State<CattleDetailPage> with TickerProviderStateMixin {
   final ImagePicker _picker = ImagePicker();
-  late String _cowId;
+  late String _cattleId;
   bool _isBusy = false;
 
   @override
   void initState() {
     super.initState();
-    _cowId = widget.cowId;
+    _cattleId = widget.cattleId;
   }
 
-  CowRecord? get _record => widget.database.getCow(_cowId);
+  CattleRecord? get _record => widget.database.getCattle(_cattleId);
 
   Widget _imageOrPlaceholder(String? imagePath, {double size = 100}) {
     if (imagePath == null || !File(imagePath).existsSync()) {
@@ -118,7 +118,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
   }
 
   Future<void> _showBasicInfoDialog() async {
-    final CowRecord? record = _record;
+    final CattleRecord? record = _record;
     if (record == null) {
       return;
     }
@@ -130,10 +130,10 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Edit cow details'),
+          title: const Text('Edit cattle details'),
           content: TextField(
             controller: idController,
-            decoration: const InputDecoration(labelText: 'Cow ID'),
+            decoration: const InputDecoration(labelText: 'Cattle ID'),
           ),
           actions: <Widget>[
             TextButton(
@@ -143,18 +143,18 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
             FilledButton(
               onPressed: () async {
                 final NavigatorState navigator = Navigator.of(context);
-                await widget.database.updateCowBasicInfo(
-                  oldCowId: record.id,
-                  newCowId: idController.text.trim(),
+                await widget.database.updateCattleBasicInfo(
+                  oldCattleId: record.id,
+                  newCattleId: idController.text.trim(),
                 );
                 if (!mounted) {
                   return;
                 }
                 setState(() {
-                  _cowId = idController.text.trim();
+                  _cattleId = idController.text.trim();
                 });
                 navigator.pop();
-                _showSnack('Cow details updated');
+                _showSnack('Cattle details updated');
               },
               child: const Text('Save'),
             ),
@@ -281,12 +281,12 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                           );
                           if (index == null) {
                             await widget.database.addHealthRecord(
-                              _cowId,
+                              _cattleId,
                               payload,
                             );
                           } else {
                             await widget.database.updateHealthRecord(
-                              cowId: _cowId,
+                              cattleId: _cattleId,
                               index: index,
                               healthRecord: payload,
                             );
@@ -429,12 +429,12 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                           );
                           if (index == null) {
                             await widget.database.addVaccinationRecord(
-                              _cowId,
+                              _cattleId,
                               payload,
                             );
                           } else {
                             await widget.database.updateVaccinationRecord(
-                              cowId: _cowId,
+                              cattleId: _cattleId,
                               index: index,
                               vaccinationRecord: payload,
                             );
@@ -495,10 +495,10 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
               onPressed: () async {
                 final NavigatorState navigator = Navigator.of(context);
                 if (index == null) {
-                  await widget.database.addNote(_cowId, noteController.text);
+                  await widget.database.addNote(_cattleId, noteController.text);
                 } else {
                   await widget.database.updateNote(
-                    cowId: _cowId,
+                    cattleId: _cattleId,
                     index: index,
                     note: noteController.text,
                   );
@@ -583,7 +583,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       builder: (BuildContext context) {
         final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text(localizations.addPhotoTo(_cowId)),
+          title: Text(localizations.addPhotoTo(_cattleId)),
           content: SizedBox(
             width: 280,
             child: Column(
@@ -624,7 +624,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
         File(selectedImage.path),
       );
 
-      final CowRecord? record = _record;
+      final CattleRecord? record = _record;
       if (record != null && record.embeddings.isNotEmpty) {
         double maxSimilarity = -1.0;
         for (final ref in record.embeddings) {
@@ -639,7 +639,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
               return AlertDialog(
                 title: Text(localizations.lowConfidenceWarning),
                 content: const Text(
-                  "This doesn't look like the same cow. Add it anyway?",
+                  "This doesn't look like the same cattle. Add it anyway?",
                 ),
                 actions: <Widget>[
                   TextButton(
@@ -658,8 +658,8 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
         }
       }
 
-      await widget.database.addCowPhoto(
-        cowId: _cowId,
+      await widget.database.addCattlePhoto(
+        cattleId: _cattleId,
         embedding: embedding,
         imagePath: selectedImage.path,
         isIdentity: true,
@@ -706,7 +706,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       builder: (BuildContext context) {
         final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text(localizations.addPhotoTo(_cowId)),
+          title: Text(localizations.addPhotoTo(_cattleId)),
           content: SizedBox(
             width: 280,
             child: Column(
@@ -746,8 +746,8 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       final List<double> embedding = await widget.embeddingService.getEmbedding(
         File(selectedImage.path),
       );
-      await widget.database.addCowPhoto(
-        cowId: _cowId,
+      await widget.database.addCattlePhoto(
+        cattleId: _cattleId,
         embedding: embedding,
         imagePath: selectedImage.path,
         isIdentity: false,
@@ -899,7 +899,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
         return;
       }
       await widget.database.saveBreedResult(
-        cowId: _cowId,
+        cattleId: _cattleId,
         breedName: predictions.first.name,
         breedConfidence: predictions.first.confidence,
         alternatives: predictions,
@@ -921,7 +921,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
 
   Future<void> _confirmBreed(String breedName) async {
     await widget.database.confirmBreed(
-      cowId: _cowId,
+      cattleId: _cattleId,
       confirmedBreed: breedName,
     );
     if (mounted) {
@@ -931,7 +931,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
   }
 
   Future<void> _chooseDifferentBreed() async {
-    final CowRecord? record = _record;
+    final CattleRecord? record = _record;
     if (record == null) {
       return;
     }
@@ -1013,7 +1013,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
 
   Future<void> _setUnknownBreed() async {
     await widget.database.confirmBreed(
-      cowId: _cowId,
+      cattleId: _cattleId,
       confirmedBreed: 'Unknown / Mixed',
     );
     if (mounted) {
@@ -1071,8 +1071,8 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       final List<double> embedding = await widget.embeddingService.getEmbedding(
         File(selectedImage.path),
       );
-      await widget.database.replaceCowPhoto(
-        cowId: _cowId,
+      await widget.database.replaceCattlePhoto(
+        cattleId: _cattleId,
         index: index,
         embedding: embedding,
         imagePath: selectedImage.path,
@@ -1117,7 +1117,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     if (confirmed != true) {
       return;
     }
-    await widget.database.deleteHealthRecord(_cowId, index);
+    await widget.database.deleteHealthRecord(_cattleId, index);
     if (!mounted) {
       return;
     }
@@ -1149,7 +1149,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     if (confirmed != true) {
       return;
     }
-    await widget.database.deleteVaccinationRecord(_cowId, index);
+    await widget.database.deleteVaccinationRecord(_cattleId, index);
     if (!mounted) {
       return;
     }
@@ -1181,7 +1181,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     if (confirmed != true) {
       return;
     }
-    await widget.database.deleteNote(_cowId, index);
+    await widget.database.deleteNote(_cattleId, index);
     if (!mounted) {
       return;
     }
@@ -1213,7 +1213,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     if (confirmed != true) {
       return;
     }
-    await widget.database.deleteImage(_cowId, index);
+    await widget.database.deleteImage(_cattleId, index);
     if (!mounted) {
       return;
     }
@@ -1221,8 +1221,8 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
     _showSnack(AppLocalizations.of(context)!.photoDeleted);
   }
 
-  Future<void> _confirmDeleteCow() async {
-    final CowRecord? record = _record;
+  Future<void> _confirmDeleteCattle() async {
+    final CattleRecord? record = _record;
     if (record == null) {
       return;
     }
@@ -1232,8 +1232,8 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       builder: (BuildContext context) {
         final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text(localizations.deleteCowRecord),
-          content: Text(localizations.deleteCowRecordConfirm(record.id)),
+          title: Text(localizations.deleteCattleRecord),
+          content: Text(localizations.deleteCattleRecordConfirm(record.id)),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -1252,21 +1252,21 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
       return;
     }
 
-    await widget.database.deleteCow(record.id);
+    await widget.database.deleteCattle(record.id);
     if (!mounted) {
       return;
     }
-    Navigator.of(context).pop(AppLocalizations.of(context)!.cowRecordDeleted);
+    Navigator.of(context).pop(AppLocalizations.of(context)!.cattleRecordDeleted);
   }
 
   @override
   Widget build(BuildContext context) {
-    final CowRecord? record = _record;
+    final CattleRecord? record = _record;
     final localizations = AppLocalizations.of(context)!;
     if (record == null) {
       return Scaffold(
-        appBar: AppBar(title: Text(localizations.cowDetails)),
-        body: Center(child: Text(localizations.cowNotFound)),
+        appBar: AppBar(title: Text(localizations.cattleDetails)),
+        body: Center(child: Text(localizations.cattleNotFound)),
       );
     }
 
@@ -1281,7 +1281,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
               icon: const Icon(Icons.edit),
             ),
             IconButton(
-              onPressed: _confirmDeleteCow,
+              onPressed: _confirmDeleteCattle,
               icon: const Icon(Icons.delete_outline),
             ),
           ],
@@ -1313,7 +1313,7 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Text(localizations.cowIdLabel(record.id)),
+                  Text(localizations.cattleIdLabel(record.id)),
                   Text(localizations.registeredLabel(_formatDate(record.registrationDate))),
                   const SizedBox(height: 10),
                   SizedBox(
@@ -1617,9 +1617,9 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemBuilder: (BuildContext context, int displayIndex) {
-                        final CowImage image = identityImages[displayIndex];
+                        final CattleImage image = identityImages[displayIndex];
                         final int index = record.images.indexWhere(
-                          (CowImage item) => item.path == image.path,
+                          (CattleImage item) => item.path == image.path,
                         );
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1707,9 +1707,9 @@ class _CowDetailPageState extends State<CowDetailPage> with TickerProviderStateM
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemBuilder: (BuildContext context, int displayIndex) {
-                        final CowImage image = galleryImages[displayIndex];
+                        final CattleImage image = galleryImages[displayIndex];
                         final int index = record.images.indexWhere(
-                          (CowImage item) => item.path == image.path,
+                          (CattleImage item) => item.path == image.path,
                         );
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
