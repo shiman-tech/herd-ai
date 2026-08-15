@@ -55,10 +55,10 @@ class EmbeddingReference {
 
 class SimilarityMatch {
   const SimilarityMatch({
-    required this.cowId,
+    required this.cattleId,
     required this.similarity,
   });
 
-  final String cowId;
+  final String cattleId;
   final double similarity;
 }
