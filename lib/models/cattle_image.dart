@@ -1,5 +1,5 @@
-class CowImage {
-  CowImage({
+class CattleImage {
+  CattleImage({
     required this.path,
     required this.uploadedAt,
     this.id,
@@ -17,8 +17,8 @@ class CowImage {
     };
   }
 
-  factory CowImage.fromJson(Map<String, dynamic> json) {
-    return CowImage(
+  factory CattleImage.fromJson(Map<String, dynamic> json) {
+    return CattleImage(
       id: json['id'] as int?,
       path: json['path'] as String,
       uploadedAt:
@@ -28,7 +28,7 @@ class CowImage {
   }
 
   /// Legacy JSON stored image paths as plain strings.
-  factory CowImage.fromLegacyPath(String path) {
-    return CowImage(path: path, uploadedAt: DateTime.now());
+  factory CattleImage.fromLegacyPath(String path) {
+    return CattleImage(path: path, uploadedAt: DateTime.now());
   }
 }
