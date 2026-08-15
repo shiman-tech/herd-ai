@@ -1,9 +1,8 @@
-import 'breed_prediction.dart';
-import 'cow_image.dart';
+import 'cattle_image.dart';
 import 'embedding_reference.dart';
 
-class CowRecord {
-  CowRecord({
+class CattleRecord {
+  CattleRecord({
     required this.id,
     required this.registrationDate,
     this.profileImagePath,
@@ -11,7 +10,7 @@ class CowRecord {
     List<HealthRecord>? healthRecords,
     List<VaccinationRecord>? vaccinations,
     List<String>? notes,
-    List<CowImage>? images,
+    List<CattleImage>? images,
     this.breedName,
     this.breedConfidence,
     this.breedAlternativesJson,
@@ -21,7 +20,7 @@ class CowRecord {
        healthRecords = healthRecords ?? <HealthRecord>[],
        vaccinations = vaccinations ?? <VaccinationRecord>[],
        notes = notes ?? <String>[],
-       images = images ?? <CowImage>[];
+       images = images ?? <CattleImage>[];
 
   final String id;
   final DateTime registrationDate;
@@ -30,35 +29,21 @@ class CowRecord {
   final List<HealthRecord> healthRecords;
   final List<VaccinationRecord> vaccinations;
   final List<String> notes;
-  final List<CowImage> images;
+  final List<CattleImage> images;
 
-  // ---------------------------------------------------------------------------
   // Breed classification fields (mutable — set by EmbeddingDatabase)
-  // ---------------------------------------------------------------------------
-
-  /// Top-1 breed name from the classifier (e.g. "Gir").
   String? breedName;
-
-  /// Top-1 confidence in [0.0, 1.0].
   double? breedConfidence;
-
-  /// JSON-encoded list of top-N [BreedPrediction] alternatives.
-  /// Use [breedAlternatives] getter for the decoded list.
   String? breedAlternativesJson;
-
-  /// Breed set explicitly by the user, overriding the model prediction.
   String? confirmedBreed;
-
-  /// True when the user has actively confirmed or manually set the breed.
   bool breedConfirmedByUser;
 
-  /// The effective breed to display: user-confirmed takes precedence.
   String? get displayBreed => confirmedBreed ?? breedName;
 
-  List<CowImage> get imagesNewestFirst {
-    final List<CowImage> sorted = List<CowImage>.from(images);
+  List<CattleImage> get imagesNewestFirst {
+    final List<CattleImage> sorted = List<CattleImage>.from(images);
     sorted.sort(
-      (CowImage a, CowImage b) => b.uploadedAt.compareTo(a.uploadedAt),
+      (CattleImage a, CattleImage b) => b.uploadedAt.compareTo(a.uploadedAt),
     );
     return sorted;
   }
@@ -78,7 +63,7 @@ class CowRecord {
           .map((VaccinationRecord item) => item.toJson())
           .toList(),
       'notes': notes,
-      'images': images.map((CowImage item) => item.toJson()).toList(),
+      'images': images.map((CattleImage item) => item.toJson()).toList(),
       'breedName': breedName,
       'breedConfidence': breedConfidence,
       'breedAlternativesJson': breedAlternativesJson,
@@ -87,8 +72,8 @@ class CowRecord {
     };
   }
 
-  factory CowRecord.fromJson(Map<String, dynamic> json) {
-    return CowRecord(
+  factory CattleRecord.fromJson(Map<String, dynamic> json) {
+    return CattleRecord(
       id: json['id'] as String,
       registrationDate:
           DateTime.tryParse(json['registrationDate'] as String? ?? '') ??
@@ -119,22 +104,22 @@ class CowRecord {
     );
   }
 
-  static List<CowImage> _parseImages(dynamic raw) {
+  static List<CattleImage> _parseImages(dynamic raw) {
     if (raw is! List<dynamic>) {
-      return <CowImage>[];
+      return <CattleImage>[];
     }
     if (raw.isEmpty) {
-      return <CowImage>[];
+      return <CattleImage>[];
     }
     if (raw.first is String) {
       return raw
           .map(
-            (dynamic item) => CowImage.fromLegacyPath(item as String),
+            (dynamic item) => CattleImage.fromLegacyPath(item as String),
           )
           .toList();
     }
     return raw
-        .map((dynamic item) => CowImage.fromJson(item as Map<String, dynamic>))
+        .map((dynamic item) => CattleImage.fromJson(item as Map<String, dynamic>))
         .toList();
   }
 
