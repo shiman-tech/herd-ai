@@ -6,8 +6,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/breed_prediction.dart';
-import '../models/cow_image.dart';
-import '../models/cow_record.dart';
+import '../models/cattle_image.dart';
+import '../models/cattle_record.dart';
 import '../models/embedding_reference.dart';
 import '../models/identification_result.dart';
 import '../utils/math_utils.dart';
@@ -15,16 +15,16 @@ import 'tflite_embedding_service.dart';
 
 class EmbeddingDatabase {
   static const String _dbFileName = 'herd_ai.db';
-  static const String _legacyJsonFileName = 'cow_records.json';
-  static const String _imageDirName = 'cow_images';
-  static const int _dbVersion = 5;
+  static const String _legacyJsonFileName = 'cattle_records.json';
+  static const String _imageDirName = 'cattle_images';
+  static const int _dbVersion = 6;
 
   /// Scores at or above this (but below [similarityThreshold]) trigger a
-  /// pre-registration warning because the photo may match an existing cow.
+  /// pre-registration warning because the photo may match an existing cattle.
   static const double preRegistrationWarningThreshold =
       IdentificationResult.borderlineThreshold;
 
-  final Map<String, CowRecord> _recordsByCow = <String, CowRecord>{};
+  final Map<String, CattleRecord> _recordsByCattle = <String, CattleRecord>{};
 
   final double similarityThreshold;
 
@@ -32,25 +32,25 @@ class EmbeddingDatabase {
 
   EmbeddingDatabase({this.similarityThreshold = 0.75});
 
-  int get totalEmbeddings => _recordsByCow.values.fold<int>(
+  int get totalEmbeddings => _recordsByCattle.values.fold<int>(
     0,
-    (int total, CowRecord cow) => total + cow.embeddings.length,
+    (int total, CattleRecord cattle) => total + cattle.embeddings.length,
   );
 
-  int get totalCows => _recordsByCow.length;
+  int get totalCattle => _recordsByCattle.length;
 
-  bool get isEmpty => _recordsByCow.isEmpty;
+  bool get isEmpty => _recordsByCattle.isEmpty;
 
-  List<CowRecord> getAllCows() {
-    final List<CowRecord> items = _recordsByCow.values.toList();
+  List<CattleRecord> getAllCattle() {
+    final List<CattleRecord> items = _recordsByCattle.values.toList();
     items.sort(
-      (CowRecord a, CowRecord b) =>
+      (CattleRecord a, CattleRecord b) =>
           b.registrationDate.compareTo(a.registrationDate),
     );
     return items;
   }
 
-  CowRecord? getCow(String cowId) => _recordsByCow[cowId];
+  CattleRecord? getCattle(String cattleId) => _recordsByCattle[cattleId];
 
   // ---------------------------------------------------------------------------
   // Initialization
@@ -76,42 +76,15 @@ class EmbeddingDatabase {
         await _createTables(db);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        if (oldVersion < 2) {
-          await db.execute(
-            'ALTER TABLE embeddings ADD COLUMN source_image_path TEXT',
-          );
-        }
-        if (oldVersion < 3) {
-          await db.execute(
-            'ALTER TABLE images ADD COLUMN uploaded_at TEXT',
-          );
-          await db.execute(
-            "UPDATE images SET uploaded_at = datetime('now') "
-            'WHERE uploaded_at IS NULL',
-          );
-        }
-        if (oldVersion < 4) {
-          await db.execute(
-            'ALTER TABLE embeddings ADD COLUMN image_id INTEGER',
-          );
-        }
-        if (oldVersion < 5) {
-          await db.execute(
-            'ALTER TABLE cows ADD COLUMN breed_name TEXT',
-          );
-          await db.execute(
-            'ALTER TABLE cows ADD COLUMN breed_confidence REAL',
-          );
-          await db.execute(
-            'ALTER TABLE cows ADD COLUMN breed_alternatives_json TEXT',
-          );
-          await db.execute(
-            'ALTER TABLE cows ADD COLUMN confirmed_breed TEXT',
-          );
-          await db.execute(
-            'ALTER TABLE cows ADD COLUMN breed_confirmed_by_user INTEGER NOT NULL DEFAULT 0',
-          );
-        }
+        // Drop all old tables to start fresh
+        await db.execute('DROP TABLE IF EXISTS cows');
+        await db.execute('DROP TABLE IF EXISTS cattle');
+        await db.execute('DROP TABLE IF EXISTS embeddings');
+        await db.execute('DROP TABLE IF EXISTS health_records');
+        await db.execute('DROP TABLE IF EXISTS vaccinations');
+        await db.execute('DROP TABLE IF EXISTS notes');
+        await db.execute('DROP TABLE IF EXISTS images');
+        await _createTables(db);
       },
     );
   }
@@ -119,7 +92,7 @@ class EmbeddingDatabase {
   Future<void> _createTables(Database db) async {
     final Batch batch = db.batch();
     batch.execute('''
-      CREATE TABLE IF NOT EXISTS cows (
+      CREATE TABLE IF NOT EXISTS cattle (
         id TEXT PRIMARY KEY,
         registration_date TEXT NOT NULL,
         profile_image_path TEXT,
@@ -133,52 +106,52 @@ class EmbeddingDatabase {
     batch.execute('''
       CREATE TABLE IF NOT EXISTS embeddings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        cow_id TEXT NOT NULL,
+        cattle_id TEXT NOT NULL,
         vector TEXT NOT NULL,
         source_image_path TEXT,
         image_id INTEGER,
-        FOREIGN KEY (cow_id) REFERENCES cows(id) ON DELETE CASCADE,
+        FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE,
         FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE
       )
     ''');
     batch.execute('''
       CREATE TABLE IF NOT EXISTS health_records (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        cow_id TEXT NOT NULL,
+        cattle_id TEXT NOT NULL,
         disease_name TEXT NOT NULL DEFAULT '',
         date TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'Ongoing',
         symptoms TEXT NOT NULL DEFAULT '',
         treatment_notes TEXT NOT NULL DEFAULT '',
-        FOREIGN KEY (cow_id) REFERENCES cows(id) ON DELETE CASCADE
+        FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE
       )
     ''');
     batch.execute('''
       CREATE TABLE IF NOT EXISTS vaccinations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        cow_id TEXT NOT NULL,
+        cattle_id TEXT NOT NULL,
         vaccine_name TEXT NOT NULL DEFAULT '',
         date_given TEXT NOT NULL,
         next_due_date TEXT,
         notes TEXT NOT NULL DEFAULT '',
-        FOREIGN KEY (cow_id) REFERENCES cows(id) ON DELETE CASCADE
+        FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE
       )
     ''');
     batch.execute('''
       CREATE TABLE IF NOT EXISTS notes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        cow_id TEXT NOT NULL,
+        cattle_id TEXT NOT NULL,
         content TEXT NOT NULL,
-        FOREIGN KEY (cow_id) REFERENCES cows(id) ON DELETE CASCADE
+        FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE
       )
     ''');
     batch.execute('''
       CREATE TABLE IF NOT EXISTS images (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        cow_id TEXT NOT NULL,
+        cattle_id TEXT NOT NULL,
         path TEXT NOT NULL,
         uploaded_at TEXT NOT NULL,
-        FOREIGN KEY (cow_id) REFERENCES cows(id) ON DELETE CASCADE
+        FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE
       )
     ''');
     await batch.commit(noResult: true);
@@ -203,34 +176,34 @@ class EmbeddingDatabase {
       return;
     }
 
-    final Map<String, CowRecord> legacy = _parseJsonContent(content);
+    final Map<String, CattleRecord> legacy = _parseJsonContent(content);
 
     final Database db = _db!;
     await db.transaction((Transaction txn) async {
-      for (final MapEntry<String, CowRecord> entry in legacy.entries) {
-        final CowRecord cow = entry.value;
+      for (final MapEntry<String, CattleRecord> entry in legacy.entries) {
+        final CattleRecord cattle = entry.value;
 
         await txn.insert(
-          'cows',
+          'cattle',
           <String, Object?>{
-            'id': cow.id,
-            'registration_date': cow.registrationDate.toIso8601String(),
-            'profile_image_path': cow.profileImagePath,
+            'id': cattle.id,
+            'registration_date': cattle.registrationDate.toIso8601String(),
+            'profile_image_path': cattle.profileImagePath,
           },
           conflictAlgorithm: ConflictAlgorithm.ignore,
         );
 
-        for (final EmbeddingReference embedding in cow.embeddings) {
+        for (final EmbeddingReference embedding in cattle.embeddings) {
           await txn.insert('embeddings', <String, Object?>{
-            'cow_id': cow.id,
+            'cattle_id': cattle.id,
             'vector': jsonEncode(embedding.vector),
             'source_image_path': embedding.sourceImagePath,
           });
         }
 
-        for (final HealthRecord hr in cow.healthRecords) {
+        for (final HealthRecord hr in cattle.healthRecords) {
           await txn.insert('health_records', <String, Object?>{
-            'cow_id': cow.id,
+            'cattle_id': cattle.id,
             'disease_name': hr.diseaseName,
             'date': hr.date.toIso8601String(),
             'status': hr.status,
@@ -239,9 +212,9 @@ class EmbeddingDatabase {
           });
         }
 
-        for (final VaccinationRecord vr in cow.vaccinations) {
+        for (final VaccinationRecord vr in cattle.vaccinations) {
           await txn.insert('vaccinations', <String, Object?>{
-            'cow_id': cow.id,
+            'cattle_id': cattle.id,
             'vaccine_name': vr.vaccineName,
             'date_given': vr.dateGiven.toIso8601String(),
             'next_due_date': vr.nextDueDate?.toIso8601String(),
@@ -249,16 +222,16 @@ class EmbeddingDatabase {
           });
         }
 
-        for (final String note in cow.notes) {
+        for (final String note in cattle.notes) {
           await txn.insert('notes', <String, Object?>{
-            'cow_id': cow.id,
+            'cattle_id': cattle.id,
             'content': note,
           });
         }
 
-        for (final CowImage image in cow.images) {
+        for (final CattleImage image in cattle.images) {
           await txn.insert('images', <String, Object?>{
-            'cow_id': cow.id,
+            'cattle_id': cattle.id,
             'path': image.path,
             'uploaded_at': image.uploadedAt.toIso8601String(),
           });
@@ -269,11 +242,11 @@ class EmbeddingDatabase {
     await jsonFile.rename(p.join(docs.path, '$_legacyJsonFileName.migrated'));
   }
 
-  /// Parses legacy JSON content into a map of CowRecords.
+  /// Parses legacy JSON content into a map of CattleRecords.
   /// Supports both the newer `{ "records": { ... } }` format and the older
-  /// flat `{ cowId: [[embedding], ...] }` format.
-  Map<String, CowRecord> _parseJsonContent(String content) {
-    final Map<String, CowRecord> result = <String, CowRecord>{};
+  /// flat `{ cattleId: [[embedding], ...] }` format.
+  Map<String, CattleRecord> _parseJsonContent(String content) {
+    final Map<String, CattleRecord> result = <String, CattleRecord>{};
 
     final dynamic decoded = jsonDecode(content);
     if (decoded is! Map<String, dynamic>) {
@@ -284,14 +257,14 @@ class EmbeddingDatabase {
       final Map<String, dynamic> records =
           decoded['records'] as Map<String, dynamic>;
       for (final MapEntry<String, dynamic> entry in records.entries) {
-        result[entry.key] = CowRecord.fromJson(
+        result[entry.key] = CattleRecord.fromJson(
           entry.value as Map<String, dynamic>,
         );
       }
       return result;
     }
 
-    // Backward compatibility with older "cowId -> embeddings" format.
+    // Backward compatibility with older "cattleId -> embeddings" format.
     for (final MapEntry<String, dynamic> entry in decoded.entries) {
       final List<EmbeddingReference> embeddings =
           (entry.value as List<dynamic>)
@@ -303,7 +276,7 @@ class EmbeddingDatabase {
                 ),
               )
               .toList();
-      result[entry.key] = CowRecord(
+      result[entry.key] = CattleRecord(
         id: entry.key,
         registrationDate: DateTime.now(),
         embeddings: embeddings,
@@ -317,14 +290,14 @@ class EmbeddingDatabase {
   // ---------------------------------------------------------------------------
 
   Future<void> _loadAllIntoMemory() async {
-    _recordsByCow.clear();
+    _recordsByCattle.clear();
     final Database db = _db!;
 
-    final List<Map<String, Object?>> cowRows = await db.query('cows');
-    for (final Map<String, Object?> row in cowRows) {
-      final String cowId = row['id']! as String;
-      final CowRecord record = CowRecord(
-        id: cowId,
+    final List<Map<String, Object?>> cattleRows = await db.query('cattle');
+    for (final Map<String, Object?> row in cattleRows) {
+      final String cattleId = row['id']! as String;
+      final CattleRecord record = CattleRecord(
+        id: cattleId,
         registrationDate: DateTime.tryParse(
               row['registration_date'] as String? ?? '',
             ) ??
@@ -337,15 +310,15 @@ class EmbeddingDatabase {
         breedConfirmedByUser:
             ((row['breed_confirmed_by_user'] as int?) ?? 0) == 1,
       );
-      _recordsByCow[cowId] = record;
+      _recordsByCattle[cattleId] = record;
     }
 
     final List<Map<String, Object?>> healthRows = await db.query(
       'health_records',
     );
     for (final Map<String, Object?> row in healthRows) {
-      final String cowId = row['cow_id']! as String;
-      final CowRecord? record = _recordsByCow[cowId];
+      final String cattleId = row['cattle_id']! as String;
+      final CattleRecord? record = _recordsByCattle[cattleId];
       if (record == null) {
         continue;
       }
@@ -363,8 +336,8 @@ class EmbeddingDatabase {
       'vaccinations',
     );
     for (final Map<String, Object?> row in vaccinationRows) {
-      final String cowId = row['cow_id']! as String;
-      final CowRecord? record = _recordsByCow[cowId];
+      final String cattleId = row['cattle_id']! as String;
+      final CattleRecord? record = _recordsByCattle[cattleId];
       if (record == null) {
         continue;
       }
@@ -381,8 +354,8 @@ class EmbeddingDatabase {
 
     final List<Map<String, Object?>> noteRows = await db.query('notes');
     for (final Map<String, Object?> row in noteRows) {
-      final String cowId = row['cow_id']! as String;
-      final CowRecord? record = _recordsByCow[cowId];
+      final String cattleId = row['cattle_id']! as String;
+      final CattleRecord? record = _recordsByCattle[cattleId];
       if (record == null) {
         continue;
       }
@@ -391,13 +364,13 @@ class EmbeddingDatabase {
 
     final List<Map<String, Object?>> imageRows = await db.query('images');
     for (final Map<String, Object?> row in imageRows) {
-      final String cowId = row['cow_id']! as String;
-      final CowRecord? record = _recordsByCow[cowId];
+      final String cattleId = row['cattle_id']! as String;
+      final CattleRecord? record = _recordsByCattle[cattleId];
       if (record == null) {
         continue;
       }
       record.images.add(
-        CowImage(
+        CattleImage(
           id: row['id'] as int?,
           path: row['path']! as String,
           uploadedAt:
@@ -411,8 +384,8 @@ class EmbeddingDatabase {
       'embeddings',
     );
     for (final Map<String, Object?> row in embeddingRows) {
-      final String cowId = row['cow_id']! as String;
-      final CowRecord? record = _recordsByCow[cowId];
+      final String cattleId = row['cattle_id']! as String;
+      final CattleRecord? record = _recordsByCattle[cattleId];
       if (record == null) {
         continue;
       }
@@ -435,8 +408,8 @@ class EmbeddingDatabase {
   // Register / Identify
   // ---------------------------------------------------------------------------
 
-  Future<void> registerCow({
-    required String cowId,
+  Future<void> registerCattle({
+    required String cattleId,
     required List<double> embedding,
     String? imagePath,
     String? note,
@@ -444,14 +417,14 @@ class EmbeddingDatabase {
     final Database db = _db!;
     final List<double> normalized = normalizeEmbedding(embedding);
 
-    final CowRecord record = _recordsByCow.putIfAbsent(
-      cowId,
-      () => CowRecord(id: cowId, registrationDate: DateTime.now()),
+    final CattleRecord record = _recordsByCattle.putIfAbsent(
+      cattleId,
+      () => CattleRecord(id: cattleId, registrationDate: DateTime.now()),
     );
 
-    // Ensure cow row exists in DB.
+    // Ensure cattle row exists in DB.
     await db.insert(
-      'cows',
+      'cattle',
       <String, Object?>{
         'id': record.id,
         'registration_date': record.registrationDate.toIso8601String(),
@@ -466,28 +439,28 @@ class EmbeddingDatabase {
       final DateTime uploadedAt = DateTime.now();
       savedImagePath = await _persistImage(imagePath);
       imageId = await db.insert('images', <String, Object?>{
-        'cow_id': cowId,
+        'cattle_id': cattleId,
         'path': savedImagePath,
         'uploaded_at': uploadedAt.toIso8601String(),
       });
       record.profileImagePath ??= savedImagePath;
       record.images.add(
-        CowImage(
+        CattleImage(
           id: imageId,
           path: savedImagePath,
           uploadedAt: uploadedAt,
         ),
       );
       await db.update(
-        'cows',
+        'cattle',
         <String, Object?>{'profile_image_path': record.profileImagePath},
         where: 'id = ?',
-        whereArgs: <Object?>[cowId],
+        whereArgs: <Object?>[cattleId],
       );
     }
 
     final int embeddingId = await db.insert('embeddings', <String, Object?>{
-      'cow_id': cowId,
+      'cattle_id': cattleId,
       'vector': jsonEncode(normalized),
       'source_image_path': savedImagePath,
       'image_id': imageId,
@@ -505,22 +478,22 @@ class EmbeddingDatabase {
     if (note != null && note.trim().isNotEmpty) {
       record.notes.add(note.trim());
       await db.insert('notes', <String, Object?>{
-        'cow_id': cowId,
+        'cattle_id': cattleId,
         'content': note.trim(),
       });
     }
   }
 
-  /// Saves a photo for [cowId], stores the upload date, and links an
-  /// embedding so the cow can be identified from this photo.
-  Future<void> addCowPhoto({
-    required String cowId,
+  /// Saves a photo for [cattleId], stores the upload date, and links an
+  /// embedding so the cattle can be identified from this photo.
+  Future<void> addCattlePhoto({
+    required String cattleId,
     required List<double> embedding,
     required String imagePath,
     DateTime? uploadedAt,
     bool isIdentity = true,
   }) async {
-    final CowRecord? record = _recordsByCow[cowId];
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null || imagePath.isEmpty) {
       return;
     }
@@ -532,23 +505,23 @@ class EmbeddingDatabase {
 
     record.profileImagePath ??= savedPath;
     final int imageId = await db.insert('images', <String, Object?>{
-      'cow_id': cowId,
+      'cattle_id': cattleId,
       'path': savedPath,
       'uploaded_at': savedAt.toIso8601String(),
     });
     record.images.add(
-      CowImage(id: imageId, path: savedPath, uploadedAt: savedAt),
+      CattleImage(id: imageId, path: savedPath, uploadedAt: savedAt),
     );
     await db.update(
-      'cows',
+      'cattle',
       <String, Object?>{'profile_image_path': record.profileImagePath},
       where: 'id = ?',
-      whereArgs: <Object?>[cowId],
+      whereArgs: <Object?>[cattleId],
     );
 
     if (isIdentity) {
       final int embeddingId = await db.insert('embeddings', <String, Object?>{
-        'cow_id': cowId,
+        'cattle_id': cattleId,
         'vector': jsonEncode(normalized),
         'source_image_path': savedPath,
         'image_id': imageId,
@@ -565,11 +538,11 @@ class EmbeddingDatabase {
   }
 
   Future<void> _deleteEmbeddingsLinkedToPhoto(
-    String cowId,
-    CowImage photo, {
+    String cattleId,
+    CattleImage photo, {
     required int photoIndexInRecord,
   }) async {
-    final CowRecord? record = _recordsByCow[cowId];
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null) {
       return;
     }
@@ -608,21 +581,21 @@ class EmbeddingDatabase {
 
     await db.delete(
       'embeddings',
-      where: 'cow_id = ? AND source_image_path = ?',
-      whereArgs: <Object?>[cowId, photo.path],
+      where: 'cattle_id = ? AND source_image_path = ?',
+      whereArgs: <Object?>[cattleId, photo.path],
     );
     if (photo.id != null) {
       await db.delete(
         'embeddings',
-        where: 'cow_id = ? AND image_id = ?',
-        whereArgs: <Object?>[cowId, photo.id],
+        where: 'cattle_id = ? AND image_id = ?',
+        whereArgs: <Object?>[cattleId, photo.id],
       );
     }
     for (final int embeddingId in embeddingIdsToDelete) {
       await db.delete(
         'embeddings',
-        where: 'id = ? AND cow_id = ?',
-        whereArgs: <Object?>[embeddingId, cowId],
+        where: 'id = ? AND cattle_id = ?',
+        whereArgs: <Object?>[embeddingId, cattleId],
       );
     }
 
@@ -640,36 +613,36 @@ class EmbeddingDatabase {
     });
   }
 
-  SimilarityMatch? findBestSimilarCow(
+  SimilarityMatch? findBestSimilarCattle(
     List<double> queryEmbedding, {
-    String? excludeCowId,
+    String? excludeCattleId,
   }) {
     final List<double> normalized = normalizeEmbedding(queryEmbedding);
 
-    String? bestCowId;
+    String? bestCattleId;
     double bestScore = -1;
 
-    for (final CowRecord record in _recordsByCow.values) {
-      if (excludeCowId != null && record.id == excludeCowId) {
+    for (final CattleRecord record in _recordsByCattle.values) {
+      if (excludeCattleId != null && record.id == excludeCattleId) {
         continue;
       }
       for (final EmbeddingReference reference in record.embeddings) {
         final double score = cosineSimilarity(normalized, reference.vector);
         if (score > bestScore) {
           bestScore = score;
-          bestCowId = record.id;
+          bestCattleId = record.id;
         }
       }
     }
 
-    if (bestCowId == null || bestScore < preRegistrationWarningThreshold) {
+    if (bestCattleId == null || bestScore < preRegistrationWarningThreshold) {
       return null;
     }
 
-    return SimilarityMatch(cowId: bestCowId, similarity: bestScore);
+    return SimilarityMatch(cattleId: bestCattleId, similarity: bestScore);
   }
 
-  Future<IdentificationResult> predictCow(
+  Future<IdentificationResult> predictCattle(
     File imageFile, {
     required TfliteEmbeddingService embeddingService,
   }) async {
@@ -677,30 +650,30 @@ class EmbeddingDatabase {
       imageFile,
     );
 
-    String bestCowId = 'Unknown';
+    String bestCattleId = 'Unknown';
     double bestScore = -1;
 
-    for (final CowRecord record in _recordsByCow.values) {
+    for (final CattleRecord record in _recordsByCattle.values) {
       for (final EmbeddingReference reference in record.embeddings) {
         final double score = cosineSimilarity(queryEmbedding, reference.vector);
         if (score > bestScore) {
           bestScore = score;
-          bestCowId = record.id;
+          bestCattleId = record.id;
         }
       }
     }
 
     if (bestScore < similarityThreshold) {
       return IdentificationResult(
-        predictedCowId: 'Unknown',
+        predictedCattleId: 'Unknown',
         similarity: bestScore < 0 ? 0 : bestScore,
         isKnown: false,
-        suggestedCowId: bestScore >= 0 ? bestCowId : null,
+        suggestedCattleId: bestScore >= 0 ? bestCattleId : null,
       );
     }
 
     return IdentificationResult(
-      predictedCowId: bestCowId,
+      predictedCattleId: bestCattleId,
       similarity: bestScore,
       isKnown: true,
     );
@@ -710,14 +683,14 @@ class EmbeddingDatabase {
   // Health Records
   // ---------------------------------------------------------------------------
 
-  Future<void> addHealthRecord(String cowId, HealthRecord healthRecord) async {
-    final CowRecord? record = _recordsByCow[cowId];
+  Future<void> addHealthRecord(String cattleId, HealthRecord healthRecord) async {
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null) {
       return;
     }
     record.healthRecords.add(healthRecord);
     await _db!.insert('health_records', <String, Object?>{
-      'cow_id': cowId,
+      'cattle_id': cattleId,
       'disease_name': healthRecord.diseaseName,
       'date': healthRecord.date.toIso8601String(),
       'status': healthRecord.status,
@@ -727,21 +700,21 @@ class EmbeddingDatabase {
   }
 
   Future<void> updateHealthRecord({
-    required String cowId,
+    required String cattleId,
     required int index,
     required HealthRecord healthRecord,
   }) async {
-    final CowRecord? record = _recordsByCow[cowId];
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null || index < 0 || index >= record.healthRecords.length) {
       return;
     }
     record.healthRecords[index] = healthRecord;
     await _replaceChildRows(
-      cowId: cowId,
+      cattleId: cattleId,
       table: 'health_records',
       rows: record.healthRecords
           .map((HealthRecord hr) => <String, Object?>{
-                'cow_id': cowId,
+                'cattle_id': cattleId,
                 'disease_name': hr.diseaseName,
                 'date': hr.date.toIso8601String(),
                 'status': hr.status,
@@ -752,18 +725,18 @@ class EmbeddingDatabase {
     );
   }
 
-  Future<void> deleteHealthRecord(String cowId, int index) async {
-    final CowRecord? record = _recordsByCow[cowId];
+  Future<void> deleteHealthRecord(String cattleId, int index) async {
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null || index < 0 || index >= record.healthRecords.length) {
       return;
     }
     record.healthRecords.removeAt(index);
     await _replaceChildRows(
-      cowId: cowId,
+      cattleId: cattleId,
       table: 'health_records',
       rows: record.healthRecords
           .map((HealthRecord hr) => <String, Object?>{
-                'cow_id': cowId,
+                'cattle_id': cattleId,
                 'disease_name': hr.diseaseName,
                 'date': hr.date.toIso8601String(),
                 'status': hr.status,
@@ -779,16 +752,16 @@ class EmbeddingDatabase {
   // ---------------------------------------------------------------------------
 
   Future<void> addVaccinationRecord(
-    String cowId,
+    String cattleId,
     VaccinationRecord vaccinationRecord,
   ) async {
-    final CowRecord? record = _recordsByCow[cowId];
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null) {
       return;
     }
     record.vaccinations.add(vaccinationRecord);
     await _db!.insert('vaccinations', <String, Object?>{
-      'cow_id': cowId,
+      'cattle_id': cattleId,
       'vaccine_name': vaccinationRecord.vaccineName,
       'date_given': vaccinationRecord.dateGiven.toIso8601String(),
       'next_due_date': vaccinationRecord.nextDueDate?.toIso8601String(),
@@ -797,21 +770,21 @@ class EmbeddingDatabase {
   }
 
   Future<void> updateVaccinationRecord({
-    required String cowId,
+    required String cattleId,
     required int index,
     required VaccinationRecord vaccinationRecord,
   }) async {
-    final CowRecord? record = _recordsByCow[cowId];
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null || index < 0 || index >= record.vaccinations.length) {
       return;
     }
     record.vaccinations[index] = vaccinationRecord;
     await _replaceChildRows(
-      cowId: cowId,
+      cattleId: cattleId,
       table: 'vaccinations',
       rows: record.vaccinations
           .map((VaccinationRecord vr) => <String, Object?>{
-                'cow_id': cowId,
+                'cattle_id': cattleId,
                 'vaccine_name': vr.vaccineName,
                 'date_given': vr.dateGiven.toIso8601String(),
                 'next_due_date': vr.nextDueDate?.toIso8601String(),
@@ -821,18 +794,18 @@ class EmbeddingDatabase {
     );
   }
 
-  Future<void> deleteVaccinationRecord(String cowId, int index) async {
-    final CowRecord? record = _recordsByCow[cowId];
+  Future<void> deleteVaccinationRecord(String cattleId, int index) async {
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null || index < 0 || index >= record.vaccinations.length) {
       return;
     }
     record.vaccinations.removeAt(index);
     await _replaceChildRows(
-      cowId: cowId,
+      cattleId: cattleId,
       table: 'vaccinations',
       rows: record.vaccinations
           .map((VaccinationRecord vr) => <String, Object?>{
-                'cow_id': cowId,
+                'cattle_id': cattleId,
                 'vaccine_name': vr.vaccineName,
                 'date_given': vr.dateGiven.toIso8601String(),
                 'next_due_date': vr.nextDueDate?.toIso8601String(),
@@ -846,24 +819,24 @@ class EmbeddingDatabase {
   // Notes
   // ---------------------------------------------------------------------------
 
-  Future<void> addNote(String cowId, String note) async {
-    final CowRecord? record = _recordsByCow[cowId];
+  Future<void> addNote(String cattleId, String note) async {
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null || note.trim().isEmpty) {
       return;
     }
     record.notes.add(note.trim());
     await _db!.insert('notes', <String, Object?>{
-      'cow_id': cowId,
+      'cattle_id': cattleId,
       'content': note.trim(),
     });
   }
 
   Future<void> updateNote({
-    required String cowId,
+    required String cattleId,
     required int index,
     required String note,
   }) async {
-    final CowRecord? record = _recordsByCow[cowId];
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null ||
         index < 0 ||
         index >= record.notes.length ||
@@ -872,29 +845,29 @@ class EmbeddingDatabase {
     }
     record.notes[index] = note.trim();
     await _replaceChildRows(
-      cowId: cowId,
+      cattleId: cattleId,
       table: 'notes',
       rows: record.notes
           .map((String n) => <String, Object?>{
-                'cow_id': cowId,
+                'cattle_id': cattleId,
                 'content': n,
               })
           .toList(),
     );
   }
 
-  Future<void> deleteNote(String cowId, int index) async {
-    final CowRecord? record = _recordsByCow[cowId];
+  Future<void> deleteNote(String cattleId, int index) async {
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null || index < 0 || index >= record.notes.length) {
       return;
     }
     record.notes.removeAt(index);
     await _replaceChildRows(
-      cowId: cowId,
+      cattleId: cattleId,
       table: 'notes',
       rows: record.notes
           .map((String n) => <String, Object?>{
-                'cow_id': cowId,
+                'cattle_id': cattleId,
                 'content': n,
               })
           .toList(),
@@ -905,13 +878,13 @@ class EmbeddingDatabase {
   // Images
   // ---------------------------------------------------------------------------
 
-  Future<void> replaceCowPhoto({
-    required String cowId,
+  Future<void> replaceCattlePhoto({
+    required String cattleId,
     required int index,
     required List<double> embedding,
     required String imagePath,
   }) async {
-    final CowRecord? record = _recordsByCow[cowId];
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null ||
         index < 0 ||
         index >= record.images.length ||
@@ -919,9 +892,9 @@ class EmbeddingDatabase {
       return;
     }
 
-    final CowImage oldPhoto = record.images[index];
+    final CattleImage oldPhoto = record.images[index];
     await _deleteEmbeddingsLinkedToPhoto(
-      cowId,
+      cattleId,
       oldPhoto,
       photoIndexInRecord: index,
     );
@@ -943,15 +916,15 @@ class EmbeddingDatabase {
     } else {
       await _db!.delete(
         'images',
-        where: 'cow_id = ? AND path = ?',
-        whereArgs: <Object?>[cowId, oldPhoto.path],
+        where: 'cattle_id = ? AND path = ?',
+        whereArgs: <Object?>[cattleId, oldPhoto.path],
       );
       final int newImageId = await _db!.insert('images', <String, Object?>{
-        'cow_id': cowId,
+        'cattle_id': cattleId,
         'path': savedPath,
         'uploaded_at': uploadedAt.toIso8601String(),
       });
-      record.images[index] = CowImage(
+      record.images[index] = CattleImage(
         id: newImageId,
         path: savedPath,
         uploadedAt: uploadedAt,
@@ -959,7 +932,7 @@ class EmbeddingDatabase {
     }
 
     if (imageId != null) {
-      record.images[index] = CowImage(
+      record.images[index] = CattleImage(
         id: imageId,
         path: savedPath,
         uploadedAt: uploadedAt,
@@ -971,16 +944,16 @@ class EmbeddingDatabase {
     }
 
     await _db!.update(
-      'cows',
+      'cattle',
       <String, Object?>{'profile_image_path': record.profileImagePath},
       where: 'id = ?',
-      whereArgs: <Object?>[cowId],
+      whereArgs: <Object?>[cattleId],
     );
 
     final List<double> normalized = normalizeEmbedding(embedding);
     final int? linkedImageId = record.images[index].id;
     final int embeddingId = await _db!.insert('embeddings', <String, Object?>{
-      'cow_id': cowId,
+      'cattle_id': cattleId,
       'vector': jsonEncode(normalized),
       'source_image_path': savedPath,
       'image_id': linkedImageId,
@@ -999,15 +972,15 @@ class EmbeddingDatabase {
     }
   }
 
-  Future<void> deleteImage(String cowId, int index) async {
-    final CowRecord? record = _recordsByCow[cowId];
+  Future<void> deleteImage(String cattleId, int index) async {
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null || index < 0 || index >= record.images.length) {
       return;
     }
 
-    final CowImage removed = record.images[index];
+    final CattleImage removed = record.images[index];
     await _deleteEmbeddingsLinkedToPhoto(
-      cowId,
+      cattleId,
       removed,
       photoIndexInRecord: index,
     );
@@ -1023,8 +996,8 @@ class EmbeddingDatabase {
     } else {
       await _db!.delete(
         'images',
-        where: 'cow_id = ? AND path = ?',
-        whereArgs: <Object?>[cowId, removed.path],
+        where: 'cattle_id = ? AND path = ?',
+        whereArgs: <Object?>[cattleId, removed.path],
       );
     }
 
@@ -1035,10 +1008,10 @@ class EmbeddingDatabase {
     }
 
     await _db!.update(
-      'cows',
+      'cattle',
       <String, Object?>{'profile_image_path': record.profileImagePath},
       where: 'id = ?',
-      whereArgs: <Object?>[cowId],
+      whereArgs: <Object?>[cattleId],
     );
 
     if (File(removed.path).existsSync()) {
@@ -1050,21 +1023,21 @@ class EmbeddingDatabase {
   // Cow-level updates
   // ---------------------------------------------------------------------------
 
-  Future<void> updateCowBasicInfo({
-    required String oldCowId,
-    required String newCowId,
+  Future<void> updateCattleBasicInfo({
+    required String oldCattleId,
+    required String newCattleId,
     String? profileImagePath,
   }) async {
-    final CowRecord? existing = _recordsByCow[oldCowId];
+    final CattleRecord? existing = _recordsByCattle[oldCattleId];
     if (existing == null) {
       return;
     }
-    if (newCowId.trim().isEmpty) {
+    if (newCattleId.trim().isEmpty) {
       return;
     }
 
-    final String trimmedId = newCowId.trim();
-    final CowRecord updated = CowRecord(
+    final String trimmedId = newCattleId.trim();
+    final CattleRecord updated = CattleRecord(
       id: trimmedId,
       registrationDate: existing.registrationDate,
       profileImagePath: profileImagePath ?? existing.profileImagePath,
@@ -1082,9 +1055,9 @@ class EmbeddingDatabase {
 
     final Database db = _db!;
     await db.transaction((Transaction txn) async {
-      // Insert the new cow row first.
+      // Insert the new cattle row first.
       await txn.insert(
-        'cows',
+        'cattle',
         <String, Object?>{
           'id': trimmedId,
           'registration_date':
@@ -1099,7 +1072,7 @@ class EmbeddingDatabase {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
-      // Re-point all child rows from old cow id to new cow id.
+      // Re-point all child rows from old cattle id to new cattle id.
       for (final String table in <String>[
         'embeddings',
         'health_records',
@@ -1109,41 +1082,41 @@ class EmbeddingDatabase {
       ]) {
         await txn.update(
           table,
-          <String, Object?>{'cow_id': trimmedId},
-          where: 'cow_id = ?',
-          whereArgs: <Object?>[oldCowId],
+          <String, Object?>{'cattle_id': trimmedId},
+          where: 'cattle_id = ?',
+          whereArgs: <Object?>[oldCattleId],
         );
       }
 
-      // Delete old cow row (if the id actually changed).
-      if (oldCowId != trimmedId) {
+      // Delete old cattle row (if the id actually changed).
+      if (oldCattleId != trimmedId) {
         await txn.delete(
-          'cows',
+          'cattle',
           where: 'id = ?',
-          whereArgs: <Object?>[oldCowId],
+          whereArgs: <Object?>[oldCattleId],
         );
       }
     });
 
-    _recordsByCow.remove(oldCowId);
-    _recordsByCow[trimmedId] = updated;
+    _recordsByCattle.remove(oldCattleId);
+    _recordsByCattle[trimmedId] = updated;
   }
 
   // ---------------------------------------------------------------------------
   // Breed Classification
   // ---------------------------------------------------------------------------
 
-  /// Saves the breed classification result for [cowId] in memory and in SQLite.
+  /// Saves the breed classification result for [cattleId] in memory and in SQLite.
   ///
   /// Calling this always resets any prior user confirmation so the user can
   /// review the new result and re-confirm if they wish.
   Future<void> saveBreedResult({
-    required String cowId,
+    required String cattleId,
     required String breedName,
     required double breedConfidence,
     required List<BreedPrediction> alternatives,
   }) async {
-    final CowRecord? record = _recordsByCow[cowId];
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null) {
       return;
     }
@@ -1159,7 +1132,7 @@ class EmbeddingDatabase {
     record.breedConfirmedByUser = false;
 
     await _db!.update(
-      'cows',
+      'cattle',
       <String, Object?>{
         'breed_name': breedName,
         'breed_confidence': breedConfidence,
@@ -1168,18 +1141,18 @@ class EmbeddingDatabase {
         'breed_confirmed_by_user': 0,
       },
       where: 'id = ?',
-      whereArgs: <Object?>[cowId],
+      whereArgs: <Object?>[cattleId],
     );
   }
 
-  /// Saves the user-chosen breed override for [cowId].
+  /// Saves the user-chosen breed override for [cattleId].
   ///
   /// This does NOT clear the model prediction — both can coexist.
   Future<void> confirmBreed({
-    required String cowId,
+    required String cattleId,
     required String confirmedBreed,
   }) async {
-    final CowRecord? record = _recordsByCow[cowId];
+    final CattleRecord? record = _recordsByCattle[cattleId];
     if (record == null) {
       return;
     }
@@ -1188,18 +1161,18 @@ class EmbeddingDatabase {
     record.breedConfirmedByUser = true;
 
     await _db!.update(
-      'cows',
+      'cattle',
       <String, Object?>{
         'confirmed_breed': confirmedBreed,
         'breed_confirmed_by_user': 1,
       },
       where: 'id = ?',
-      whereArgs: <Object?>[cowId],
+      whereArgs: <Object?>[cattleId],
     );
   }
 
-  Future<void> deleteCow(String cowId) async {
-    _recordsByCow.remove(cowId);
+  Future<void> deleteCattle(String cattleId) async {
+    _recordsByCattle.remove(cattleId);
 
     final Database db = _db!;
     await db.transaction((Transaction txn) async {
@@ -1210,9 +1183,9 @@ class EmbeddingDatabase {
         'notes',
         'images',
       ]) {
-        await txn.delete(table, where: 'cow_id = ?', whereArgs: <Object?>[cowId]);
+        await txn.delete(table, where: 'cattle_id = ?', whereArgs: <Object?>[cattleId]);
       }
-      await txn.delete('cows', where: 'id = ?', whereArgs: <Object?>[cowId]);
+      await txn.delete('cattle', where: 'id = ?', whereArgs: <Object?>[cattleId]);
     });
   }
 
@@ -1220,17 +1193,17 @@ class EmbeddingDatabase {
   // Helpers
   // ---------------------------------------------------------------------------
 
-  /// Replaces all child rows for a given cow in the specified table.
+  /// Replaces all child rows for a given cattle in the specified table.
   /// Used for update/delete operations on ordered lists where we don't have
   /// stable row IDs mapped to in-memory indices.
   Future<void> _replaceChildRows({
-    required String cowId,
+    required String cattleId,
     required String table,
     required List<Map<String, Object?>> rows,
   }) async {
     final Database db = _db!;
     await db.transaction((Transaction txn) async {
-      await txn.delete(table, where: 'cow_id = ?', whereArgs: <Object?>[cowId]);
+      await txn.delete(table, where: 'cattle_id = ?', whereArgs: <Object?>[cattleId]);
       for (final Map<String, Object?> row in rows) {
         await txn.insert(table, row);
       }
@@ -1238,9 +1211,9 @@ class EmbeddingDatabase {
   }
 
   void _repairImagePaths() {
-    for (final CowRecord record in _recordsByCow.values) {
+    for (final CattleRecord record in _recordsByCattle.values) {
       record.images.removeWhere(
-        (CowImage image) => !File(image.path).existsSync(),
+        (CattleImage image) => !File(image.path).existsSync(),
       );
       if (record.profileImagePath != null &&
           !File(record.profileImagePath!).existsSync()) {
@@ -1253,7 +1226,7 @@ class EmbeddingDatabase {
   }
 
   Future<void> _purgeEmbeddingsForMissingPhotos() async {
-    for (final CowRecord record in _recordsByCow.values) {
+    for (final CattleRecord record in _recordsByCattle.values) {
       final List<EmbeddingReference> stale = record.embeddings
           .where(
             (EmbeddingReference ref) =>
@@ -1275,18 +1248,18 @@ class EmbeddingDatabase {
 
   Future<void> _repairPhotoEmbeddingLinks() async {
     final Database db = _db!;
-    for (final CowRecord record in _recordsByCow.values) {
+    for (final CattleRecord record in _recordsByCattle.values) {
       final Set<String> pathsWithEmbedding = record.embeddings
           .map((EmbeddingReference ref) => ref.sourceImagePath)
           .whereType<String>()
           .where((String path) => path.isNotEmpty)
           .toSet();
 
-      final List<CowImage> photosNeedingLink = record.images
-          .where((CowImage img) => !pathsWithEmbedding.contains(img.path))
+      final List<CattleImage> photosNeedingLink = record.images
+          .where((CattleImage img) => !pathsWithEmbedding.contains(img.path))
           .toList()
         ..sort(
-          (CowImage a, CowImage b) => (a.id ?? 0).compareTo(b.id ?? 0),
+          (CattleImage a, CattleImage b) => (a.id ?? 0).compareTo(b.id ?? 0),
         );
 
       final List<int> unlinkedEmbeddingIndexes = <int>[];
@@ -1300,7 +1273,7 @@ class EmbeddingDatabase {
           index < photosNeedingLink.length &&
           index < unlinkedEmbeddingIndexes.length;
           index++) {
-        final CowImage photo = photosNeedingLink[index];
+        final CattleImage photo = photosNeedingLink[index];
         final int embeddingIndex = unlinkedEmbeddingIndexes[index];
         final EmbeddingReference old = record.embeddings[embeddingIndex];
         record.embeddings[embeddingIndex] = old.copyWith(
@@ -1323,7 +1296,7 @@ class EmbeddingDatabase {
   }
 
   Future<void> _removeOrphanEmbeddings() async {
-    for (final CowRecord record in _recordsByCow.values) {
+    for (final CattleRecord record in _recordsByCattle.values) {
       final List<EmbeddingReference> orphans = record.embeddings
           .where(
             (EmbeddingReference ref) =>
@@ -1344,17 +1317,17 @@ class EmbeddingDatabase {
   }
 
   bool _embeddingLinkedToLivePhoto(
-    CowRecord record,
+    CattleRecord record,
     EmbeddingReference ref,
   ) {
     if (ref.imageId != null &&
-        record.images.any((CowImage img) => img.id == ref.imageId)) {
+        record.images.any((CattleImage img) => img.id == ref.imageId)) {
       return true;
     }
     final String? path = ref.sourceImagePath;
     if (path != null &&
         path.isNotEmpty &&
-        record.images.any((CowImage img) => img.path == path)) {
+        record.images.any((CattleImage img) => img.path == path)) {
       return true;
     }
     return false;
@@ -1376,7 +1349,7 @@ class EmbeddingDatabase {
         ? source.path.substring(source.path.lastIndexOf('.'))
         : '.jpg';
     final String fileName =
-        'cow_${DateTime.now().microsecondsSinceEpoch}$extension';
+        'cattle_${DateTime.now().microsecondsSinceEpoch}$extension';
     final String targetPath = p.join(imageDir.path, fileName);
     await source.copy(targetPath);
     return targetPath;
