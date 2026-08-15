@@ -1,22 +1,22 @@
 class IdentificationResult {
   const IdentificationResult({
-    required this.predictedCowId,
+    required this.predictedCattleId,
     required this.similarity,
     required this.isKnown,
-    this.suggestedCowId,
+    this.suggestedCattleId,
   });
 
-  final String predictedCowId;
+  final String predictedCattleId;
   final double similarity;
   final bool isKnown;
 
-  /// Best-matching registered cow when [isKnown] is false but a partial match
+  /// Best-matching registered cattle when [isKnown] is false but a partial match
   /// exists. Used to surface borderline matches on the Identify tab.
-  final String? suggestedCowId;
+  final String? suggestedCattleId;
 
   bool get hasBorderlineMatch =>
       !isKnown &&
-      suggestedCowId != null &&
+      suggestedCattleId != null &&
       similarity >= IdentificationResult.borderlineThreshold;
 
   static const double borderlineThreshold = 0.70;
