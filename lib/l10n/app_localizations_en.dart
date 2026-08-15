@@ -96,17 +96,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidPinLength => 'PIN must be 4 digits';
 
   @override
-  String get cowsNotebook => 'Cows Notebook';
+  String get cattleNotebook => 'Cattle Notebook';
 
   @override
-  String get noCows => 'No cows registered yet.';
+  String get noCattles => 'No cattle registered yet.';
 
   @override
   String get searchHint => 'Search your herd...';
 
   @override
-  String cowIdLabel(String id) {
-    return 'Cow ID: $id';
+  String cattleIdLabel(String id) {
+    return 'Cattle ID: $id';
   }
 
   @override
@@ -115,7 +115,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get readyToIdentify => 'Ready to identify cows and keep records.';
+  String get readyToIdentify => 'Ready to identify cattle and keep records.';
 
   @override
   String get initializingDb => 'Getting your cattle notebook ready...';
@@ -130,26 +130,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectImage => 'Select an image after the model finishes loading.';
 
   @override
-  String get checkingCow => 'Checking cow...';
+  String get checkingCattle => 'Checking cattle...';
 
   @override
-  String get cowIdentified => 'Cow identified.';
+  String get cattleIdentified => 'Cattle identified.';
 
   @override
   String get borderlineMatch =>
-      'This looks like a cow you already have — see below.';
+      'This looks like a cattle you already have — see below.';
 
   @override
-  String get noMatchingCow => 'No matching cow found.';
+  String get noMatchingCattle => 'No matching cattle found.';
 
   @override
-  String get couldNotIdentify => 'Could not identify this cow right now.';
+  String get couldNotIdentify => 'Could not identify this cattle right now.';
 
   @override
-  String get addThisCow => 'Add this cow';
+  String get addThisCattle => 'Add this cattle';
 
   @override
-  String get cowId => 'Cow ID';
+  String get cattleId => 'Cattle ID';
 
   @override
   String get optionalNote => 'Note (optional)';
@@ -158,10 +158,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get register => 'Register';
 
   @override
-  String get addCow => 'Add cow';
+  String get addCattle => 'Add cattle';
 
   @override
-  String get cowAlreadyExists => 'Cow ID already exists';
+  String get cattleAlreadyExists => 'Cattle ID already exists';
 
   @override
   String get pleaseEnterId => 'Please enter an ID';
@@ -170,10 +170,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registering => 'Registering...';
 
   @override
-  String get cowRegistered => 'Cow registered';
+  String get cattleRegistered => 'Cattle registered';
 
   @override
-  String get failedToRegister => 'Could not register cow';
+  String get failedToRegister => 'Could not register cattle';
 
   @override
   String get basicInfo => 'Basic info';
@@ -354,7 +354,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cattleIdentificationDesc =>
-      'Add facial photos used to recognize this cow.';
+      'Add facial photos used to recognize this cattle.';
 
   @override
   String get noIdentityPhotos => 'No facial photos added yet.';
@@ -370,7 +370,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get photoDesc =>
-      'Add photos to track this cow\'s appearance over time.';
+      'Add photos to track this cattle\'s appearance over time.';
 
   @override
   String get noPhotos => 'No photos yet.';
@@ -396,7 +396,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deletePhotoConfirm =>
-      'Delete this photo? It will also be removed from cow identification.';
+      'Delete this photo? It will also be removed from cattle identification.';
 
   @override
   String get photoDeleted => 'Photo deleted';
@@ -408,11 +408,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addPhotoConfirm =>
-      'This photo will be saved and can be used to identify this cow later.';
+      'This photo will be saved and can be used to identify this cattle later.';
 
   @override
   String get galleryPhotoConfirm =>
-      'This photo will be saved to track this cow\'s appearance over time.';
+      'This photo will be saved to track this cattle\'s appearance over time.';
 
   @override
   String get photoAdded => 'Photo added';
@@ -427,7 +427,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseFromGallery => 'Choose from gallery';
 
   @override
-  String get takeOrChooseClear => 'Take or choose a clear photo of this cow.';
+  String get takeOrChooseClear =>
+      'Take or choose a clear photo of this cattle.';
 
   @override
   String get classifyThisPhoto => 'Classify this photo?';
@@ -441,24 +442,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get takeOrChooseFullBody =>
-      'Take or choose a clear full-body photo of this cow.';
+      'Take or choose a clear full-body photo of this cattle.';
 
   @override
-  String get deleteCowRecord => 'Delete Cow Record';
+  String get deleteCattleRecord => 'Delete Cattle Record';
 
   @override
-  String deleteCowRecordConfirm(String id) {
+  String deleteCattleRecordConfirm(String id) {
     return 'Delete $id and all related records?';
   }
 
   @override
-  String get cowRecordDeleted => 'Cow record deleted';
+  String get cattleRecordDeleted => 'Cattle record deleted';
 
   @override
-  String get cowDetails => 'Cow details';
+  String get cattleDetails => 'Cattle details';
 
   @override
-  String get cowNotFound => 'Cow record not found.';
+  String get cattleNotFound => 'Cattle record not found.';
 
   @override
   String detailsHeader(String id) {
@@ -466,16 +467,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get identifyCow => 'Identify Cow';
+  String get identifyCattle => 'Identify Cattle';
 
   @override
   String get identifyTab => 'Identify';
 
   @override
-  String get cowsTab => 'My Cows';
+  String get cattleTab => 'My Cattle';
 
   @override
-  String get tapIdentify => 'Photo added. Tap Identify Cow.';
+  String get tapIdentify => 'Photo added. Tap Identify Cattle.';
 
   @override
   String get selectImageFirst => 'Select an image first.';
@@ -487,16 +488,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get details => 'Details';
 
   @override
-  String get unknownCow => 'Unknown Cow';
+  String get unknownCattle => 'Unknown Cattle';
 
   @override
-  String get registerThisCow => 'Register this cow';
+  String get registerThisCattle => 'Register this cattle';
 
   @override
   String get backButton => 'Back';
 
   @override
-  String get noCowsFound => 'No cows found';
+  String get noCattlesFound => 'No cattle found';
 
   @override
   String get activeLabel => 'Active';
@@ -530,7 +531,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String dialogIdentifyAsConfirm(String id, int confidence) {
-    return 'This cow looks a lot like $id (Confidence: $confidence%). Do you want to save this photo under $id\'s history instead of registering a new cow?';
+    return 'This cattle looks a lot like $id (Confidence: $confidence%). Do you want to save this photo under $id\'s history instead of registering a new cattle?';
   }
 
   @override
@@ -539,7 +540,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get dialogIdentifyNewCow => 'No, it\'s a new cow';
+  String get dialogIdentifyNewCattle => 'No, it\'s a new cattle';
 
   @override
   String get checkingPhotoBeforeReg => 'Checking photo before registration...';
@@ -566,10 +567,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get addPhotoToThat => 'Add this photo to that cow?';
+  String get addPhotoToThat => 'Add this photo to that cattle?';
 
   @override
-  String get createNewCow => 'Create new cow';
+  String get createNewCattle => 'Create new cattle';
 
   @override
   String get savingPhoto => 'Saving photo...';
@@ -583,7 +584,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get couldNotSavePhoto => 'Could not save this photo.';
 
   @override
-  String get savingCowDetails => 'Saving cow details...';
+  String get savingCattleDetails => 'Saving cattle details...';
 
   @override
   String addedToHerd(String id) {
@@ -621,8 +622,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get identificationResult => 'Identification result';
 
   @override
-  String get noCowsMessage =>
-      'No cows yet.\nUse Identify to add your first cow.';
+  String get noCattlesMessage =>
+      'No cattle yet.\nUse Identify to add your first cattle.';
 
   @override
   String get yourHerd => 'Your herd';
@@ -632,11 +633,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookDescription =>
-      'Take or upload a photo to identify a cow and keep simple records.';
+      'Take or upload a photo to identify a cattle and keep simple records.';
 
   @override
-  String registeredCowsCount(int count) {
-    return 'Registered cows: $count';
+  String registeredCattlesCount(int count) {
+    return 'Registered cattle: $count';
   }
 
   @override
@@ -650,7 +651,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get identifyResultPlaceholder =>
-      'Identify a cow to see the result here.';
+      'Identify a cattle to see the result here.';
 
   @override
   String matchConfidence(String confidence) {
@@ -658,14 +659,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get cowAlreadyInHerd => 'This cow is already in your herd.';
+  String get cattleAlreadyInHerd => 'This cattle is already in your herd.';
 
   @override
-  String get noMatchingCowRegisterHint =>
-      'No matching cow found. You can add this as a new cow.';
+  String get noMatchingCattleRegisterHint =>
+      'No matching cattle found. You can add this as a new cattle.';
 
   @override
-  String cowSummarySubtitle(int health, int vaccines, int notes) {
+  String cattleSummarySubtitle(int health, int vaccines, int notes) {
     return 'Health: $health • Vaccines: $vaccines • Notes: $notes';
   }
 

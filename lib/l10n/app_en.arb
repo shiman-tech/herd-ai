@@ -32,11 +32,11 @@
   "enterAllFields": "Please fill in all fields",
   "invalidPinLength": "PIN must be 4 digits",
   
-  "cowsNotebook": "Cows Notebook",
-  "noCows": "No cows registered yet.",
+  "cattleNotebook": "Cattle Notebook",
+  "noCattles": "No cattle registered yet.",
   "searchHint": "Search your herd...",
-  "cowIdLabel": "Cow ID: {id}",
-  "@cowIdLabel": {
+  "cattleIdLabel": "Cattle ID: {id}",
+  "@cattleIdLabel": {
     "placeholders": {
       "id": {
         "type": "String"
@@ -51,26 +51,26 @@
       }
     }
   },
-  "readyToIdentify": "Ready to identify cows and keep records.",
+  "readyToIdentify": "Ready to identify cattle and keep records.",
   "initializingDb": "Getting your cattle notebook ready...",
   "readyText": "Ready to identify",
   "notReady": "App setup is not complete yet. Please retry.",
   "selectImage": "Select an image after the model finishes loading.",
-  "checkingCow": "Checking cow...",
-  "cowIdentified": "Cow identified.",
-  "borderlineMatch": "This looks like a cow you already have — see below.",
-  "noMatchingCow": "No matching cow found.",
-  "couldNotIdentify": "Could not identify this cow right now.",
-  "addThisCow": "Add this cow",
-  "cowId": "Cow ID",
+  "checkingCattle": "Checking cattle...",
+  "cattleIdentified": "Cattle identified.",
+  "borderlineMatch": "This looks like a cattle you already have — see below.",
+  "noMatchingCattle": "No matching cattle found.",
+  "couldNotIdentify": "Could not identify this cattle right now.",
+  "addThisCattle": "Add this cattle",
+  "cattleId": "Cattle ID",
   "optionalNote": "Note (optional)",
   "register": "Register",
-  "addCow": "Add cow",
-  "cowAlreadyExists": "Cow ID already exists",
+  "addCattle": "Add cattle",
+  "cattleAlreadyExists": "Cattle ID already exists",
   "pleaseEnterId": "Please enter an ID",
   "registering": "Registering...",
-  "cowRegistered": "Cow registered",
-  "failedToRegister": "Could not register cow",
+  "cattleRegistered": "Cattle registered",
+  "failedToRegister": "Could not register cattle",
   
   "basicInfo": "Basic info",
   "registeredOn": "Registered: {date}",
@@ -160,13 +160,13 @@
   "noteSaved": "Note saved",
   
   "cattleIdentification": "Cattle Identification",
-  "cattleIdentificationDesc": "Add facial photos used to recognize this cow.",
+  "cattleIdentificationDesc": "Add facial photos used to recognize this cattle.",
   "noIdentityPhotos": "No facial photos added yet.",
   "addFacialPhoto": "Add Photo",
 
   "photos": "Photo Gallery",
   "addPhoto": "Add Photo",
-  "photoDesc": "Add photos to track this cow's appearance over time.",
+  "photoDesc": "Add photos to track this cattle's appearance over time.",
   "noPhotos": "No photos yet.",
   "replace": "Replace",
   "replacePhoto": "Replace this photo?",
@@ -174,7 +174,7 @@
   "photoUpdated": "Photo updated",
   "couldNotUpdatePhoto": "Could not update photo",
   "deletePhoto": "Delete photo",
-  "deletePhotoConfirm": "Delete this photo? It will also be removed from cow identification.",
+  "deletePhotoConfirm": "Delete this photo? It will also be removed from cattle identification.",
   "photoDeleted": "Photo deleted",
   "addPhotoTo": "Add photo to {id}?",
   "@addPhotoTo": {
@@ -184,30 +184,30 @@
       }
     }
   },
-  "addPhotoConfirm": "This photo will be saved and can be used to identify this cow later.",
-  "galleryPhotoConfirm": "This photo will be saved to track this cow's appearance over time.",
+  "addPhotoConfirm": "This photo will be saved and can be used to identify this cattle later.",
+  "galleryPhotoConfirm": "This photo will be saved to track this cattle's appearance over time.",
   "photoAdded": "Photo added",
   "couldNotAddPhoto": "Could not add photo",
   "takePhoto": "Take photo",
   "chooseFromGallery": "Choose from gallery",
-  "takeOrChooseClear": "Take or choose a clear photo of this cow.",
+  "takeOrChooseClear": "Take or choose a clear photo of this cattle.",
   "classifyThisPhoto": "Classify this photo?",
   "classifyThisPhotoConfirm": "A clear, well-lit full-body photo gives the best breed prediction.",
   "classify": "Classify",
-  "takeOrChooseFullBody": "Take or choose a clear full-body photo of this cow.",
+  "takeOrChooseFullBody": "Take or choose a clear full-body photo of this cattle.",
   
-  "deleteCowRecord": "Delete Cow Record",
-  "deleteCowRecordConfirm": "Delete {id} and all related records?",
-  "@deleteCowRecordConfirm": {
+  "deleteCattleRecord": "Delete Cattle Record",
+  "deleteCattleRecordConfirm": "Delete {id} and all related records?",
+  "@deleteCattleRecordConfirm": {
     "placeholders": {
       "id": {
         "type": "String"
       }
     }
   },
-  "cowRecordDeleted": "Cow record deleted",
-  "cowDetails": "Cow details",
-  "cowNotFound": "Cow record not found.",
+  "cattleRecordDeleted": "Cattle record deleted",
+  "cattleDetails": "Cattle details",
+  "cattleNotFound": "Cattle record not found.",
   "detailsHeader": "{id} details",
   "@detailsHeader": {
     "placeholders": {
@@ -217,17 +217,17 @@
     }
   },
   
-  "identifyCow": "Identify Cow",
+  "identifyCattle": "Identify Cattle",
   "identifyTab": "Identify",
-  "cowsTab": "My Cows",
-  "tapIdentify": "Photo added. Tap Identify Cow.",
+  "cattleTab": "My Cattle",
+  "tapIdentify": "Photo added. Tap Identify Cattle.",
   "selectImageFirst": "Select an image first.",
   "matchesHeading": "Matches",
   "details": "Details",
-  "unknownCow": "Unknown Cow",
-  "registerThisCow": "Register this cow",
+  "unknownCattle": "Unknown Cattle",
+  "registerThisCattle": "Register this cattle",
   "backButton": "Back",
-  "noCowsFound": "No cows found",
+  "noCattlesFound": "No cattle found",
   "activeLabel": "Active",
   "recoveredLabel": "Recovered",
   "givenLabel": "Given: {date}",
@@ -259,7 +259,7 @@
       }
     }
   },
-  "dialogIdentifyAsConfirm": "This cow looks a lot like {id} (Confidence: {confidence}%). Do you want to save this photo under {id}'s history instead of registering a new cow?",
+  "dialogIdentifyAsConfirm": "This cattle looks a lot like {id} (Confidence: {confidence}%). Do you want to save this photo under {id}'s history instead of registering a new cattle?",
   "@dialogIdentifyAsConfirm": {
     "placeholders": {
       "id": {
@@ -278,7 +278,7 @@
       }
     }
   },
-  "dialogIdentifyNewCow": "No, it's a new cow",
+  "dialogIdentifyNewCattle": "No, it's a new cattle",
   
   "checkingPhotoBeforeReg": "Checking photo before registration...",
   "alreadyInHerd": "{id} is already in your herd",
@@ -307,8 +307,8 @@
       }
     }
   },
-  "addPhotoToThat": "Add this photo to that cow?",
-  "createNewCow": "Create new cow",
+  "addPhotoToThat": "Add this photo to that cattle?",
+  "createNewCattle": "Create new cattle",
   "savingPhoto": "Saving photo...",
   "photoAddedTo": "Photo added to {id}",
   "@photoAddedTo": {
@@ -319,7 +319,7 @@
     }
   },
   "couldNotSavePhoto": "Could not save this photo.",
-  "savingCowDetails": "Saving cow details...",
+  "savingCattleDetails": "Saving cattle details...",
   "addedToHerd": "{id} added to your herd.",
   "@addedToHerd": {
     "placeholders": {
@@ -345,12 +345,12 @@
   "captureImage": "Capture Image",
   "uploadImage": "Upload Image",
   "identificationResult": "Identification result",
-  "noCowsMessage": "No cows yet.\nUse Identify to add your first cow.",
+  "noCattlesMessage": "No cattle yet.\nUse Identify to add your first cattle.",
   "yourHerd": "Your herd",
   "welcomeNotebook": "Welcome to your cattle notebook",
-  "notebookDescription": "Take or upload a photo to identify a cow and keep simple records.",
-  "registeredCowsCount": "Registered cows: {count}",
-  "@registeredCowsCount": {
+  "notebookDescription": "Take or upload a photo to identify a cattle and keep simple records.",
+  "registeredCattlesCount": "Registered cattle: {count}",
+  "@registeredCattlesCount": {
     "placeholders": {
       "count": {
         "type": "int"
@@ -360,7 +360,7 @@
   "initErrorOccurred": "Something went wrong while opening the app.",
   "tryAgain": "Try again",
   "noPhotoSelected": "No photo selected",
-  "identifyResultPlaceholder": "Identify a cow to see the result here.",
+  "identifyResultPlaceholder": "Identify a cattle to see the result here.",
   "matchConfidence": "Match confidence: {confidence}%",
   "@matchConfidence": {
     "placeholders": {
@@ -369,10 +369,10 @@
       }
     }
   },
-  "cowAlreadyInHerd": "This cow is already in your herd.",
-  "noMatchingCowRegisterHint": "No matching cow found. You can add this as a new cow.",
-  "cowSummarySubtitle": "Health: {health} • Vaccines: {vaccines} • Notes: {notes}",
-  "@cowSummarySubtitle": {
+  "cattleAlreadyInHerd": "This cattle is already in your herd.",
+  "noMatchingCattleRegisterHint": "No matching cattle found. You can add this as a new cattle.",
+  "cattleSummarySubtitle": "Health: {health} • Vaccines: {vaccines} • Notes: {notes}",
+  "@cattleSummarySubtitle": {
     "placeholders": {
       "health": {
         "type": "int"

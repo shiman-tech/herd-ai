@@ -288,17 +288,17 @@ abstract class AppLocalizations {
   /// **'PIN must be 4 digits'**
   String get invalidPinLength;
 
-  /// No description provided for @cowsNotebook.
+  /// No description provided for @cattleNotebook.
   ///
   /// In en, this message translates to:
-  /// **'Cows Notebook'**
-  String get cowsNotebook;
+  /// **'Cattle Notebook'**
+  String get cattleNotebook;
 
-  /// No description provided for @noCows.
+  /// No description provided for @noCattles.
   ///
   /// In en, this message translates to:
-  /// **'No cows registered yet.'**
-  String get noCows;
+  /// **'No cattle registered yet.'**
+  String get noCattles;
 
   /// No description provided for @searchHint.
   ///
@@ -306,11 +306,11 @@ abstract class AppLocalizations {
   /// **'Search your herd...'**
   String get searchHint;
 
-  /// No description provided for @cowIdLabel.
+  /// No description provided for @cattleIdLabel.
   ///
   /// In en, this message translates to:
-  /// **'Cow ID: {id}'**
-  String cowIdLabel(String id);
+  /// **'Cattle ID: {id}'**
+  String cattleIdLabel(String id);
 
   /// No description provided for @registeredLabel.
   ///
@@ -321,7 +321,7 @@ abstract class AppLocalizations {
   /// No description provided for @readyToIdentify.
   ///
   /// In en, this message translates to:
-  /// **'Ready to identify cows and keep records.'**
+  /// **'Ready to identify cattle and keep records.'**
   String get readyToIdentify;
 
   /// No description provided for @initializingDb.
@@ -348,47 +348,47 @@ abstract class AppLocalizations {
   /// **'Select an image after the model finishes loading.'**
   String get selectImage;
 
-  /// No description provided for @checkingCow.
+  /// No description provided for @checkingCattle.
   ///
   /// In en, this message translates to:
-  /// **'Checking cow...'**
-  String get checkingCow;
+  /// **'Checking cattle...'**
+  String get checkingCattle;
 
-  /// No description provided for @cowIdentified.
+  /// No description provided for @cattleIdentified.
   ///
   /// In en, this message translates to:
-  /// **'Cow identified.'**
-  String get cowIdentified;
+  /// **'Cattle identified.'**
+  String get cattleIdentified;
 
   /// No description provided for @borderlineMatch.
   ///
   /// In en, this message translates to:
-  /// **'This looks like a cow you already have — see below.'**
+  /// **'This looks like a cattle you already have — see below.'**
   String get borderlineMatch;
 
-  /// No description provided for @noMatchingCow.
+  /// No description provided for @noMatchingCattle.
   ///
   /// In en, this message translates to:
-  /// **'No matching cow found.'**
-  String get noMatchingCow;
+  /// **'No matching cattle found.'**
+  String get noMatchingCattle;
 
   /// No description provided for @couldNotIdentify.
   ///
   /// In en, this message translates to:
-  /// **'Could not identify this cow right now.'**
+  /// **'Could not identify this cattle right now.'**
   String get couldNotIdentify;
 
-  /// No description provided for @addThisCow.
+  /// No description provided for @addThisCattle.
   ///
   /// In en, this message translates to:
-  /// **'Add this cow'**
-  String get addThisCow;
+  /// **'Add this cattle'**
+  String get addThisCattle;
 
-  /// No description provided for @cowId.
+  /// No description provided for @cattleId.
   ///
   /// In en, this message translates to:
-  /// **'Cow ID'**
-  String get cowId;
+  /// **'Cattle ID'**
+  String get cattleId;
 
   /// No description provided for @optionalNote.
   ///
@@ -402,17 +402,17 @@ abstract class AppLocalizations {
   /// **'Register'**
   String get register;
 
-  /// No description provided for @addCow.
+  /// No description provided for @addCattle.
   ///
   /// In en, this message translates to:
-  /// **'Add cow'**
-  String get addCow;
+  /// **'Add cattle'**
+  String get addCattle;
 
-  /// No description provided for @cowAlreadyExists.
+  /// No description provided for @cattleAlreadyExists.
   ///
   /// In en, this message translates to:
-  /// **'Cow ID already exists'**
-  String get cowAlreadyExists;
+  /// **'Cattle ID already exists'**
+  String get cattleAlreadyExists;
 
   /// No description provided for @pleaseEnterId.
   ///
@@ -426,16 +426,16 @@ abstract class AppLocalizations {
   /// **'Registering...'**
   String get registering;
 
-  /// No description provided for @cowRegistered.
+  /// No description provided for @cattleRegistered.
   ///
   /// In en, this message translates to:
-  /// **'Cow registered'**
-  String get cowRegistered;
+  /// **'Cattle registered'**
+  String get cattleRegistered;
 
   /// No description provided for @failedToRegister.
   ///
   /// In en, this message translates to:
-  /// **'Could not register cow'**
+  /// **'Could not register cattle'**
   String get failedToRegister;
 
   /// No description provided for @basicInfo.
@@ -777,7 +777,7 @@ abstract class AppLocalizations {
   /// No description provided for @cattleIdentificationDesc.
   ///
   /// In en, this message translates to:
-  /// **'Add facial photos used to recognize this cow.'**
+  /// **'Add facial photos used to recognize this cattle.'**
   String get cattleIdentificationDesc;
 
   /// No description provided for @noIdentityPhotos.
@@ -807,7 +807,7 @@ abstract class AppLocalizations {
   /// No description provided for @photoDesc.
   ///
   /// In en, this message translates to:
-  /// **'Add photos to track this cow\'s appearance over time.'**
+  /// **'Add photos to track this cattle\'s appearance over time.'**
   String get photoDesc;
 
   /// No description provided for @noPhotos.
@@ -855,7 +855,7 @@ abstract class AppLocalizations {
   /// No description provided for @deletePhotoConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Delete this photo? It will also be removed from cow identification.'**
+  /// **'Delete this photo? It will also be removed from cattle identification.'**
   String get deletePhotoConfirm;
 
   /// No description provided for @photoDeleted.
@@ -873,13 +873,13 @@ abstract class AppLocalizations {
   /// No description provided for @addPhotoConfirm.
   ///
   /// In en, this message translates to:
-  /// **'This photo will be saved and can be used to identify this cow later.'**
+  /// **'This photo will be saved and can be used to identify this cattle later.'**
   String get addPhotoConfirm;
 
   /// No description provided for @galleryPhotoConfirm.
   ///
   /// In en, this message translates to:
-  /// **'This photo will be saved to track this cow\'s appearance over time.'**
+  /// **'This photo will be saved to track this cattle\'s appearance over time.'**
   String get galleryPhotoConfirm;
 
   /// No description provided for @photoAdded.
@@ -909,7 +909,7 @@ abstract class AppLocalizations {
   /// No description provided for @takeOrChooseClear.
   ///
   /// In en, this message translates to:
-  /// **'Take or choose a clear photo of this cow.'**
+  /// **'Take or choose a clear photo of this cattle.'**
   String get takeOrChooseClear;
 
   /// No description provided for @classifyThisPhoto.
@@ -933,38 +933,38 @@ abstract class AppLocalizations {
   /// No description provided for @takeOrChooseFullBody.
   ///
   /// In en, this message translates to:
-  /// **'Take or choose a clear full-body photo of this cow.'**
+  /// **'Take or choose a clear full-body photo of this cattle.'**
   String get takeOrChooseFullBody;
 
-  /// No description provided for @deleteCowRecord.
+  /// No description provided for @deleteCattleRecord.
   ///
   /// In en, this message translates to:
-  /// **'Delete Cow Record'**
-  String get deleteCowRecord;
+  /// **'Delete Cattle Record'**
+  String get deleteCattleRecord;
 
-  /// No description provided for @deleteCowRecordConfirm.
+  /// No description provided for @deleteCattleRecordConfirm.
   ///
   /// In en, this message translates to:
   /// **'Delete {id} and all related records?'**
-  String deleteCowRecordConfirm(String id);
+  String deleteCattleRecordConfirm(String id);
 
-  /// No description provided for @cowRecordDeleted.
+  /// No description provided for @cattleRecordDeleted.
   ///
   /// In en, this message translates to:
-  /// **'Cow record deleted'**
-  String get cowRecordDeleted;
+  /// **'Cattle record deleted'**
+  String get cattleRecordDeleted;
 
-  /// No description provided for @cowDetails.
+  /// No description provided for @cattleDetails.
   ///
   /// In en, this message translates to:
-  /// **'Cow details'**
-  String get cowDetails;
+  /// **'Cattle details'**
+  String get cattleDetails;
 
-  /// No description provided for @cowNotFound.
+  /// No description provided for @cattleNotFound.
   ///
   /// In en, this message translates to:
-  /// **'Cow record not found.'**
-  String get cowNotFound;
+  /// **'Cattle record not found.'**
+  String get cattleNotFound;
 
   /// No description provided for @detailsHeader.
   ///
@@ -972,11 +972,11 @@ abstract class AppLocalizations {
   /// **'{id} details'**
   String detailsHeader(String id);
 
-  /// No description provided for @identifyCow.
+  /// No description provided for @identifyCattle.
   ///
   /// In en, this message translates to:
-  /// **'Identify Cow'**
-  String get identifyCow;
+  /// **'Identify Cattle'**
+  String get identifyCattle;
 
   /// No description provided for @identifyTab.
   ///
@@ -984,16 +984,16 @@ abstract class AppLocalizations {
   /// **'Identify'**
   String get identifyTab;
 
-  /// No description provided for @cowsTab.
+  /// No description provided for @cattleTab.
   ///
   /// In en, this message translates to:
-  /// **'My Cows'**
-  String get cowsTab;
+  /// **'My Cattle'**
+  String get cattleTab;
 
   /// No description provided for @tapIdentify.
   ///
   /// In en, this message translates to:
-  /// **'Photo added. Tap Identify Cow.'**
+  /// **'Photo added. Tap Identify Cattle.'**
   String get tapIdentify;
 
   /// No description provided for @selectImageFirst.
@@ -1014,17 +1014,17 @@ abstract class AppLocalizations {
   /// **'Details'**
   String get details;
 
-  /// No description provided for @unknownCow.
+  /// No description provided for @unknownCattle.
   ///
   /// In en, this message translates to:
-  /// **'Unknown Cow'**
-  String get unknownCow;
+  /// **'Unknown Cattle'**
+  String get unknownCattle;
 
-  /// No description provided for @registerThisCow.
+  /// No description provided for @registerThisCattle.
   ///
   /// In en, this message translates to:
-  /// **'Register this cow'**
-  String get registerThisCow;
+  /// **'Register this cattle'**
+  String get registerThisCattle;
 
   /// No description provided for @backButton.
   ///
@@ -1032,11 +1032,11 @@ abstract class AppLocalizations {
   /// **'Back'**
   String get backButton;
 
-  /// No description provided for @noCowsFound.
+  /// No description provided for @noCattlesFound.
   ///
   /// In en, this message translates to:
-  /// **'No cows found'**
-  String get noCowsFound;
+  /// **'No cattle found'**
+  String get noCattlesFound;
 
   /// No description provided for @activeLabel.
   ///
@@ -1089,7 +1089,7 @@ abstract class AppLocalizations {
   /// No description provided for @dialogIdentifyAsConfirm.
   ///
   /// In en, this message translates to:
-  /// **'This cow looks a lot like {id} (Confidence: {confidence}%). Do you want to save this photo under {id}\'s history instead of registering a new cow?'**
+  /// **'This cattle looks a lot like {id} (Confidence: {confidence}%). Do you want to save this photo under {id}\'s history instead of registering a new cattle?'**
   String dialogIdentifyAsConfirm(String id, int confidence);
 
   /// No description provided for @dialogIdentifySavePhoto.
@@ -1098,11 +1098,11 @@ abstract class AppLocalizations {
   /// **'Save photo to {id}'**
   String dialogIdentifySavePhoto(String id);
 
-  /// No description provided for @dialogIdentifyNewCow.
+  /// No description provided for @dialogIdentifyNewCattle.
   ///
   /// In en, this message translates to:
-  /// **'No, it\'s a new cow'**
-  String get dialogIdentifyNewCow;
+  /// **'No, it\'s a new cattle'**
+  String get dialogIdentifyNewCattle;
 
   /// No description provided for @checkingPhotoBeforeReg.
   ///
@@ -1143,14 +1143,14 @@ abstract class AppLocalizations {
   /// No description provided for @addPhotoToThat.
   ///
   /// In en, this message translates to:
-  /// **'Add this photo to that cow?'**
+  /// **'Add this photo to that cattle?'**
   String get addPhotoToThat;
 
-  /// No description provided for @createNewCow.
+  /// No description provided for @createNewCattle.
   ///
   /// In en, this message translates to:
-  /// **'Create new cow'**
-  String get createNewCow;
+  /// **'Create new cattle'**
+  String get createNewCattle;
 
   /// No description provided for @savingPhoto.
   ///
@@ -1170,11 +1170,11 @@ abstract class AppLocalizations {
   /// **'Could not save this photo.'**
   String get couldNotSavePhoto;
 
-  /// No description provided for @savingCowDetails.
+  /// No description provided for @savingCattleDetails.
   ///
   /// In en, this message translates to:
-  /// **'Saving cow details...'**
-  String get savingCowDetails;
+  /// **'Saving cattle details...'**
+  String get savingCattleDetails;
 
   /// No description provided for @addedToHerd.
   ///
@@ -1236,11 +1236,11 @@ abstract class AppLocalizations {
   /// **'Identification result'**
   String get identificationResult;
 
-  /// No description provided for @noCowsMessage.
+  /// No description provided for @noCattlesMessage.
   ///
   /// In en, this message translates to:
-  /// **'No cows yet.\nUse Identify to add your first cow.'**
-  String get noCowsMessage;
+  /// **'No cattle yet.\nUse Identify to add your first cattle.'**
+  String get noCattlesMessage;
 
   /// No description provided for @yourHerd.
   ///
@@ -1257,14 +1257,14 @@ abstract class AppLocalizations {
   /// No description provided for @notebookDescription.
   ///
   /// In en, this message translates to:
-  /// **'Take or upload a photo to identify a cow and keep simple records.'**
+  /// **'Take or upload a photo to identify a cattle and keep simple records.'**
   String get notebookDescription;
 
-  /// No description provided for @registeredCowsCount.
+  /// No description provided for @registeredCattlesCount.
   ///
   /// In en, this message translates to:
-  /// **'Registered cows: {count}'**
-  String registeredCowsCount(int count);
+  /// **'Registered cattle: {count}'**
+  String registeredCattlesCount(int count);
 
   /// No description provided for @initErrorOccurred.
   ///
@@ -1287,7 +1287,7 @@ abstract class AppLocalizations {
   /// No description provided for @identifyResultPlaceholder.
   ///
   /// In en, this message translates to:
-  /// **'Identify a cow to see the result here.'**
+  /// **'Identify a cattle to see the result here.'**
   String get identifyResultPlaceholder;
 
   /// No description provided for @matchConfidence.
@@ -1296,23 +1296,23 @@ abstract class AppLocalizations {
   /// **'Match confidence: {confidence}%'**
   String matchConfidence(String confidence);
 
-  /// No description provided for @cowAlreadyInHerd.
+  /// No description provided for @cattleAlreadyInHerd.
   ///
   /// In en, this message translates to:
-  /// **'This cow is already in your herd.'**
-  String get cowAlreadyInHerd;
+  /// **'This cattle is already in your herd.'**
+  String get cattleAlreadyInHerd;
 
-  /// No description provided for @noMatchingCowRegisterHint.
+  /// No description provided for @noMatchingCattleRegisterHint.
   ///
   /// In en, this message translates to:
-  /// **'No matching cow found. You can add this as a new cow.'**
-  String get noMatchingCowRegisterHint;
+  /// **'No matching cattle found. You can add this as a new cattle.'**
+  String get noMatchingCattleRegisterHint;
 
-  /// No description provided for @cowSummarySubtitle.
+  /// No description provided for @cattleSummarySubtitle.
   ///
   /// In en, this message translates to:
   /// **'Health: {health} • Vaccines: {vaccines} • Notes: {notes}'**
-  String cowSummarySubtitle(int health, int vaccines, int notes);
+  String cattleSummarySubtitle(int health, int vaccines, int notes);
 
   /// No description provided for @diseaseNameLabel.
   ///

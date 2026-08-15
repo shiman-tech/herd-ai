@@ -97,16 +97,16 @@ class AppLocalizationsKn extends AppLocalizations {
   String get invalidPinLength => 'ಪಿನ್ ಕಡ್ಡಾಯವಾಗಿ 4 ಅಂಕಿಗಳಿರಬೇಕು';
 
   @override
-  String get cowsNotebook => 'ಜಾನುವಾರು ನೋಟ್‌ಬುಕ್';
+  String get cattleNotebook => 'ಜಾನುವಾರು ನೋಟ್‌ಬುಕ್';
 
   @override
-  String get noCows => 'ಇನ್ನೂ ಯಾವುದೇ ಹಸುವನ್ನು ನೋಂದಾಯಿಸಲಾಗಿಲ್ಲ.';
+  String get noCattles => 'ಇನ್ನೂ ಯಾವುದೇ ಹಸುವನ್ನು ನೋಂದಾಯಿಸಲಾಗಿಲ್ಲ.';
 
   @override
   String get searchHint => 'ನಿಮ್ಮ ಹಿಂಡನ್ನು ಹುಡುಕಿ...';
 
   @override
-  String cowIdLabel(String id) {
+  String cattleIdLabel(String id) {
     return 'ಹಸುವಿನ ಐಡಿ: $id';
   }
 
@@ -133,27 +133,27 @@ class AppLocalizationsKn extends AppLocalizations {
   String get selectImage => 'ಮಾದರಿ ಲೋಡ್ ಆದ ನಂತರ ಚಿತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ.';
 
   @override
-  String get checkingCow => 'ಹಸುವನ್ನು ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...';
+  String get checkingCattle => 'ಹಸುವನ್ನು ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...';
 
   @override
-  String get cowIdentified => 'ಹಸುವನ್ನು ಗುರುತಿಸಲಾಗಿದೆ.';
+  String get cattleIdentified => 'ಹಸುವನ್ನು ಗುರುತಿಸಲಾಗಿದೆ.';
 
   @override
   String get borderlineMatch =>
       'ಇದು ನಿಮ್ಮ ಬಳಿ ಈಗಾಗಲೇ ಇರುವ ಹಸುವಿನಂತೆ ಕಾಣುತ್ತಿದೆ — ಕೆಳಗೆ ನೋಡಿ.';
 
   @override
-  String get noMatchingCow => 'ಯಾವುದೇ ಹೊಂದಿಕೆಯಾಗುವ ಹಸು ಕಂಡುಬಂದಿಲ್ಲ.';
+  String get noMatchingCattle => 'ಯಾವುದೇ ಹೊಂದಿಕೆಯಾಗುವ ಹಸು ಕಂಡುಬಂದಿಲ್ಲ.';
 
   @override
   String get couldNotIdentify =>
       'ಈ ಸಮಯದಲ್ಲಿ ಈ ಹಸುವನ್ನು ಗುರುತಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.';
 
   @override
-  String get addThisCow => 'ಈ ಹಸುವನ್ನು ಸೇರಿಸಿ';
+  String get addThisCattle => 'ಈ ಹಸುವನ್ನು ಸೇರಿಸಿ';
 
   @override
-  String get cowId => 'ಹಸುವಿನ ಐಡಿ';
+  String get cattleId => 'ಹಸುವಿನ ಐಡಿ';
 
   @override
   String get optionalNote => 'ಟಿಪ್ಪಣಿ (ಐಚ್ಛಿಕ)';
@@ -162,10 +162,10 @@ class AppLocalizationsKn extends AppLocalizations {
   String get register => 'ನೋಂದಾಯಿಸಿ';
 
   @override
-  String get addCow => 'ಹಸುವನ್ನು ಸೇರಿಸಿ';
+  String get addCattle => 'ಹಸುವನ್ನು ಸೇರಿಸಿ';
 
   @override
-  String get cowAlreadyExists => 'ಹಸುವಿನ ಐಡಿ ಈಗಾಗಲೇ ಅಸ್ತಿತ್ವದಲ್ಲಿದೆ';
+  String get cattleAlreadyExists => 'ಹಸುವಿನ ಐಡಿ ಈಗಾಗಲೇ ಅಸ್ತಿತ್ವದಲ್ಲಿದೆ';
 
   @override
   String get pleaseEnterId => 'ದಯವಿಟ್ಟು ಐಡಿ ನಮೂದಿಸಿ';
@@ -174,7 +174,7 @@ class AppLocalizationsKn extends AppLocalizations {
   String get registering => 'ನೋಂದಾಯಿಸಲಾಗುತ್ತಿದೆ...';
 
   @override
-  String get cowRegistered => 'ಹಸು ನೋಂದಾಯಿಸಲಾಗಿದೆ';
+  String get cattleRegistered => 'ಹಸು ನೋಂದಾಯಿಸಲಾಗಿದೆ';
 
   @override
   String get failedToRegister => 'ಹಸುವನ್ನು ನೋಂದಾಯಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ';
@@ -361,7 +361,7 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get cattleIdentificationDesc =>
-      'Add facial photos used to recognize this cow.';
+      'Add facial photos used to recognize this cattle.';
 
   @override
   String get noIdentityPhotos => 'No facial photos added yet.';
@@ -419,7 +419,7 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get galleryPhotoConfirm =>
-      'This photo will be saved to track this cow\'s appearance over time.';
+      'This photo will be saved to track this cattle\'s appearance over time.';
 
   @override
   String get photoAdded => 'ಫೋಟೋ ಸೇರಿಸಲಾಗಿದೆ';
@@ -452,21 +452,21 @@ class AppLocalizationsKn extends AppLocalizations {
       'ಈ ಹಸುವಿನ ಸ್ಪಷ್ಟವಾದ ಪೂರ್ಣ ದೇಹದ ಫೋಟೋ ತೆಗೆದುಕೊಳ್ಳಿ ಅಥವಾ ಗ್ಯಾಲರಿಯಿಂದ ಆರಿಸಿ.';
 
   @override
-  String get deleteCowRecord => 'ಹಸುವಿನ ದಾಖಲೆ ಅಳಿಸಿ';
+  String get deleteCattleRecord => 'ಹಸುವಿನ ದಾಖಲೆ ಅಳಿಸಿ';
 
   @override
-  String deleteCowRecordConfirm(String id) {
+  String deleteCattleRecordConfirm(String id) {
     return 'ನೀವು $id ಮತ್ತು ಅದಕ್ಕೆ ಸಂಬಂಧಿಸಿದ ಎಲ್ಲಾ ದಾಖಲೆಗಳನ್ನು ಅಳಿಸಲು ಬಯಸುವಿರಾ?';
   }
 
   @override
-  String get cowRecordDeleted => 'ಹಸುವಿನ ದಾಖಲೆಯನ್ನು ಅಳಿಸಲಾಗಿದೆ';
+  String get cattleRecordDeleted => 'ಹಸುವಿನ ದಾಖಲೆಯನ್ನು ಅಳಿಸಲಾಗಿದೆ';
 
   @override
-  String get cowDetails => 'ಹಸುವಿನ ವಿವರಗಳು';
+  String get cattleDetails => 'ಹಸುವಿನ ವಿವರಗಳು';
 
   @override
-  String get cowNotFound => 'ಹಸುವಿನ ದಾಖಲೆ ಕಂಡುಬಂದಿಲ್ಲ.';
+  String get cattleNotFound => 'ಹಸುವಿನ ದಾಖಲೆ ಕಂಡುಬಂದಿಲ್ಲ.';
 
   @override
   String detailsHeader(String id) {
@@ -474,13 +474,13 @@ class AppLocalizationsKn extends AppLocalizations {
   }
 
   @override
-  String get identifyCow => 'ಹಸುವನ್ನು ಗುರುತಿಸಿ';
+  String get identifyCattle => 'ಹಸುವನ್ನು ಗುರುತಿಸಿ';
 
   @override
   String get identifyTab => 'ಗುರುತಿಸಿ';
 
   @override
-  String get cowsTab => 'ನನ್ನ ಹಸುಗಳು';
+  String get cattleTab => 'ನನ್ನ ಹಸುಗಳು';
 
   @override
   String get tapIdentify =>
@@ -496,16 +496,16 @@ class AppLocalizationsKn extends AppLocalizations {
   String get details => 'ವಿವರಗಳು';
 
   @override
-  String get unknownCow => 'ಅಪರಿಚಿತ ಹಸು';
+  String get unknownCattle => 'ಅಪರಿಚಿತ ಹಸು';
 
   @override
-  String get registerThisCow => 'ಈ ಹಸುವನ್ನು ನೋಂದಾಯಿಸಿ';
+  String get registerThisCattle => 'ಈ ಹಸುವನ್ನು ನೋಂದಾಯಿಸಿ';
 
   @override
   String get backButton => 'ಹಿಂದಕ್ಕೆ';
 
   @override
-  String get noCowsFound => 'ಯಾವುದೇ ಹಸು ಕಂಡುಬಂದಿಲ್ಲ';
+  String get noCattlesFound => 'ಯಾವುದೇ ಹಸು ಕಂಡುಬಂದಿಲ್ಲ';
 
   @override
   String get activeLabel => 'ಸಕ್ರಿಯವಾಗಿದೆ';
@@ -548,7 +548,7 @@ class AppLocalizationsKn extends AppLocalizations {
   }
 
   @override
-  String get dialogIdentifyNewCow => 'ಇಲ್ಲ, ಇದು ಹೊಸ ಹಸು';
+  String get dialogIdentifyNewCattle => 'ಇಲ್ಲ, ಇದು ಹೊಸ ಹಸು';
 
   @override
   String get checkingPhotoBeforeReg =>
@@ -579,7 +579,7 @@ class AppLocalizationsKn extends AppLocalizations {
   String get addPhotoToThat => 'ಈ ಫೋಟೋವನ್ನು ಆ ಹಸುವಿಗೆ ಸೇರಿಸಬೇಕೇ?';
 
   @override
-  String get createNewCow => 'ಹೊಸ ಹಸು ರಚಿಸಿ';
+  String get createNewCattle => 'ಹೊಸ ಹಸು ರಚಿಸಿ';
 
   @override
   String get savingPhoto => 'ಫೋಟೋ ಉಳಿಸಲಾಗುತ್ತಿದೆ...';
@@ -593,7 +593,7 @@ class AppLocalizationsKn extends AppLocalizations {
   String get couldNotSavePhoto => 'ಈ ಫೋಟೋವನ್ನು ಉಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.';
 
   @override
-  String get savingCowDetails => 'ಹಸುವಿನ ವಿವರಗಳನ್ನು ಉಳಿಸಲಾಗುತ್ತಿದೆ...';
+  String get savingCattleDetails => 'ಹಸುವಿನ ವಿವರಗಳನ್ನು ಉಳಿಸಲಾಗುತ್ತಿದೆ...';
 
   @override
   String addedToHerd(String id) {
@@ -631,7 +631,7 @@ class AppLocalizationsKn extends AppLocalizations {
   String get identificationResult => 'ಗುರುತಿಸುವಿಕೆಯ ಫಲಿತಾಂಶ';
 
   @override
-  String get noCowsMessage =>
+  String get noCattlesMessage =>
       'ಇನ್ನೂ ಯಾವುದೇ ಹಸುಗಳಿಲ್ಲ.\nಮೊದಲ ಹಸುವನ್ನು ಸೇರಿಸಲು \'ಗುರುತಿಸಿ\' ಟ್ಯಾಬ್ ಬಳಸಿ.';
 
   @override
@@ -645,7 +645,7 @@ class AppLocalizationsKn extends AppLocalizations {
       'ಹಸುವನ್ನು ಗುರುತಿಸಲು ಮತ್ತು ಸರಳ ದಾಖಲೆಗಳನ್ನು ಇಡಲು ಫೋಟೋ ತೆಗೆಯಿರಿ ಅಥವಾ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.';
 
   @override
-  String registeredCowsCount(int count) {
+  String registeredCattlesCount(int count) {
     return 'ನೋಂದಾಯಿತ ಹಸುಗಳು: $count';
   }
 
@@ -668,14 +668,14 @@ class AppLocalizationsKn extends AppLocalizations {
   }
 
   @override
-  String get cowAlreadyInHerd => 'ಈ ಹಸು ಈಗಾಗಲೇ ನಿಮ್ಮ ಹಿಂಡಿನಲ್ಲಿದೆ.';
+  String get cattleAlreadyInHerd => 'ಈ ಹಸು ಈಗಾಗಲೇ ನಿಮ್ಮ ಹಿಂಡಿನಲ್ಲಿದೆ.';
 
   @override
-  String get noMatchingCowRegisterHint =>
+  String get noMatchingCattleRegisterHint =>
       'ಹೊಂದಿಕೆಯಾಗುವ ಯಾವುದೇ ಹಸು ಕಂಡುಬಂದಿಲ್ಲ. ನೀವು ಇದನ್ನು ಹೊಸ ಹಸುವಾಗಿ ಸೇರಿಸಬಹುದು.';
 
   @override
-  String cowSummarySubtitle(int health, int vaccines, int notes) {
+  String cattleSummarySubtitle(int health, int vaccines, int notes) {
     return 'ಆರೋಗ್ಯ: $health • ಲಸಿಕೆಗಳು: $vaccines • ಟಿಪ್ಪಣಿಗಳು: $notes';
   }
 

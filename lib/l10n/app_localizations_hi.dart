@@ -96,16 +96,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get invalidPinLength => 'पिन 4 अंकों का होना चाहिए';
 
   @override
-  String get cowsNotebook => 'मवेशी नोटबुक';
+  String get cattleNotebook => 'मवेशी नोटबुक';
 
   @override
-  String get noCows => 'अभी तक कोई गाय पंजीकृत नहीं है।';
+  String get noCattles => 'अभी तक कोई गाय पंजीकृत नहीं है।';
 
   @override
   String get searchHint => 'गाय खोजें...';
 
   @override
-  String cowIdLabel(String id) {
+  String cattleIdLabel(String id) {
     return 'गाय आईडी: $id';
   }
 
@@ -132,26 +132,26 @@ class AppLocalizationsHi extends AppLocalizations {
   String get selectImage => 'मॉडल लोड होने के बाद एक छवि चुनें।';
 
   @override
-  String get checkingCow => 'गाय की जाँच की जा रही है...';
+  String get checkingCattle => 'गाय की जाँच की जा रही है...';
 
   @override
-  String get cowIdentified => 'गाय की पहचान हो गई।';
+  String get cattleIdentified => 'गाय की पहचान हो गई।';
 
   @override
   String get borderlineMatch =>
       'यह आपके पास पहले से मौजूद गाय जैसी दिखती है — नीचे देखें।';
 
   @override
-  String get noMatchingCow => 'कोई मेल खाती गाय नहीं मिली।';
+  String get noMatchingCattle => 'कोई मेल खाती गाय नहीं मिली।';
 
   @override
   String get couldNotIdentify => 'इस समय इस गाय की पहचान नहीं की जा सकी।';
 
   @override
-  String get addThisCow => 'इस गाय को जोड़ें';
+  String get addThisCattle => 'इस गाय को जोड़ें';
 
   @override
-  String get cowId => 'गाय आईडी';
+  String get cattleId => 'गाय आईडी';
 
   @override
   String get optionalNote => 'नोट (वैकल्पिक)';
@@ -160,10 +160,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get register => 'पंजीकृत करें';
 
   @override
-  String get addCow => 'गाय जोड़ें';
+  String get addCattle => 'गाय जोड़ें';
 
   @override
-  String get cowAlreadyExists => 'गाय आईडी पहले से मौजूद है';
+  String get cattleAlreadyExists => 'गाय आईडी पहले से मौजूद है';
 
   @override
   String get pleaseEnterId => 'कृपया एक आईडी दर्ज करें';
@@ -172,7 +172,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get registering => 'पंजीकरण किया जा रही है...';
 
   @override
-  String get cowRegistered => 'गाय पंजीकृत हो गई';
+  String get cattleRegistered => 'गाय पंजीकृत हो गई';
 
   @override
   String get failedToRegister => 'गाय का पंजीकरण नहीं किया जा सका';
@@ -359,7 +359,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get cattleIdentificationDesc =>
-      'Add facial photos used to recognize this cow.';
+      'Add facial photos used to recognize this cattle.';
 
   @override
   String get noIdentityPhotos => 'No facial photos added yet.';
@@ -417,7 +417,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get galleryPhotoConfirm =>
-      'This photo will be saved to track this cow\'s appearance over time.';
+      'This photo will be saved to track this cattle\'s appearance over time.';
 
   @override
   String get photoAdded => 'तस्वीर जोड़ दी गई';
@@ -450,21 +450,21 @@ class AppLocalizationsHi extends AppLocalizations {
       'इस गाय की एक स्पष्ट पूरे शरीर की तस्वीर लें या गैलरी से चुनें।';
 
   @override
-  String get deleteCowRecord => 'गाय का रिकॉर्ड हटाएं';
+  String get deleteCattleRecord => 'गाय का रिकॉर्ड हटाएं';
 
   @override
-  String deleteCowRecordConfirm(String id) {
+  String deleteCattleRecordConfirm(String id) {
     return 'क्या आप $id और उससे संबंधित सभी रिकॉर्ड हटाना चाहते हैं?';
   }
 
   @override
-  String get cowRecordDeleted => 'गाय का रिकॉर्ड हटा दिया गया';
+  String get cattleRecordDeleted => 'गाय का रिकॉर्ड हटा दिया गया';
 
   @override
-  String get cowDetails => 'गाय का विवरण';
+  String get cattleDetails => 'गाय का विवरण';
 
   @override
-  String get cowNotFound => 'गाय का रिकॉर्ड नहीं मिला।';
+  String get cattleNotFound => 'गाय का रिकॉर्ड नहीं मिला।';
 
   @override
   String detailsHeader(String id) {
@@ -472,13 +472,13 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get identifyCow => 'गाय की पहचान करें';
+  String get identifyCattle => 'गाय की पहचान करें';
 
   @override
   String get identifyTab => 'पहचान';
 
   @override
-  String get cowsTab => 'मवेशी';
+  String get cattleTab => 'मवेशी';
 
   @override
   String get tapIdentify => 'तस्वीर जोड़ दी गई। गाय की पहचान करें पर टैप करें।';
@@ -493,16 +493,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get details => 'विवरण';
 
   @override
-  String get unknownCow => 'अज्ञात गाय';
+  String get unknownCattle => 'अज्ञात गाय';
 
   @override
-  String get registerThisCow => 'इस गाय को पंजीकृत करें';
+  String get registerThisCattle => 'इस गाय को पंजीकृत करें';
 
   @override
   String get backButton => 'पीछे';
 
   @override
-  String get noCowsFound => 'कोई गाय नहीं मिली';
+  String get noCattlesFound => 'कोई गाय नहीं मिली';
 
   @override
   String get activeLabel => 'सक्रिय';
@@ -545,7 +545,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get dialogIdentifyNewCow => 'नहीं, यह एक नई गाय है';
+  String get dialogIdentifyNewCattle => 'नहीं, यह एक नई गाय है';
 
   @override
   String get checkingPhotoBeforeReg =>
@@ -576,7 +576,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get addPhotoToThat => 'क्या इस तस्वीर को उस गाय में जोड़ें?';
 
   @override
-  String get createNewCow => 'नई गाय जोड़ें';
+  String get createNewCattle => 'नई गाय जोड़ें';
 
   @override
   String get savingPhoto => 'तस्वीर सहेजी जा रही है...';
@@ -590,7 +590,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get couldNotSavePhoto => 'यह तस्वीर सहेजी नहीं जा सकी।';
 
   @override
-  String get savingCowDetails => 'गाय का विवरण सहेजा जा रहा है...';
+  String get savingCattleDetails => 'गाय का विवरण सहेजा जा रहा है...';
 
   @override
   String addedToHerd(String id) {
@@ -628,7 +628,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get identificationResult => 'पहचान का परिणाम';
 
   @override
-  String get noCowsMessage =>
+  String get noCattlesMessage =>
       'कोई गाय नहीं मिली।\nगाय जोड़ने के लिए पहले \'पहचान\' का उपयोग करें।';
 
   @override
@@ -642,7 +642,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'गाय की पहचान करने और रिकॉर्ड रखने के लिए तस्वीर लें या अपलोड करें।';
 
   @override
-  String registeredCowsCount(int count) {
+  String registeredCattlesCount(int count) {
     return 'पंजीकृत गायें: $count';
   }
 
@@ -665,14 +665,14 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get cowAlreadyInHerd => 'यह गाय आपकी नोटबुक में पहले से मौजूद है।';
+  String get cattleAlreadyInHerd => 'यह गाय आपकी नोटबुक में पहले से मौजूद है।';
 
   @override
-  String get noMatchingCowRegisterHint =>
+  String get noMatchingCattleRegisterHint =>
       'कोई मेल खाती गाय नहीं मिली। आप इसे नई गाय के रूप में जोड़ सकते हैं।';
 
   @override
-  String cowSummarySubtitle(int health, int vaccines, int notes) {
+  String cattleSummarySubtitle(int health, int vaccines, int notes) {
     return 'स्वास्थ्य: $health • टीकाकरण: $vaccines • टिप्पणियाँ: $notes';
   }
 

@@ -97,16 +97,16 @@ class AppLocalizationsTa extends AppLocalizations {
   String get invalidPinLength => 'பின் கண்டிப்பாக 4 இலக்கங்கள் இருக்க வேண்டும்';
 
   @override
-  String get cowsNotebook => 'கால்நடை நோட்புக்';
+  String get cattleNotebook => 'கால்நடை நோட்புக்';
 
   @override
-  String get noCows => 'இன்னும் எந்த மாடும் பதிவு செய்யப்படவில்லை.';
+  String get noCattles => 'இன்னும் எந்த மாடும் பதிவு செய்யப்படவில்லை.';
 
   @override
   String get searchHint => 'உங்கள் மந்தையைத் தேடுங்கள்...';
 
   @override
-  String cowIdLabel(String id) {
+  String cattleIdLabel(String id) {
     return 'மாடு ஐடி: $id';
   }
 
@@ -134,27 +134,27 @@ class AppLocalizationsTa extends AppLocalizations {
   String get selectImage => 'மாதிரி ஏற்றிய பின் படத்தை தேர்ந்தெடுக்கவும்.';
 
   @override
-  String get checkingCow => 'மாடு சரிபார்க்கப்படுகிறது...';
+  String get checkingCattle => 'மாடு சரிபார்க்கப்படுகிறது...';
 
   @override
-  String get cowIdentified => 'மாடு அடையாளம் காணப்பட்டது.';
+  String get cattleIdentified => 'மாடு அடையாளம் காணப்பட்டது.';
 
   @override
   String get borderlineMatch =>
       'இது உங்களிடம் ஏற்கனவே உள்ள மாடு போல தெரிகிறது — கீழே பார்க்கவும்.';
 
   @override
-  String get noMatchingCow => 'பொருந்தும் மாடு எதுவும் காணப்படவில்லை.';
+  String get noMatchingCattle => 'பொருந்தும் மாடு எதுவும் காணப்படவில்லை.';
 
   @override
   String get couldNotIdentify =>
       'இந்த நேரத்தில் இந்த மாட்டை அடையாளம் காண முடியவில்லை.';
 
   @override
-  String get addThisCow => 'இந்த மாட்டைச் சேர்க்கவும்';
+  String get addThisCattle => 'இந்த மாட்டைச் சேர்க்கவும்';
 
   @override
-  String get cowId => 'மாடு ஐடி';
+  String get cattleId => 'மாடு ஐடி';
 
   @override
   String get optionalNote => 'குறிப்பு (விரும்பினால்)';
@@ -163,10 +163,10 @@ class AppLocalizationsTa extends AppLocalizations {
   String get register => 'பதிவுசெய்';
 
   @override
-  String get addCow => 'மாட்டைச் சேர்க்கவும்';
+  String get addCattle => 'மாட்டைச் சேர்க்கவும்';
 
   @override
-  String get cowAlreadyExists => 'மாடு ஐடி ஏற்கனவே உள்ளது';
+  String get cattleAlreadyExists => 'மாடு ஐடி ஏற்கனவே உள்ளது';
 
   @override
   String get pleaseEnterId => 'தயவுசெய்து ஒரு ஐடியை உள்ளிடவும்';
@@ -175,7 +175,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get registering => 'பதிவு செய்யப்படுகிறது...';
 
   @override
-  String get cowRegistered => 'மாடு பதிவு செய்யப்பட்டது';
+  String get cattleRegistered => 'மாடு பதிவு செய்யப்பட்டது';
 
   @override
   String get failedToRegister => 'மாட்டை பதிவு செய்ய முடியவில்லை';
@@ -363,7 +363,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get cattleIdentificationDesc =>
-      'Add facial photos used to recognize this cow.';
+      'Add facial photos used to recognize this cattle.';
 
   @override
   String get noIdentityPhotos => 'No facial photos added yet.';
@@ -421,7 +421,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get galleryPhotoConfirm =>
-      'This photo will be saved to track this cow\'s appearance over time.';
+      'This photo will be saved to track this cattle\'s appearance over time.';
 
   @override
   String get photoAdded => 'புகைப்படம் சேர்க்கப்பட்டது';
@@ -454,21 +454,21 @@ class AppLocalizationsTa extends AppLocalizations {
       'இந்த மாட்டிற்கு ஒரு தெளிவான முழு உடல் புகைப்படம் எடுக்கவும் அல்லது கேலரியில் இருந்து தேர்ந்தெடுக்கவும்.';
 
   @override
-  String get deleteCowRecord => 'மாடு பதிவை நீக்கு';
+  String get deleteCattleRecord => 'மாடு பதிவை நீக்கு';
 
   @override
-  String deleteCowRecordConfirm(String id) {
+  String deleteCattleRecordConfirm(String id) {
     return '$id மற்றும் அதன் தொடர்புடைய அனைத்து பதிவுகளையும் நீக்க விரும்புகிறீர்களா?';
   }
 
   @override
-  String get cowRecordDeleted => 'மாடு பதிவு நீக்கப்பட்டது';
+  String get cattleRecordDeleted => 'மாடு பதிவு நீக்கப்பட்டது';
 
   @override
-  String get cowDetails => 'மாடு விவரங்கள்';
+  String get cattleDetails => 'மாடு விவரங்கள்';
 
   @override
-  String get cowNotFound => 'மாடு பதிவு காணப்படவில்லை.';
+  String get cattleNotFound => 'மாடு பதிவு காணப்படவில்லை.';
 
   @override
   String detailsHeader(String id) {
@@ -476,13 +476,13 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
-  String get identifyCow => 'மாட்டை அடையாளம் காண்க';
+  String get identifyCattle => 'மாட்டை அடையாளம் காண்க';
 
   @override
   String get identifyTab => 'அடையாளம் காண்க';
 
   @override
-  String get cowsTab => 'என் மாடுகள்';
+  String get cattleTab => 'என் மாடுகள்';
 
   @override
   String get tapIdentify =>
@@ -498,16 +498,16 @@ class AppLocalizationsTa extends AppLocalizations {
   String get details => 'விவரங்கள்';
 
   @override
-  String get unknownCow => 'அறியப்படாத மாடு';
+  String get unknownCattle => 'அறியப்படாத மாடு';
 
   @override
-  String get registerThisCow => 'இந்த மாட்டைப் பதிவு செய்';
+  String get registerThisCattle => 'இந்த மாட்டைப் பதிவு செய்';
 
   @override
   String get backButton => 'பின்னால்';
 
   @override
-  String get noCowsFound => 'மாடுகள் எதுவும் காணப்படவில்லை';
+  String get noCattlesFound => 'மாடுகள் எதுவும் காணப்படவில்லை';
 
   @override
   String get activeLabel => 'செயலில் உள்ளது';
@@ -550,7 +550,7 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
-  String get dialogIdentifyNewCow => 'இல்லை, இது புதிய மாடு';
+  String get dialogIdentifyNewCattle => 'இல்லை, இது புதிய மாடு';
 
   @override
   String get checkingPhotoBeforeReg =>
@@ -582,7 +582,7 @@ class AppLocalizationsTa extends AppLocalizations {
       'இந்தப் புகைப்படத்தை அந்த மாட்டிற்குச் சேர்க்கலாமா?';
 
   @override
-  String get createNewCow => 'புதிய மாட்டை உருவாக்கு';
+  String get createNewCattle => 'புதிய மாட்டை உருவாக்கு';
 
   @override
   String get savingPhoto => 'புகைப்படம் சேமிக்கப்படுகிறது...';
@@ -596,7 +596,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get couldNotSavePhoto => 'இந்த புகைப்படத்தை சேமிக்க முடியவில்லை.';
 
   @override
-  String get savingCowDetails => 'மாடு விவரங்கள் சேமிக்கப்படுகின்றன...';
+  String get savingCattleDetails => 'மாடு விவரங்கள் சேமிக்கப்படுகின்றன...';
 
   @override
   String addedToHerd(String id) {
@@ -634,7 +634,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get identificationResult => 'அடையாளம் கண்ட முடிவு';
 
   @override
-  String get noCowsMessage =>
+  String get noCattlesMessage =>
       'இன்னும் மாடுகள் இல்லை.\nமுதல் மாட்டைச் சேர்க்க \'அடையாளம் காண்க\' என்பதைப் பயன்படுத்தவும்.';
 
   @override
@@ -648,7 +648,7 @@ class AppLocalizationsTa extends AppLocalizations {
       'மாட்டை அடையாளம் காணவும் எளிய பதிவுகளை வைத்திருக்கவும் புகைப்படம் எடுக்கவும் அல்லது பதிவேற்றவும்.';
 
   @override
-  String registeredCowsCount(int count) {
+  String registeredCattlesCount(int count) {
     return 'பதிவு செய்யப்பட்ட மாடுகள்: $count';
   }
 
@@ -672,14 +672,15 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
-  String get cowAlreadyInHerd => 'இந்த மாடு ஏற்கனவே உங்கள் மந்தையில் உள்ளது.';
+  String get cattleAlreadyInHerd =>
+      'இந்த மாடு ஏற்கனவே உங்கள் மந்தையில் உள்ளது.';
 
   @override
-  String get noMatchingCowRegisterHint =>
+  String get noMatchingCattleRegisterHint =>
       'பொருந்தும் மாடு எதுவும் காணப்படவில்லை. இதை நீங்கள் புதிய மாடாகச் சேர்க்கலாம்.';
 
   @override
-  String cowSummarySubtitle(int health, int vaccines, int notes) {
+  String cattleSummarySubtitle(int health, int vaccines, int notes) {
     return 'சுகாதாரம்: $health • தடுப்பூசிகள்: $vaccines • குறிப்புகள்: $notes';
   }
 

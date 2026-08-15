@@ -96,16 +96,16 @@ class AppLocalizationsTe extends AppLocalizations {
   String get invalidPinLength => 'పిన్ తప్పనిసరిగా 4 అంకెలు ఉండాలి';
 
   @override
-  String get cowsNotebook => 'పశువుల నోట్‌బుక్';
+  String get cattleNotebook => 'పశువుల నోట్‌బుక్';
 
   @override
-  String get noCows => 'ఇంకా ఏ ఆవు నమోదు చేయబడలేదు.';
+  String get noCattles => 'ఇంకా ఏ ఆవు నమోదు చేయబడలేదు.';
 
   @override
   String get searchHint => 'మీ మందను శోధించండి...';
 
   @override
-  String cowIdLabel(String id) {
+  String cattleIdLabel(String id) {
     return 'ఆవు ఐడి: $id';
   }
 
@@ -131,26 +131,26 @@ class AppLocalizationsTe extends AppLocalizations {
   String get selectImage => 'మోడల్ లోడ్ అయిన తర్వాత చిత్రాన్ని ఎంచుకోండి.';
 
   @override
-  String get checkingCow => 'ఆవును తనిఖీ చేస్తోంది...';
+  String get checkingCattle => 'ఆవును తనిఖీ చేస్తోంది...';
 
   @override
-  String get cowIdentified => 'ఆవు గుర్తించబడింది.';
+  String get cattleIdentified => 'ఆవు గుర్తించబడింది.';
 
   @override
   String get borderlineMatch =>
       'ఇది మీ వద్ద ఇప్పటికే ఉన్న ఆవులా కనిపిస్తోంది — కింద చూడండి.';
 
   @override
-  String get noMatchingCow => 'సరిపోలే ఆవు కనుగొనబడలేదు.';
+  String get noMatchingCattle => 'సరిపోలే ఆవు కనుగొనబడలేదు.';
 
   @override
   String get couldNotIdentify => 'ఈ సమయంలో ఈ ఆవును గుర్తించలేకపోయాము.';
 
   @override
-  String get addThisCow => 'ఈ ఆవును జోడించండి';
+  String get addThisCattle => 'ఈ ఆవును జోడించండి';
 
   @override
-  String get cowId => 'ఆవు ఐడి';
+  String get cattleId => 'ఆవు ఐడి';
 
   @override
   String get optionalNote => 'గమనిక (ఐచ్ఛికం)';
@@ -159,10 +159,10 @@ class AppLocalizationsTe extends AppLocalizations {
   String get register => 'నమోదు చేయి';
 
   @override
-  String get addCow => 'ఆవును జోడించండి';
+  String get addCattle => 'ఆవును జోడించండి';
 
   @override
-  String get cowAlreadyExists => 'ఆవు ఐడి ఇప్పటికే ఉంది';
+  String get cattleAlreadyExists => 'ఆవు ఐడి ఇప్పటికే ఉంది';
 
   @override
   String get pleaseEnterId => 'దయచేసి ఐడి నమోదు చేయండి';
@@ -171,7 +171,7 @@ class AppLocalizationsTe extends AppLocalizations {
   String get registering => 'నమోదు అవుతోంది...';
 
   @override
-  String get cowRegistered => 'ఆవు నమోదు చేయబడింది';
+  String get cattleRegistered => 'ఆవు నమోదు చేయబడింది';
 
   @override
   String get failedToRegister => 'ఆవును నమోదు చేయలేకపోయాము';
@@ -358,7 +358,7 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String get cattleIdentificationDesc =>
-      'Add facial photos used to recognize this cow.';
+      'Add facial photos used to recognize this cattle.';
 
   @override
   String get noIdentityPhotos => 'No facial photos added yet.';
@@ -416,7 +416,7 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String get galleryPhotoConfirm =>
-      'This photo will be saved to track this cow\'s appearance over time.';
+      'This photo will be saved to track this cattle\'s appearance over time.';
 
   @override
   String get photoAdded => 'ఫోటో జోడించబడింది';
@@ -449,21 +449,21 @@ class AppLocalizationsTe extends AppLocalizations {
       'ఈ ఆవు యొక్క స్పష్టమైన పూర్తి శరీరం ఫోటో తీయండి లేదా గ్యాలరీ నుండి ఎంచుకోండి.';
 
   @override
-  String get deleteCowRecord => 'ఆవు రికార్డును తొలగించండి';
+  String get deleteCattleRecord => 'ఆవు రికార్డును తొలగించండి';
 
   @override
-  String deleteCowRecordConfirm(String id) {
+  String deleteCattleRecordConfirm(String id) {
     return 'మీరు $id మరియు దానికి సంబంధించిన అన్ని రికార్డులను తొలగించాలనుకుంటున్నారా?';
   }
 
   @override
-  String get cowRecordDeleted => 'ఆవు రికార్డు తొలగించబడింది';
+  String get cattleRecordDeleted => 'ఆవు రికార్డు తొలగించబడింది';
 
   @override
-  String get cowDetails => 'ఆవు వివరాలు';
+  String get cattleDetails => 'ఆవు వివరాలు';
 
   @override
-  String get cowNotFound => 'ఆవు రికార్డు కనుగొనబడలేదు.';
+  String get cattleNotFound => 'ఆవు రికార్డు కనుగొనబడలేదు.';
 
   @override
   String detailsHeader(String id) {
@@ -471,13 +471,13 @@ class AppLocalizationsTe extends AppLocalizations {
   }
 
   @override
-  String get identifyCow => 'ఆవును గుర్తించండి';
+  String get identifyCattle => 'ఆవును గుర్తించండి';
 
   @override
   String get identifyTab => 'గుర్తించు';
 
   @override
-  String get cowsTab => 'నా ఆవులు';
+  String get cattleTab => 'నా ఆవులు';
 
   @override
   String get tapIdentify =>
@@ -493,16 +493,16 @@ class AppLocalizationsTe extends AppLocalizations {
   String get details => 'వివరాలు';
 
   @override
-  String get unknownCow => 'తెలియని ఆవు';
+  String get unknownCattle => 'తెలియని ఆవు';
 
   @override
-  String get registerThisCow => 'ఈ ఆవును నమోదు చేయండి';
+  String get registerThisCattle => 'ఈ ఆవును నమోదు చేయండి';
 
   @override
   String get backButton => 'వెనుకకు';
 
   @override
-  String get noCowsFound => 'ఆవులు కనుగొనబడలేదు';
+  String get noCattlesFound => 'ఆవులు కనుగొనబడలేదు';
 
   @override
   String get activeLabel => 'క్రియాశీలకంగా ఉంది';
@@ -545,7 +545,7 @@ class AppLocalizationsTe extends AppLocalizations {
   }
 
   @override
-  String get dialogIdentifyNewCow => 'కాదు, ఇది కొత్త ఆవు';
+  String get dialogIdentifyNewCattle => 'కాదు, ఇది కొత్త ఆవు';
 
   @override
   String get checkingPhotoBeforeReg =>
@@ -576,7 +576,7 @@ class AppLocalizationsTe extends AppLocalizations {
   String get addPhotoToThat => 'ఈ ఫోటోను ఆ ఆవుకి జోడించాలా?';
 
   @override
-  String get createNewCow => 'కొత్త ఆవును సృష్టించండి';
+  String get createNewCattle => 'కొత్త ఆవును సృష్టించండి';
 
   @override
   String get savingPhoto => 'ఫోటోను సేవ్ చేస్తోంది...';
@@ -590,7 +590,7 @@ class AppLocalizationsTe extends AppLocalizations {
   String get couldNotSavePhoto => 'ఈ ఫోటోను సేవ్ చేయలేకపోయాము.';
 
   @override
-  String get savingCowDetails => 'ఆవు వివరాలను సేవ్ చేస్తోంది...';
+  String get savingCattleDetails => 'ఆవు వివరాలను సేవ్ చేస్తోంది...';
 
   @override
   String addedToHerd(String id) {
@@ -628,7 +628,7 @@ class AppLocalizationsTe extends AppLocalizations {
   String get identificationResult => 'గుర్తింపు ఫలితం';
 
   @override
-  String get noCowsMessage =>
+  String get noCattlesMessage =>
       'ఇంకా ఆవులు లేవు.\nమొదటి ఆవును జోడించడానికి \'గుర్తించు\'ని ఉపయోగించండి.';
 
   @override
@@ -642,7 +642,7 @@ class AppLocalizationsTe extends AppLocalizations {
       'ఆవును గుర్తించడానికి మరియు సాధారణ రికార్డులను ఉంచడానికి ఫోటో తీయండి లేదా అప్‌లోడ్ చేయండి.';
 
   @override
-  String registeredCowsCount(int count) {
+  String registeredCattlesCount(int count) {
     return 'నమోదైన ఆవులు: $count';
   }
 
@@ -665,14 +665,14 @@ class AppLocalizationsTe extends AppLocalizations {
   }
 
   @override
-  String get cowAlreadyInHerd => 'ఈ ఆవు ఇప్పటికే మీ మందలో ఉంది.';
+  String get cattleAlreadyInHerd => 'ఈ ఆవు ఇప్పటికే మీ మందలో ఉంది.';
 
   @override
-  String get noMatchingCowRegisterHint =>
+  String get noMatchingCattleRegisterHint =>
       'సరిపోలే ఆవు కనుగొనబడలేదు. మీరు దీనిని కొత్త ఆవుగా జోడించవచ్చు.';
 
   @override
-  String cowSummarySubtitle(int health, int vaccines, int notes) {
+  String cattleSummarySubtitle(int health, int vaccines, int notes) {
     return 'ఆరోగ్యం: $health • టీకాలు: $vaccines • గమనికలు: $notes';
   }
 
