@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'models/cow_record.dart';
+import 'models/cattle_record.dart';
 import 'models/embedding_reference.dart';
 import 'models/identification_result.dart';
 import 'services/app_auth_service.dart';
@@ -13,7 +13,7 @@ import 'services/embedding_database.dart';
 import 'services/tflite_breed_service.dart';
 import 'services/tflite_embedding_service.dart';
 import 'widgets/auth_gate.dart';
-import 'widgets/cow_detail_page.dart';
+import 'widgets/cattle_detail_page.dart';
 
 import 'l10n/app_localizations.dart';
 import 'services/app_language_service.dart';
@@ -147,7 +147,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
   IdentificationResult? _result;
   bool _ignoreSimilarWarning = false;
 
-  Widget _cowAvatar(String? imagePath) {
+  Widget _cattleAvatar(String? imagePath) {
     if (imagePath == null || !File(imagePath).existsSync()) {
       return const DecoratedBox(
         decoration: BoxDecoration(color: Color(0xFFECEEE8)),
@@ -258,7 +258,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
     });
   }
 
-  Future<void> _identifyCow() async {
+  Future<void> _identifyCattle() async {
     if (!_isReady || _selectedImage == null) {
       setState(() {
         _statusResolver = (context) => AppLocalizations.of(context)!.selectImage;
@@ -268,11 +268,11 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
     setState(() {
       _isBusy = true;
-      _statusResolver = (context) => AppLocalizations.of(context)!.checkingCow;
+      _statusResolver = (context) => AppLocalizations.of(context)!.checkingCattle;
     });
 
     try {
-      final IdentificationResult result = await _database.predictCow(
+      final IdentificationResult result = await _database.predictCattle(
         _selectedImage!,
         embeddingService: _embeddingService,
       );
@@ -281,11 +281,11 @@ class _HerdHomePageState extends State<HerdHomePage> {
         _result = result;
         _statusResolver = (context) {
           if (result.isKnown) {
-            return AppLocalizations.of(context)!.cowIdentified;
+            return AppLocalizations.of(context)!.cattleIdentified;
           } else if (result.hasBorderlineMatch) {
             return AppLocalizations.of(context)!.borderlineMatch;
           } else {
-            return AppLocalizations.of(context)!.noMatchingCow;
+            return AppLocalizations.of(context)!.noMatchingCattle;
           }
         };
       });
@@ -317,13 +317,13 @@ class _HerdHomePageState extends State<HerdHomePage> {
       builder: (BuildContext context) {
         final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text(localizations.addThisCow),
+          title: Text(localizations.addThisCattle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               TextField(
                 controller: idController,
-                decoration: InputDecoration(labelText: localizations.cowId),
+                decoration: InputDecoration(labelText: localizations.cattleId),
               ),
               const SizedBox(height: 10),
               TextField(
@@ -345,12 +345,12 @@ class _HerdHomePageState extends State<HerdHomePage> {
                 if (idController.text.trim().isEmpty) {
                   return;
                 }
-                final String cowId = idController.text.trim();
+                final String cattleId = idController.text.trim();
                 final String note = noteController.text.trim();
                 Navigator.of(context).pop();
-                await _prepareRegistration(cowId, note: note);
+                await _prepareRegistration(cattleId, note: note);
               },
-              child: Text(localizations.addCow),
+              child: Text(localizations.addCattle),
             ),
           ],
         );
@@ -358,7 +358,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
     );
   }
 
-  Future<void> _prepareRegistration(String cowId, {String? note}) async {
+  Future<void> _prepareRegistration(String cattleId, {String? note}) async {
     if (!_isReady || _selectedImage == null) {
       return;
     }
@@ -373,23 +373,23 @@ class _HerdHomePageState extends State<HerdHomePage> {
         _selectedImage!,
       );
 
-      if (_database.getCow(cowId) != null) {
-        final bool? addPhoto = await _showDuplicateCowDialog(cowId);
+      if (_database.getCattle(cattleId) != null) {
+        final bool? addPhoto = await _showDuplicateCattleDialog(cattleId);
         if (addPhoto == true) {
-          await _addPhotoToExistingCow(cowId, embedding: embedding);
+          await _addPhotoToExistingCattle(cattleId, embedding: embedding);
         }
         return;
       }
 
       if (!_ignoreSimilarWarning) {
-        final SimilarityMatch? similarMatch = _database.findBestSimilarCow(
+        final SimilarityMatch? similarMatch = _database.findBestSimilarCattle(
           embedding,
         );
         if (similarMatch != null) {
-          final String? action = await _showSimilarCowDialog(similarMatch);
+          final String? action = await _showSimilarCattleDialog(similarMatch);
           if (action == 'add_to_existing') {
-            await _addPhotoToExistingCow(
-              similarMatch.cowId,
+            await _addPhotoToExistingCattle(
+              similarMatch.cattleId,
               embedding: embedding,
             );
             return;
@@ -404,8 +404,8 @@ class _HerdHomePageState extends State<HerdHomePage> {
         }
       }
 
-      await _registerCow(
-        cowId,
+      await _registerCattle(
+        cattleId,
         note: note,
         embedding: embedding,
       );
@@ -423,15 +423,15 @@ class _HerdHomePageState extends State<HerdHomePage> {
     }
   }
 
-  Future<bool?> _showDuplicateCowDialog(String cowId) {
+  Future<bool?> _showDuplicateCattleDialog(String cattleId) {
     return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text(localizations.alreadyInHerd(cowId)),
+          title: Text(localizations.alreadyInHerd(cattleId)),
           content: Text(
-            localizations.addPhotoTo(cowId),
+            localizations.addPhotoTo(cattleId),
           ),
           actions: <Widget>[
             TextButton(
@@ -440,7 +440,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text(localizations.yesAddTo(cowId)),
+              child: Text(localizations.yesAddTo(cattleId)),
             ),
           ],
         );
@@ -449,28 +449,28 @@ class _HerdHomePageState extends State<HerdHomePage> {
   }
 
   Future<void> _showIdentifyBorderlineDialog(IdentificationResult result) async {
-    final String cowId = result.suggestedCowId!;
-    final CowRecord? matchedCow = _database.getCow(cowId);
+    final String cattleId = result.suggestedCattleId!;
+    final CattleRecord? matchedCattle = _database.getCattle(cattleId);
 
     final String? action = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
         final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text(localizations.looksLike(cowId)),
+          title: Text(localizations.looksLike(cattleId)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(localizations.addPhotoToThat),
-              if (matchedCow?.profileImagePath != null) ...<Widget>[
+              if (matchedCattle?.profileImagePath != null) ...<Widget>[
                 const SizedBox(height: 12),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: SizedBox(
                     height: 100,
                     width: 100,
-                    child: _cowAvatar(matchedCow!.profileImagePath),
+                    child: _cattleAvatar(matchedCattle!.profileImagePath),
                   ),
                 ),
               ],
@@ -483,7 +483,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop('add_photo'),
-              child: Text(localizations.yesAddTo(cowId)),
+              child: Text(localizations.yesAddTo(cattleId)),
             ),
           ],
         );
@@ -491,34 +491,34 @@ class _HerdHomePageState extends State<HerdHomePage> {
     );
 
     if (action == 'add_photo' && mounted) {
-      await _addPhotoToExistingCow(cowId);
+      await _addPhotoToExistingCattle(cattleId);
     } else {
       _ignoreSimilarWarning = true;
     }
   }
 
-  Future<String?> _showSimilarCowDialog(SimilarityMatch match) {
-    final CowRecord? matchedCow = _database.getCow(match.cowId);
+  Future<String?> _showSimilarCattleDialog(SimilarityMatch match) {
+    final CattleRecord? matchedCattle = _database.getCattle(match.cattleId);
 
     return showDialog<String>(
       context: context,
       builder: (BuildContext context) {
         final localizations = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text(localizations.looksLike(match.cowId)),
+          title: Text(localizations.looksLike(match.cattleId)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(localizations.addPhotoToThat),
-              if (matchedCow?.profileImagePath != null) ...<Widget>[
+              if (matchedCattle?.profileImagePath != null) ...<Widget>[
                 const SizedBox(height: 12),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: SizedBox(
                     height: 100,
                     width: 100,
-                    child: _cowAvatar(matchedCow!.profileImagePath),
+                    child: _cattleAvatar(matchedCattle!.profileImagePath),
                   ),
                 ),
               ],
@@ -531,11 +531,11 @@ class _HerdHomePageState extends State<HerdHomePage> {
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop('add_to_existing'),
-              child: Text(localizations.yesAddTo(match.cowId)),
+              child: Text(localizations.yesAddTo(match.cattleId)),
             ),
             OutlinedButton(
               onPressed: () => Navigator.of(context).pop('create_new'),
-              child: Text(localizations.createNewCow),
+              child: Text(localizations.createNewCattle),
             ),
           ],
         );
@@ -543,8 +543,8 @@ class _HerdHomePageState extends State<HerdHomePage> {
     );
   }
 
-  Future<void> _addPhotoToExistingCow(
-    String cowId, {
+  Future<void> _addPhotoToExistingCattle(
+    String cattleId, {
     List<double>? embedding,
   }) async {
     if (!_isReady || _selectedImage == null) {
@@ -559,20 +559,20 @@ class _HerdHomePageState extends State<HerdHomePage> {
     try {
       final List<double> resolvedEmbedding = embedding ??
           await _embeddingService.getEmbedding(_selectedImage!);
-      await _database.addCowPhoto(
-        cowId: cowId,
+      await _database.addCattlePhoto(
+        cattleId: cattleId,
         embedding: resolvedEmbedding,
         imagePath: _selectedImage!.path,
       );
       setState(() {
-        _statusResolver = (context) => AppLocalizations.of(context)!.photoAddedTo(cowId);
+        _statusResolver = (context) => AppLocalizations.of(context)!.photoAddedTo(cattleId);
         _result = IdentificationResult(
-          predictedCowId: cowId,
+          predictedCattleId: cattleId,
           similarity: 1,
           isKnown: true,
         );
       });
-      _showSnack(AppLocalizations.of(context)!.photoAddedTo(cowId));
+      _showSnack(AppLocalizations.of(context)!.photoAddedTo(cattleId));
     } catch (error) {
       setState(() {
         _statusResolver = (context) => AppLocalizations.of(context)!.couldNotSavePhoto;
@@ -587,8 +587,8 @@ class _HerdHomePageState extends State<HerdHomePage> {
     }
   }
 
-  Future<void> _registerCow(
-    String cowId, {
+  Future<void> _registerCattle(
+    String cattleId, {
     String? note,
     List<double>? embedding,
   }) async {
@@ -598,27 +598,27 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
     setState(() {
       _isBusy = true;
-      _statusResolver = (context) => AppLocalizations.of(context)!.savingCowDetails;
+      _statusResolver = (context) => AppLocalizations.of(context)!.savingCattleDetails;
     });
 
     try {
       final List<double> resolvedEmbedding = embedding ??
           await _embeddingService.getEmbedding(_selectedImage!);
-      await _database.registerCow(
-        cowId: cowId,
+      await _database.registerCattle(
+        cattleId: cattleId,
         embedding: resolvedEmbedding,
         imagePath: _selectedImage!.path,
         note: note,
       );
       setState(() {
-        _statusResolver = (context) => AppLocalizations.of(context)!.addedToHerd(cowId);
+        _statusResolver = (context) => AppLocalizations.of(context)!.addedToHerd(cattleId);
         _result = const IdentificationResult(
-          predictedCowId: 'Registered',
+          predictedCattleId: 'Registered',
           similarity: 0,
           isKnown: true,
         );
       });
-      _showSnack(AppLocalizations.of(context)!.addedSuccessfully(cowId));
+      _showSnack(AppLocalizations.of(context)!.addedSuccessfully(cattleId));
     } catch (error) {
       setState(() {
         _statusResolver = (context) => AppLocalizations.of(context)!.couldNotIdentify;
@@ -631,11 +631,11 @@ class _HerdHomePageState extends State<HerdHomePage> {
     }
   }
 
-  Future<void> _openCowDetail(String cowId) async {
+  Future<void> _openCattleDetail(String cattleId) async {
     final String? eventMessage = await Navigator.of(context).push<String>(
       MaterialPageRoute<String>(
-        builder: (_) => CowDetailPage(
-          cowId: cowId,
+        builder: (_) => CattleDetailPage(
+          cattleId: cattleId,
           database: _database,
           embeddingService: _embeddingService,
           breedService: _breedService,
@@ -901,7 +901,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
         children: <Widget>[
           _HeaderCard(
             statusMessage: _statusResolver?.call(context),
-            cowCount: _database.totalCows,
+            cattleCount: _database.totalCattle,
             isReady: _isReady,
             initializationError: _initializationError,
             onRetry: _isBusy ? null : _initialize,
@@ -928,9 +928,9 @@ class _HerdHomePageState extends State<HerdHomePage> {
                 label: Text(localizations.uploadImage),
               ),
               FilledButton.tonalIcon(
-                onPressed: (_isBusy || !_isReady) ? null : _identifyCow,
+                onPressed: (_isBusy || !_isReady) ? null : _identifyCattle,
                 icon: const Icon(Icons.search),
-                label: Text(localizations.identifyCow),
+                label: Text(localizations.identifyCattle),
               ),
             ],
           ),
@@ -945,10 +945,10 @@ class _HerdHomePageState extends State<HerdHomePage> {
           const SizedBox(height: 8),
           _PredictionCard(
             result: _result,
-            matchedCow: _result?.suggestedCowId == null
+            matchedCattle: _result?.suggestedCattleId == null
                 ? null
-                : _database.getCow(_result!.suggestedCowId!),
-            cowAvatarBuilder: _cowAvatar,
+                : _database.getCattle(_result!.suggestedCattleId!),
+            cattleAvatarBuilder: _cattleAvatar,
           ),
           if (_result?.hasBorderlineMatch == true &&
               _selectedImage != null) ...<Widget>[
@@ -961,7 +961,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      localizations.looksLike(_result!.suggestedCowId!),
+                      localizations.looksLike(_result!.suggestedCattleId!),
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 6),
@@ -970,12 +970,12 @@ class _HerdHomePageState extends State<HerdHomePage> {
                     FilledButton.icon(
                       onPressed: (_isBusy || !_isReady)
                           ? null
-                          : () => _addPhotoToExistingCow(
-                                _result!.suggestedCowId!,
+                          : () => _addPhotoToExistingCattle(
+                                _result!.suggestedCattleId!,
                               ),
                       icon: const Icon(Icons.add_a_photo_outlined),
                       label: Text(
-                        localizations.yesAddTo(_result!.suggestedCowId!),
+                        localizations.yesAddTo(_result!.suggestedCattleId!),
                       ),
                     ),
                   ],
@@ -989,7 +989,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
             FilledButton.icon(
               onPressed: (_isBusy || !_isReady) ? null : _showRegisterDialog,
               icon: const Icon(Icons.app_registration),
-              label: Text(localizations.addThisCow),
+              label: Text(localizations.addThisCattle),
             ),
           ],
           if (_isBusy) ...<Widget>[
@@ -1001,14 +1001,14 @@ class _HerdHomePageState extends State<HerdHomePage> {
     );
   }
 
-  Widget _buildMyCowsTab(ThemeData theme) {
+  Widget _buildMyCattlesTab(ThemeData theme) {
     final localizations = AppLocalizations.of(context)!;
     final String query = _searchController.text.trim().toLowerCase();
-    final List<CowRecord> cows = _database
-        .getAllCows()
-        .where((CowRecord cow) => cow.id.toLowerCase().contains(query))
+    final List<CattleRecord> cattles = _database
+        .getAllCattle()
+        .where((CattleRecord cattle) => cattle.id.toLowerCase().contains(query))
         .toList();
-    if (cows.isEmpty) {
+    if (cattles.isEmpty) {
       return Column(
         children: <Widget>[
           Padding(
@@ -1036,7 +1036,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
           ),
           Expanded(
             child: Center(
-              child: Text(localizations.noCowsMessage),
+              child: Text(localizations.noCattlesMessage),
             ),
           ),
         ],
@@ -1072,24 +1072,24 @@ class _HerdHomePageState extends State<HerdHomePage> {
           child: ListView.separated(
             padding: const EdgeInsets.all(12),
             itemBuilder: (BuildContext context, int index) {
-              final CowRecord cow = cows[index];
+              final CattleRecord cattle = cattles[index];
               return Card(
                 child: ListTile(
-                  onTap: () => _openCowDetail(cow.id),
+                  onTap: () => _openCattleDetail(cattle.id),
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: SizedBox(
                       width: 48,
                       height: 48,
-                      child: _cowAvatar(cow.profileImagePath),
+                      child: _cattleAvatar(cattle.profileImagePath),
                     ),
                   ),
-                  title: Text(cow.id),
+                  title: Text(cattle.id),
                   subtitle: Text(
-                    localizations.cowSummarySubtitle(
-                      cow.healthRecords.length,
-                      cow.vaccinations.length,
-                      cow.notes.length,
+                    localizations.cattleSummarySubtitle(
+                      cattle.healthRecords.length,
+                      cattle.vaccinations.length,
+                      cattle.notes.length,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1100,7 +1100,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
               );
             },
             separatorBuilder: (_, __) => const SizedBox(height: 4),
-            itemCount: cows.length,
+            itemCount: cattles.length,
           ),
         ),
       ],
@@ -1122,7 +1122,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_currentTab == 0 ? localizations.identifyCow : localizations.yourHerd),
+          title: Text(_currentTab == 0 ? localizations.identifyCattle : localizations.yourHerd),
           actions: <Widget>[
             if (_currentTab == 0)
               IconButton(
@@ -1135,7 +1135,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
         body: SafeArea(
           child: _currentTab == 0
               ? _buildIdentifyTab(theme)
-              : _buildMyCowsTab(theme),
+              : _buildMyCattlesTab(theme),
         ),
         bottomNavigationBar: NavigationBar(
           backgroundColor: const Color(0xFFFFFDF7),
@@ -1148,7 +1148,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
           },
           destinations: <NavigationDestination>[
             NavigationDestination(icon: const Icon(Icons.search), label: localizations.identifyTab),
-            NavigationDestination(icon: const Icon(Icons.list_alt), label: localizations.cowsTab),
+            NavigationDestination(icon: const Icon(Icons.list_alt), label: localizations.cattleTab),
           ],
         ),
       ),
@@ -1159,14 +1159,14 @@ class _HerdHomePageState extends State<HerdHomePage> {
 class _HeaderCard extends StatelessWidget {
   const _HeaderCard({
     required this.statusMessage,
-    required this.cowCount,
+    required this.cattleCount,
     required this.isReady,
     required this.initializationError,
     required this.onRetry,
   });
 
   final String? statusMessage;
-  final int cowCount;
+  final int cattleCount;
   final bool isReady;
   final String? initializationError;
   final Future<void> Function()? onRetry;
@@ -1197,7 +1197,7 @@ class _HeaderCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                localizations.registeredCowsCount(cowCount),
+                localizations.registeredCattlesCount(cattleCount),
                 style: TextStyle(color: accent, fontWeight: FontWeight.w700),
               ),
             ),
@@ -1251,13 +1251,13 @@ class _ImagePreviewCard extends StatelessWidget {
 class _PredictionCard extends StatelessWidget {
   const _PredictionCard({
     required this.result,
-    required this.matchedCow,
-    required this.cowAvatarBuilder,
+    required this.matchedCattle,
+    required this.cattleAvatarBuilder,
   });
 
   final IdentificationResult? result;
-  final CowRecord? matchedCow;
-  final Widget Function(String? imagePath) cowAvatarBuilder;
+  final CattleRecord? matchedCattle;
+  final Widget Function(String? imagePath) cattleAvatarBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -1278,11 +1278,11 @@ class _PredictionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              result!.predictedCowId == 'Registered'
-                  ? localizations.cowRegistered
-                  : (result!.predictedCowId == 'Unknown Cow'
-                      ? localizations.unknownCow
-                      : result!.predictedCowId),
+              result!.predictedCattleId == 'Registered'
+                  ? localizations.cattleRegistered
+                  : (result!.predictedCattleId == 'Unknown Cattle'
+                      ? localizations.unknownCattle
+                      : result!.predictedCattleId),
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
@@ -1292,20 +1292,20 @@ class _PredictionCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               result!.isKnown
-                  ? localizations.cowAlreadyInHerd
+                  ? localizations.cattleAlreadyInHerd
                   : result!.hasBorderlineMatch
                   ? localizations.borderlineMatch
-                  : localizations.noMatchingCowRegisterHint,
+                  : localizations.noMatchingCattleRegisterHint,
             ),
             if (result!.hasBorderlineMatch &&
-                matchedCow?.profileImagePath != null) ...<Widget>[
+                matchedCattle?.profileImagePath != null) ...<Widget>[
               const SizedBox(height: 12),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: SizedBox(
                   height: 80,
                   width: 80,
-                  child: cowAvatarBuilder(matchedCow!.profileImagePath),
+                  child: cattleAvatarBuilder(matchedCattle!.profileImagePath),
                 ),
               ),
             ],
