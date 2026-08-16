@@ -126,10 +126,14 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
     final TextEditingController idController = TextEditingController(
       text: record.id,
     );
-    String? selectedSex = record.sex ?? 'Female';
+    String selectedSex = (record.sex == 'Male') ? 'Male' : 'Female';
     DateTime? selectedDob = record.dateOfBirth;
-    String? selectedLifeStage = record.lifeStage ?? record.effectiveLifeStage;
-    String? selectedReproductive = record.reproductiveStatus ?? record.effectiveReproductiveStatus;
+    const List<String> validStages = <String>['Calf', 'Heifer', 'Steer'];
+    String? selectedLifeStage = validStages.contains(record.lifeStage) ? record.lifeStage : null;
+    const List<String> validRepro = <String>['Not Pregnant', 'Pregnant', 'Unknown'];
+    String? selectedReproductive = validRepro.contains(record.reproductiveStatus)
+        ? record.reproductiveStatus
+        : 'Unknown';
 
     await showDialog<void>(
       context: context,
@@ -169,6 +173,8 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                             selectedSex = val;
                             if (val == 'Male') {
                               selectedReproductive = null;
+                            } else {
+                              selectedReproductive ??= 'Unknown';
                             }
                           });
                         }
@@ -220,21 +226,23 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     const SizedBox(height: 12),
 
                     // Life Stage
-                    DropdownButtonFormField<String>(
+                    DropdownButtonFormField<String?>(
                       initialValue: selectedLifeStage,
                       decoration: const InputDecoration(
                         labelText: 'Life Stage',
                         border: OutlineInputBorder(),
                       ),
-                      items: const <DropdownMenuItem<String>>[
-                        DropdownMenuItem(value: 'Calf', child: Text('Calf')),
-                        DropdownMenuItem(value: 'Heifer', child: Text('Heifer')),
-                        DropdownMenuItem(value: 'Steer', child: Text('Steer')),
+                      items: const <DropdownMenuItem<String?>>[
+                        DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('Auto (Cow / Bull / Age)'),
+                        ),
+                        DropdownMenuItem<String?>(value: 'Calf', child: Text('Calf')),
+                        DropdownMenuItem<String?>(value: 'Heifer', child: Text('Heifer')),
+                        DropdownMenuItem<String?>(value: 'Steer', child: Text('Steer')),
                       ],
                       onChanged: (String? val) {
-                        if (val != null) {
-                          setModalState(() => selectedLifeStage = val);
-                        }
+                        setModalState(() => selectedLifeStage = val);
                       },
                     ),
 
@@ -242,7 +250,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     if (selectedSex == 'Female') ...<Widget>[
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        initialValue: selectedReproductive,
+                        initialValue: selectedReproductive ?? 'Unknown',
                         decoration: const InputDecoration(
                           labelText: 'Reproductive Status',
                           border: OutlineInputBorder(),
