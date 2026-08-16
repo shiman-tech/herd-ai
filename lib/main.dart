@@ -975,30 +975,45 @@ class _HerdHomePageState extends State<HerdHomePage> {
           const SizedBox(height: 16),
           _ImagePreviewCard(imageFile: _selectedImage),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
+          Row(
             children: <Widget>[
-              FilledButton.icon(
-                onPressed: _isBusy
-                    ? null
-                    : () => _pickImage(ImageSource.camera),
-                icon: const Icon(Icons.photo_camera_outlined),
-                label: Text(localizations.captureImage),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _isBusy
+                      ? null
+                      : () => _pickImage(ImageSource.camera),
+                  icon: const Icon(Icons.photo_camera_outlined),
+                  label: Text(localizations.captureImage),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
               ),
-              OutlinedButton.icon(
-                onPressed: _isBusy
-                    ? null
-                    : () => _pickImage(ImageSource.gallery),
-                icon: const Icon(Icons.photo_library_outlined),
-                label: Text(localizations.uploadImage),
-              ),
-              FilledButton.tonalIcon(
-                onPressed: (_isBusy || !_isReady) ? null : _identifyCattle,
-                icon: const Icon(Icons.search),
-                label: Text(localizations.identifyCattle),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _isBusy
+                      ? null
+                      : () => _pickImage(ImageSource.gallery),
+                  icon: const Icon(Icons.photo_library_outlined),
+                  label: Text(localizations.uploadImage),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: FilledButton.tonalIcon(
+              onPressed: (_isBusy || !_isReady) ? null : _identifyCattle,
+              icon: const Icon(Icons.search),
+              label: Text(localizations.identifyCattle),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+              ),
+            ),
           ),
           const SizedBox(height: 20),
           Text(
