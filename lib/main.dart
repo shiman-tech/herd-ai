@@ -1089,6 +1089,9 @@ class _HerdHomePageState extends State<HerdHomePage> {
                 child: TextField(
                   controller: _searchController,
                   onChanged: (_) => setState(() {}),
+                  onTapOutside: (PointerDownEvent event) {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                  },
                   decoration: InputDecoration(
                     hintText: localizations.searchHint,
                     prefixIcon: const Icon(Icons.search),

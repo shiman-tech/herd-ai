@@ -126,16 +126,16 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
     final TextEditingController idController = TextEditingController(
       text: record.id,
     );
-    String selectedSex = (record.sex == 'Male') ? 'Male' : 'Female';
+    String selectedSex = (record.effectiveSex == 'Male') ? 'Male' : 'Female';
     DateTime? selectedDob = record.dateOfBirth;
     const List<String> validStages = <String>['Calf', 'Heifer', 'Steer', 'Unknown'];
-    String selectedLifeStage = validStages.contains(record.lifeStage) ? record.lifeStage! : 'Unknown';
+    String selectedLifeStage = validStages.contains(record.effectiveLifeStage) ? record.effectiveLifeStage : 'Unknown';
     const List<String> validRepro = <String>['Not Pregnant', 'Pregnant', 'Unknown'];
-    String selectedReproductive = validRepro.contains(record.reproductiveStatus)
-        ? record.reproductiveStatus!
+    String selectedReproductive = validRepro.contains(record.effectiveReproductiveStatus)
+        ? record.effectiveReproductiveStatus
         : 'Unknown';
     const List<String> validHealth = <String>['Healthy', 'Under Observation', 'Diseased', 'Recovered', 'Unknown'];
-    String selectedHealth = validHealth.contains(record.healthStatus) ? record.healthStatus! : 'Unknown';
+    String selectedHealth = validHealth.contains(record.effectiveHealthStatus) ? record.effectiveHealthStatus : 'Unknown';
 
     await showDialog<void>(
       context: context,
