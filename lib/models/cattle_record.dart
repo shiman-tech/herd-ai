@@ -16,6 +16,11 @@ class CattleRecord {
     this.breedAlternativesJson,
     this.confirmedBreed,
     this.breedConfirmedByUser = false,
+    this.sex,
+    this.dateOfBirth,
+    this.lifeStage,
+    this.healthStatus,
+    this.reproductiveStatus,
   }) : embeddings = embeddings ?? <EmbeddingReference>[],
        healthRecords = healthRecords ?? <HealthRecord>[],
        vaccinations = vaccinations ?? <VaccinationRecord>[],
@@ -38,7 +43,139 @@ class CattleRecord {
   String? confirmedBreed;
   bool breedConfirmedByUser;
 
+  // Additional Cattle Demographics & Status
+  String? sex; // 'Male', 'Female', 'Unknown'
+  DateTime? dateOfBirth;
+  String? lifeStage; // 'Calf', 'Heifer', 'Cow', 'Bull', 'Steer'
+  String? healthStatus; // 'Healthy', 'Under Observation', 'Diseased', 'Recovered'
+  String? reproductiveStatus; // 'Pregnant', 'Not Pregnant', 'Unknown'
+
   String? get displayBreed => confirmedBreed ?? breedName;
+
+  String get effectiveBreed {
+    final String? breed = displayBreed;
+    if (breed != null && breed.trim().isNotEmpty) {
+      return breed.trim();
+    }
+    return 'Unknown';
+  }
+
+  String get effectiveSex => sex ?? 'Unknown';
+
+  int? get ageInMonths {
+    if (dateOfBirth == null) {
+      return null;
+    }
+    final DateTime now = DateTime.now();
+    int months = (now.year - dateOfBirth!.year) * 12 + (now.month - dateOfBirth!.month);
+    if (now.day < dateOfBirth!.day) {
+      months--;
+    }
+    return months >= 0 ? months : 0;
+  }
+
+  String get ageDisplay {
+    final int? months = ageInMonths;
+    if (months == null) {
+      return 'Unknown age';
+    }
+    final int years = months ~/ 12;
+    final int remMonths = months % 12;
+    if (years > 0 && remMonths > 0) {
+      return '$years yr${years > 1 ? 's' : ''} $remMonths mo${remMonths > 1 ? 's' : ''}';
+    } else if (years > 0) {
+      return '$years yr${years > 1 ? 's' : ''}';
+    } else {
+      return '$remMonths mo${remMonths > 1 ? 's' : ''}';
+    }
+  }
+
+  String get effectiveLifeStage {
+    if (lifeStage != null && lifeStage!.trim().isNotEmpty) {
+      return lifeStage!.trim();
+    }
+    final int? months = ageInMonths;
+    if (months != null) {
+      if (months < 12) {
+        return 'Calf';
+      }
+      if (sex == 'Female') {
+        return months < 24 ? 'Heifer' : 'Cow';
+      }
+      if (sex == 'Male') {
+        return 'Bull';
+      }
+    }
+    if (sex == 'Male') {
+      return 'Bull';
+    }
+    if (sex == 'Female') {
+      return 'Cow';
+    }
+    return 'Cow';
+  }
+
+  String get effectiveHealthStatus {
+    if (healthStatus != null && healthStatus!.trim().isNotEmpty) {
+      return healthStatus!.trim();
+    }
+    final bool hasOngoing = healthRecords.any(
+      (HealthRecord r) => r.status.trim().toLowerCase() == 'ongoing',
+    );
+    if (hasOngoing) {
+      return 'Diseased';
+    }
+    if (healthRecords.isNotEmpty) {
+      return 'Recovered';
+    }
+    return 'Healthy';
+  }
+
+  String get effectiveReproductiveStatus {
+    if (reproductiveStatus != null && reproductiveStatus!.trim().isNotEmpty) {
+      return reproductiveStatus!.trim();
+    }
+    final bool noteMentionsPregnant = notes.any(
+      (String n) => n.toLowerCase().contains('pregnant'),
+    );
+    if (noteMentionsPregnant) {
+      return 'Pregnant';
+    }
+    if (sex == 'Male') {
+      return 'Not Pregnant';
+    }
+    return 'Unknown';
+  }
+
+  String get calculatedVaccinationStatus {
+    if (vaccinations.isEmpty) {
+      return 'No Record';
+    }
+    final DateTime now = DateTime.now();
+    final DateTime today = DateTime(now.year, now.month, now.day);
+    final DateTime thirtyDaysFromNow = today.add(const Duration(days: 30));
+
+    bool hasDueSoon = false;
+    for (final VaccinationRecord record in vaccinations) {
+      if (record.nextDueDate != null) {
+        final DateTime due = DateTime(
+          record.nextDueDate!.year,
+          record.nextDueDate!.month,
+          record.nextDueDate!.day,
+        );
+        if (due.isBefore(today)) {
+          return 'Overdue';
+        }
+        if (!due.isAfter(thirtyDaysFromNow)) {
+          hasDueSoon = true;
+        }
+      }
+    }
+    if (hasDueSoon) {
+      return 'Due Soon';
+    }
+    return 'Up to Date';
+  }
 
   List<CattleImage> get imagesNewestFirst {
     final List<CattleImage> sorted = List<CattleImage>.from(images);
@@ -69,6 +206,11 @@ class CattleRecord {
       'breedAlternativesJson': breedAlternativesJson,
       'confirmedBreed': confirmedBreed,
       'breedConfirmedByUser': breedConfirmedByUser,
+      'sex': sex,
+      'dateOfBirth': dateOfBirth?.toIso8601String(),
+      'lifeStage': lifeStage,
+      'healthStatus': healthStatus,
+      'reproductiveStatus': reproductiveStatus,
     };
   }
 
@@ -101,6 +243,11 @@ class CattleRecord {
       breedAlternativesJson: json['breedAlternativesJson'] as String?,
       confirmedBreed: json['confirmedBreed'] as String?,
       breedConfirmedByUser: (json['breedConfirmedByUser'] as bool?) ?? false,
+      sex: json['sex'] as String?,
+      dateOfBirth: DateTime.tryParse(json['dateOfBirth'] as String? ?? ''),
+      lifeStage: json['lifeStage'] as String?,
+      healthStatus: json['healthStatus'] as String?,
+      reproductiveStatus: json['reproductiveStatus'] as String?,
     );
   }
 
