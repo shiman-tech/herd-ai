@@ -19,7 +19,7 @@ void main() {
 
     test('infers life stage when not explicitly set', () {
       final DateTime now = DateTime.now();
-      // Calf (< 12 months)
+      // Calf (< 12 months) — can be inferred from DOB
       final CattleRecord calf = CattleRecord(
         id: 'C-01',
         registrationDate: now,
@@ -28,32 +28,41 @@ void main() {
       );
       expect(calf.effectiveLifeStage, 'Calf');
 
-      // Heifer (Female, 12 - 24 months)
-      final CattleRecord heifer = CattleRecord(
+      // Adult Female >= 12 months, no explicit lifeStage -> Unknown
+      final CattleRecord adult = CattleRecord(
         id: 'C-02',
         registrationDate: now,
         sex: 'Female',
         dateOfBirth: DateTime(now.year - 1, now.month - 3, now.day),
       );
-      expect(heifer.effectiveLifeStage, 'Heifer');
+      expect(adult.effectiveLifeStage, 'Unknown');
 
-      // Cow (Female, >= 24 months)
+      // Adult Female without explicit life stage -> Unknown
       final CattleRecord cow = CattleRecord(
         id: 'C-03',
         registrationDate: now,
         sex: 'Female',
         dateOfBirth: DateTime(now.year - 3, now.month, now.day),
       );
-      expect(cow.effectiveLifeStage, 'Cow');
+      expect(cow.effectiveLifeStage, 'Unknown');
 
-      // Bull (Male)
+      // Adult Male without explicit life stage -> Unknown
       final CattleRecord bull = CattleRecord(
         id: 'C-04',
         registrationDate: now,
         sex: 'Male',
         dateOfBirth: DateTime(now.year - 3, now.month, now.day),
       );
-      expect(bull.effectiveLifeStage, 'Bull');
+      expect(bull.effectiveLifeStage, 'Unknown');
+
+      // Explicitly set Cow -> returns Cow
+      final CattleRecord explicitCow = CattleRecord(
+        id: 'C-05',
+        registrationDate: now,
+        sex: 'Female',
+        lifeStage: 'Cow',
+      );
+      expect(explicitCow.effectiveLifeStage, 'Cow');
     });
 
     test('calculates effective health status from health records', () {

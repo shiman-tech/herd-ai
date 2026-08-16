@@ -1220,7 +1220,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
   Future<void> _setUnknownBreed() async {
     await widget.database.confirmBreed(
       cattleId: _cattleId,
-      confirmedBreed: 'Unknown / Mixed',
+      confirmedBreed: 'Unknown',
     );
     if (mounted) {
       setState(() {});
@@ -1903,7 +1903,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                         ),
                                         OutlinedButton(
                                           onPressed: _setUnknownBreed,
-                                          child: Text(localizations.unknownMixed),
+                                          child: const Text('Set as Unknown'),
                                         ),
                                       ],
                                     ),
@@ -1937,7 +1937,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                       ),
                                       OutlinedButton(
                                         onPressed: _setUnknownBreed,
-                                        child: Text(localizations.unknownMixed),
+                                        child: const Text('Set as Unknown'),
                                       ),
                                     ],
                                   ),

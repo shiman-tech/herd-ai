@@ -94,23 +94,10 @@ class CattleRecord {
     if (lifeStage != null && lifeStage!.trim().isNotEmpty) {
       return lifeStage!.trim();
     }
+    // Only infer Calf from age — never guess Cow/Bull/Heifer automatically
     final int? months = ageInMonths;
-    if (months != null) {
-      if (months < 12) {
-        return 'Calf';
-      }
-      if (sex == 'Female') {
-        return months < 24 ? 'Heifer' : 'Cow';
-      }
-      if (sex == 'Male') {
-        return 'Bull';
-      }
-    }
-    if (sex == 'Male') {
-      return 'Bull';
-    }
-    if (sex == 'Female') {
-      return 'Cow';
+    if (months != null && months < 12) {
+      return 'Calf';
     }
     return 'Unknown';
   }
