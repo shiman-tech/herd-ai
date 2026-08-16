@@ -130,7 +130,6 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
     DateTime? selectedDob = record.dateOfBirth;
     String? selectedLifeStage = record.lifeStage ?? record.effectiveLifeStage;
     String? selectedReproductive = record.reproductiveStatus ?? record.effectiveReproductiveStatus;
-    String? selectedHealth = record.healthStatus ?? record.effectiveHealthStatus;
 
     await showDialog<void>(
       context: context,
@@ -168,8 +167,8 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                         if (val != null) {
                           setModalState(() {
                             selectedSex = val;
-                            if (val == 'Male' && selectedLifeStage == 'Heifer') {
-                              selectedLifeStage = 'Bull';
+                            if (val == 'Male') {
+                              selectedReproductive = null;
                             }
                           });
                         }
@@ -177,54 +176,46 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     ),
                     const SizedBox(height: 12),
 
-                    // Date of Birth / Age
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              const Text(
-                                'Date of Birth',
-                                style: TextStyle(fontSize: 12, color: Colors.grey),
-                              ),
-                              Text(
-                                selectedDob != null
-                                    ? '${_formatDate(selectedDob!)} (${record.ageInMonths != null ? record.ageDisplay : ""})'
-                                    : 'Not set (Unknown)',
-                                style: const TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                            ],
+                    // Date of Birth
+                    InkWell(
+                      onTap: () async {
+                        final DateTime now = DateTime.now();
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          firstDate: DateTime(2000),
+                          lastDate: now,
+                          initialDate: selectedDob ?? now.subtract(const Duration(days: 365)),
+                        );
+                        if (picked != null) {
+                          setModalState(() {
+                            selectedDob = picked;
+                          });
+                        }
+                      },
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Date of Birth',
+                          border: const OutlineInputBorder(),
+                          suffixIcon: selectedDob != null
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, size: 18),
+                                  onPressed: () {
+                                    setModalState(() {
+                                      selectedDob = null;
+                                    });
+                                  },
+                                )
+                              : const Icon(Icons.calendar_today, size: 18),
+                        ),
+                        child: Text(
+                          selectedDob != null
+                              ? '${_formatDate(selectedDob!)}${record.ageInMonths != null ? '  (${record.ageDisplay})' : ''}'
+                              : 'Not set',
+                          style: TextStyle(
+                            color: selectedDob != null ? Colors.black87 : Colors.grey,
                           ),
                         ),
-                        TextButton.icon(
-                          icon: const Icon(Icons.calendar_today, size: 16),
-                          label: Text(selectedDob == null ? 'Set DOB' : 'Change'),
-                          onPressed: () async {
-                            final DateTime now = DateTime.now();
-                            final DateTime? picked = await showDatePicker(
-                              context: context,
-                              firstDate: DateTime(2000),
-                              lastDate: now,
-                              initialDate: selectedDob ?? now.subtract(const Duration(days: 365)),
-                            );
-                            if (picked != null) {
-                              setModalState(() {
-                                selectedDob = picked;
-                              });
-                            }
-                          },
-                        ),
-                        if (selectedDob != null)
-                          IconButton(
-                            icon: const Icon(Icons.clear, size: 18),
-                            onPressed: () {
-                              setModalState(() {
-                                selectedDob = null;
-                              });
-                            },
-                          ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 12),
 
@@ -238,8 +229,6 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       items: const <DropdownMenuItem<String>>[
                         DropdownMenuItem(value: 'Calf', child: Text('Calf')),
                         DropdownMenuItem(value: 'Heifer', child: Text('Heifer')),
-                        DropdownMenuItem(value: 'Cow', child: Text('Cow')),
-                        DropdownMenuItem(value: 'Bull', child: Text('Bull')),
                         DropdownMenuItem(value: 'Steer', child: Text('Steer')),
                       ],
                       onChanged: (String? val) {
@@ -248,47 +237,28 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                         }
                       },
                     ),
-                    const SizedBox(height: 12),
 
-                    // Reproductive Status
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedReproductive,
-                      decoration: const InputDecoration(
-                        labelText: 'Reproductive Status',
-                        border: OutlineInputBorder(),
+                    // Reproductive Status (Female only)
+                    if (selectedSex == 'Female') ...<Widget>[
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedReproductive,
+                        decoration: const InputDecoration(
+                          labelText: 'Reproductive Status',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: const <DropdownMenuItem<String>>[
+                          DropdownMenuItem(value: 'Not Pregnant', child: Text('Not Pregnant')),
+                          DropdownMenuItem(value: 'Pregnant', child: Text('Pregnant')),
+                          DropdownMenuItem(value: 'Unknown', child: Text('Unknown')),
+                        ],
+                        onChanged: (String? val) {
+                          if (val != null) {
+                            setModalState(() => selectedReproductive = val);
+                          }
+                        },
                       ),
-                      items: const <DropdownMenuItem<String>>[
-                        DropdownMenuItem(value: 'Not Pregnant', child: Text('Not Pregnant')),
-                        DropdownMenuItem(value: 'Pregnant', child: Text('Pregnant')),
-                        DropdownMenuItem(value: 'Unknown', child: Text('Unknown')),
-                      ],
-                      onChanged: (String? val) {
-                        if (val != null) {
-                          setModalState(() => selectedReproductive = val);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Health Status
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedHealth,
-                      decoration: const InputDecoration(
-                        labelText: 'Health Status',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const <DropdownMenuItem<String>>[
-                        DropdownMenuItem(value: 'Healthy', child: Text('Healthy')),
-                        DropdownMenuItem(value: 'Under Observation', child: Text('Under Observation')),
-                        DropdownMenuItem(value: 'Diseased', child: Text('Diseased')),
-                        DropdownMenuItem(value: 'Recovered', child: Text('Recovered')),
-                      ],
-                      onChanged: (String? val) {
-                        if (val != null) {
-                          setModalState(() => selectedHealth = val);
-                        }
-                      },
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -311,7 +281,6 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       dateOfBirth: selectedDob,
                       lifeStage: selectedLifeStage,
                       reproductiveStatus: selectedReproductive,
-                      healthStatus: selectedHealth,
                     );
                     if (!mounted) {
                       return;
@@ -1427,6 +1396,38 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
     Navigator.of(context).pop(AppLocalizations.of(context)!.cattleRecordDeleted);
   }
 
+  Widget _buildInfoRow(String label, String value, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: valueColor ?? Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final CattleRecord? record = _record;
@@ -1526,90 +1527,22 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                               localizations.registeredLabel(_formatDate(record.registrationDate)),
                               style: const TextStyle(fontSize: 12, color: Colors.grey),
                             ),
-                            if (record.dateOfBirth != null) ...<Widget>[
-                              const SizedBox(height: 2),
-                              Text(
-                                'Age: ${record.ageDisplay}',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                              ),
-                            ],
+                            const SizedBox(height: 8),
+                            _buildInfoRow('Sex:', record.effectiveSex),
+                            _buildInfoRow('Life Stage:', record.effectiveLifeStage),
+                            if (record.dateOfBirth != null)
+                              _buildInfoRow('Age:', record.ageDisplay),
+                            _buildInfoRow('Health:', record.effectiveHealthStatus,
+                                valueColor: record.effectiveHealthStatus == 'Healthy'
+                                    ? Colors.green
+                                    : (record.effectiveHealthStatus == 'Diseased' ? Colors.red : Colors.orange)),
+                            if (record.effectiveSex == 'Female' &&
+                                record.effectiveReproductiveStatus != 'Unknown' &&
+                                record.effectiveReproductiveStatus != 'Not Applicable')
+                              _buildInfoRow('Reproductive:', record.effectiveReproductiveStatus, valueColor: Colors.purple),
+                            _buildInfoRow('Vaccination:', record.calculatedVaccinationStatus),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: <Widget>[
-                      // Sex tag
-                      Chip(
-                        avatar: Icon(
-                          record.effectiveSex == 'Female'
-                              ? Icons.female
-                              : (record.effectiveSex == 'Male' ? Icons.male : Icons.transgender),
-                          size: 16,
-                          color: record.effectiveSex == 'Female' ? Colors.pink : Colors.blue,
-                        ),
-                        label: Text(record.effectiveSex),
-                        visualDensity: VisualDensity.compact,
-                        backgroundColor: Colors.grey.shade100,
-                      ),
-
-                      // Life Stage
-                      Chip(
-                        avatar: const Icon(Icons.timeline, size: 16, color: Color(0xFF2D6A4F)),
-                        label: Text(record.effectiveLifeStage),
-                        visualDensity: VisualDensity.compact,
-                        backgroundColor: Colors.grey.shade100,
-                      ),
-
-                      // Health Status
-                      Chip(
-                        avatar: Icon(
-                          Icons.favorite,
-                          size: 16,
-                          color: record.effectiveHealthStatus == 'Healthy'
-                              ? Colors.green
-                              : (record.effectiveHealthStatus == 'Diseased'
-                                  ? Colors.red
-                                  : Colors.orange),
-                        ),
-                        label: Text(record.effectiveHealthStatus),
-                        visualDensity: VisualDensity.compact,
-                        backgroundColor: (record.effectiveHealthStatus == 'Healthy'
-                                ? Colors.green
-                                : (record.effectiveHealthStatus == 'Diseased'
-                                    ? Colors.red
-                                    : Colors.orange))
-                            .withValues(alpha: 0.1),
-                      ),
-
-                      // Reproductive Status
-                      if (record.effectiveReproductiveStatus != 'Unknown' &&
-                          record.effectiveReproductiveStatus != 'Not Applicable')
-                        Chip(
-                          avatar: const Icon(Icons.pregnant_woman, size: 16, color: Colors.purple),
-                          label: Text(record.effectiveReproductiveStatus),
-                          visualDensity: VisualDensity.compact,
-                          backgroundColor: Colors.purple.withValues(alpha: 0.1),
-                        ),
-
-                      // Vaccination Status
-                      Chip(
-                        avatar: Icon(
-                          Icons.vaccines,
-                          size: 16,
-                          color: record.calculatedVaccinationStatus == 'Up to Date'
-                              ? Colors.green
-                              : (record.calculatedVaccinationStatus == 'Overdue'
-                                  ? Colors.red
-                                  : Colors.orange),
-                        ),
-                        label: Text('Vax: ${record.calculatedVaccinationStatus}'),
-                        visualDensity: VisualDensity.compact,
-                        backgroundColor: Colors.grey.shade100,
                       ),
                     ],
                   ),

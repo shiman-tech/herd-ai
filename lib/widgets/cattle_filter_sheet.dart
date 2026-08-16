@@ -73,30 +73,28 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
     required VoidCallback onSelected,
     Color? activeColor,
     Color? activeTextColor,
-    Widget? avatar,
   }) {
-    return FilterChip(
-      selected: isSelected,
-      label: Text(label),
-      avatar: avatar,
-      showCheckmark: true,
-      checkmarkColor: activeTextColor ?? Colors.white,
-      selectedColor: activeColor ?? const Color(0xFF2D6A4F),
-      labelStyle: TextStyle(
-        color: isSelected ? (activeTextColor ?? Colors.white) : Colors.black87,
-        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-        fontSize: 13,
-      ),
-      backgroundColor: Colors.grey.shade100,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected
-              ? (activeColor ?? const Color(0xFF2D6A4F))
-              : Colors.grey.shade300,
+    final Color chipColor = activeColor ?? const Color(0xFF2D6A4F);
+    return GestureDetector(
+      onTap: onSelected,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? chipColor : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? chipColor : Colors.grey.shade300,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? (activeTextColor ?? Colors.white) : Colors.black87,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 13,
+          ),
         ),
       ),
-      onSelected: (_) => onSelected(),
     );
   }
 
@@ -106,36 +104,40 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
     required VoidCallback onSelected,
     IconData? icon,
   }) {
-    return ChoiceChip(
-      selected: isSelected,
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          if (icon != null) ...<Widget>[
-            Icon(
-              icon,
-              size: 16,
-              color: isSelected ? Colors.white : Colors.black87,
+    const Color chipColor = Color(0xFF2D6A4F);
+    return GestureDetector(
+      onTap: onSelected,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? chipColor : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? chipColor : Colors.grey.shade300,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            if (icon != null) ...<Widget>[
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected ? Colors.white : Colors.black87,
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.black87,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 13,
+              ),
             ),
-            const SizedBox(width: 4),
           ],
-          Text(label),
-        ],
-      ),
-      selectedColor: const Color(0xFF2D6A4F),
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.black87,
-        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-        fontSize: 13,
-      ),
-      backgroundColor: Colors.grey.shade100,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected ? const Color(0xFF2D6A4F) : Colors.grey.shade300,
         ),
       ),
-      onSelected: (_) => onSelected(),
     );
   }
 
@@ -244,7 +246,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
-                  children: <String>['Calf', 'Heifer', 'Cow', 'Bull', 'Steer'].map((String stage) {
+                  children: <String>['Calf', 'Heifer', 'Steer'].map((String stage) {
                     return _buildChip(
                       label: stage,
                       isSelected: _filter.selectedLifeStages.contains(stage),
