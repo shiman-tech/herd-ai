@@ -17,7 +17,7 @@ class EmbeddingDatabase {
   static const String _dbFileName = 'herd_ai.db';
   static const String _legacyJsonFileName = 'cattle_records.json';
   static const String _imageDirName = 'cattle_images';
-  static const int _dbVersion = 6;
+  static const int _dbVersion = 7;
 
   /// Scores at or above this (but below [similarityThreshold]) trigger a
   /// pre-registration warning because the photo may match an existing cattle.
@@ -76,15 +76,25 @@ class EmbeddingDatabase {
         await _createTables(db);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        // Drop all old tables to start fresh
-        await db.execute('DROP TABLE IF EXISTS cows');
-        await db.execute('DROP TABLE IF EXISTS cattle');
-        await db.execute('DROP TABLE IF EXISTS embeddings');
-        await db.execute('DROP TABLE IF EXISTS health_records');
-        await db.execute('DROP TABLE IF EXISTS vaccinations');
-        await db.execute('DROP TABLE IF EXISTS notes');
-        await db.execute('DROP TABLE IF EXISTS images');
-        await _createTables(db);
+        if (oldVersion < 6) {
+          // Drop all old tables to start fresh
+          await db.execute('DROP TABLE IF EXISTS cows');
+          await db.execute('DROP TABLE IF EXISTS cattle');
+          await db.execute('DROP TABLE IF EXISTS embeddings');
+          await db.execute('DROP TABLE IF EXISTS health_records');
+          await db.execute('DROP TABLE IF EXISTS vaccinations');
+          await db.execute('DROP TABLE IF EXISTS notes');
+          await db.execute('DROP TABLE IF EXISTS images');
+          await _createTables(db);
+          return;
+        }
+        if (oldVersion < 7) {
+          await db.execute('ALTER TABLE cattle ADD COLUMN sex TEXT');
+          await db.execute('ALTER TABLE cattle ADD COLUMN date_of_birth TEXT');
+          await db.execute('ALTER TABLE cattle ADD COLUMN life_stage TEXT');
+          await db.execute('ALTER TABLE cattle ADD COLUMN health_status TEXT');
+          await db.execute('ALTER TABLE cattle ADD COLUMN reproductive_status TEXT');
+        }
       },
     );
   }
@@ -100,7 +110,12 @@ class EmbeddingDatabase {
         breed_confidence REAL,
         breed_alternatives_json TEXT,
         confirmed_breed TEXT,
-        breed_confirmed_by_user INTEGER NOT NULL DEFAULT 0
+        breed_confirmed_by_user INTEGER NOT NULL DEFAULT 0,
+        sex TEXT,
+        date_of_birth TEXT,
+        life_stage TEXT,
+        health_status TEXT,
+        reproductive_status TEXT
       )
     ''');
     batch.execute('''
@@ -309,6 +324,11 @@ class EmbeddingDatabase {
         confirmedBreed: row['confirmed_breed'] as String?,
         breedConfirmedByUser:
             ((row['breed_confirmed_by_user'] as int?) ?? 0) == 1,
+        sex: row['sex'] as String?,
+        dateOfBirth: DateTime.tryParse(row['date_of_birth'] as String? ?? ''),
+        lifeStage: row['life_stage'] as String?,
+        healthStatus: row['health_status'] as String?,
+        reproductiveStatus: row['reproductive_status'] as String?,
       );
       _recordsByCattle[cattleId] = record;
     }
@@ -413,14 +433,32 @@ class EmbeddingDatabase {
     required List<double> embedding,
     String? imagePath,
     String? note,
+    String? sex,
+    DateTime? dateOfBirth,
+    String? lifeStage,
+    String? healthStatus,
+    String? reproductiveStatus,
   }) async {
     final Database db = _db!;
     final List<double> normalized = normalizeEmbedding(embedding);
 
     final CattleRecord record = _recordsByCattle.putIfAbsent(
       cattleId,
-      () => CattleRecord(id: cattleId, registrationDate: DateTime.now()),
+      () => CattleRecord(
+        id: cattleId,
+        registrationDate: DateTime.now(),
+        sex: sex,
+        dateOfBirth: dateOfBirth,
+        lifeStage: lifeStage,
+        healthStatus: healthStatus,
+        reproductiveStatus: reproductiveStatus,
+      ),
     );
+    if (sex != null) record.sex = sex;
+    if (dateOfBirth != null) record.dateOfBirth = dateOfBirth;
+    if (lifeStage != null) record.lifeStage = lifeStage;
+    if (healthStatus != null) record.healthStatus = healthStatus;
+    if (reproductiveStatus != null) record.reproductiveStatus = reproductiveStatus;
 
     // Ensure cattle row exists in DB.
     await db.insert(
@@ -429,6 +467,11 @@ class EmbeddingDatabase {
         'id': record.id,
         'registration_date': record.registrationDate.toIso8601String(),
         'profile_image_path': record.profileImagePath,
+        'sex': record.sex,
+        'date_of_birth': record.dateOfBirth?.toIso8601String(),
+        'life_stage': record.lifeStage,
+        'health_status': record.healthStatus,
+        'reproductive_status': record.reproductiveStatus,
       },
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
@@ -1027,6 +1070,11 @@ class EmbeddingDatabase {
     required String oldCattleId,
     required String newCattleId,
     String? profileImagePath,
+    String? sex,
+    DateTime? dateOfBirth,
+    String? lifeStage,
+    String? healthStatus,
+    String? reproductiveStatus,
   }) async {
     final CattleRecord? existing = _recordsByCattle[oldCattleId];
     if (existing == null) {
@@ -1051,6 +1099,11 @@ class EmbeddingDatabase {
       breedAlternativesJson: existing.breedAlternativesJson,
       confirmedBreed: existing.confirmedBreed,
       breedConfirmedByUser: existing.breedConfirmedByUser,
+      sex: sex ?? existing.sex,
+      dateOfBirth: dateOfBirth ?? existing.dateOfBirth,
+      lifeStage: lifeStage ?? existing.lifeStage,
+      healthStatus: healthStatus ?? existing.healthStatus,
+      reproductiveStatus: reproductiveStatus ?? existing.reproductiveStatus,
     );
 
     final Database db = _db!;
@@ -1068,6 +1121,11 @@ class EmbeddingDatabase {
           'breed_alternatives_json': updated.breedAlternativesJson,
           'confirmed_breed': updated.confirmedBreed,
           'breed_confirmed_by_user': updated.breedConfirmedByUser ? 1 : 0,
+          'sex': updated.sex,
+          'date_of_birth': updated.dateOfBirth?.toIso8601String(),
+          'life_stage': updated.lifeStage,
+          'health_status': updated.healthStatus,
+          'reproductive_status': updated.reproductiveStatus,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -1098,7 +1156,9 @@ class EmbeddingDatabase {
       }
     });
 
-    _recordsByCattle.remove(oldCattleId);
+    if (oldCattleId != trimmedId) {
+      _recordsByCattle.remove(oldCattleId);
+    }
     _recordsByCattle[trimmedId] = updated;
   }
 
