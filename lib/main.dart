@@ -352,54 +352,76 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
     final TextEditingController idController = TextEditingController();
     final TextEditingController noteController = TextEditingController();
+    String selectedSex = 'Female';
 
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         final localizations = AppLocalizations.of(context)!;
-        return AlertDialog(
-          title: Text(localizations.addThisCattle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextField(
-                controller: idController,
-                decoration: InputDecoration(labelText: localizations.cattleId),
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setDialogState) {
+            return AlertDialog(
+              title: Text(localizations.addThisCattle),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextField(
+                    controller: idController,
+                    decoration: InputDecoration(labelText: localizations.cattleId),
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    initialValue: selectedSex,
+                    decoration: const InputDecoration(
+                      labelText: 'Sex *',
+                    ),
+                    items: const <DropdownMenuItem<String>>[
+                      DropdownMenuItem(value: 'Female', child: Text('Female')),
+                      DropdownMenuItem(value: 'Male', child: Text('Male')),
+                    ],
+                    onChanged: (String? val) {
+                      if (val != null) {
+                        setDialogState(() => selectedSex = val);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: noteController,
+                    decoration: InputDecoration(
+                      labelText: localizations.optionalNote,
+                      hintText: 'e.g. Pregnant',
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: noteController,
-                decoration: InputDecoration(
-                  labelText: localizations.optionalNote,
-                  hintText: 'e.g. Pregnant',
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(localizations.cancel),
                 ),
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(localizations.cancel),
-            ),
-            FilledButton(
-              onPressed: () async {
-                if (idController.text.trim().isEmpty) {
-                  return;
-                }
-                final String cattleId = idController.text.trim();
-                final String note = noteController.text.trim();
-                Navigator.of(context).pop();
-                await _prepareRegistration(cattleId, note: note);
-              },
-              child: Text(localizations.addCattle),
-            ),
-          ],
+                FilledButton(
+                  onPressed: () async {
+                    if (idController.text.trim().isEmpty) {
+                      return;
+                    }
+                    final String cattleId = idController.text.trim();
+                    final String note = noteController.text.trim();
+                    Navigator.of(context).pop();
+                    await _prepareRegistration(cattleId, sex: selectedSex, note: note);
+                  },
+                  child: Text(localizations.addCattle),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
 
-  Future<void> _prepareRegistration(String cattleId, {String? note}) async {
+  Future<void> _prepareRegistration(String cattleId, {required String sex, String? note}) async {
     if (!_isReady || _selectedImage == null) {
       return;
     }
@@ -447,6 +469,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
       await _registerCattle(
         cattleId,
+        sex: sex,
         note: note,
         embedding: embedding,
       );
@@ -630,6 +653,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
   Future<void> _registerCattle(
     String cattleId, {
+    required String sex,
     String? note,
     List<double>? embedding,
   }) async {
@@ -649,6 +673,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
         cattleId: cattleId,
         embedding: resolvedEmbedding,
         imagePath: _selectedImage!.path,
+        sex: sex,
         note: note,
       );
       setState(() {

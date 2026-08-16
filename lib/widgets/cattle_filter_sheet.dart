@@ -246,7 +246,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
-                  children: <String>['Calf', 'Heifer', 'Steer'].map((String stage) {
+                  children: <String>['Calf', 'Heifer', 'Steer', 'Unknown'].map((String stage) {
                     return _buildChip(
                       label: stage,
                       isSelected: _filter.selectedLifeStages.contains(stage),
@@ -265,6 +265,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                     'Under Observation',
                     'Diseased',
                     'Recovered',
+                    'Unknown',
                   ].map((String status) {
                     Color? activeColor;
                     if (status == 'Healthy' || status == 'Recovered') {

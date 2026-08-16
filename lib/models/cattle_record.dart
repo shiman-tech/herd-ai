@@ -91,7 +91,7 @@ class CattleRecord {
   }
 
   String get effectiveLifeStage {
-    if (lifeStage != null && lifeStage!.trim().isNotEmpty) {
+    if (lifeStage != null && lifeStage!.trim().isNotEmpty && lifeStage != 'Unknown') {
       return lifeStage!.trim();
     }
     final int? months = ageInMonths;
@@ -112,16 +112,17 @@ class CattleRecord {
     if (sex == 'Female') {
       return 'Cow';
     }
-    return 'Cow';
+    return lifeStage ?? 'Unknown';
   }
 
   String get effectiveHealthStatus {
-    if (healthStatus != null && healthStatus!.trim().isNotEmpty) {
-      return healthStatus!.trim();
-    }
     if (healthRecords.isEmpty) {
-      return 'Healthy';
+      if (healthStatus != null && healthStatus!.trim().isNotEmpty && healthStatus != 'Unknown') {
+        return healthStatus!.trim();
+      }
+      return 'Unknown';
     }
+
     final List<HealthRecord> sorted = List<HealthRecord>.from(healthRecords)
       ..sort((HealthRecord a, HealthRecord b) => b.date.compareTo(a.date));
     final String latest = sorted.first.status.trim();
@@ -138,7 +139,7 @@ class CattleRecord {
     if (lower == 'healthy') {
       return 'Healthy';
     }
-    return latest.isNotEmpty ? latest : 'Healthy';
+    return latest.isNotEmpty ? latest : 'Unknown';
   }
 
   String get effectiveReproductiveStatus {

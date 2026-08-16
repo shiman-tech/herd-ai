@@ -58,12 +58,20 @@ void main() {
 
     test('calculates effective health status from health records', () {
       final DateTime now = DateTime.now();
-      // No records -> Healthy
-      final CattleRecord healthy = CattleRecord(
+      // No records and no manual status -> Unknown
+      final CattleRecord unknown = CattleRecord(
         id: 'C-01',
         registrationDate: now,
       );
-      expect(healthy.effectiveHealthStatus, 'Healthy');
+      expect(unknown.effectiveHealthStatus, 'Unknown');
+
+      // Manual status -> Healthy
+      final CattleRecord manualHealthy = CattleRecord(
+        id: 'C-01B',
+        registrationDate: now,
+        healthStatus: 'Healthy',
+      );
+      expect(manualHealthy.effectiveHealthStatus, 'Healthy');
 
       // Ongoing disease -> Diseased
       final CattleRecord diseased = CattleRecord(

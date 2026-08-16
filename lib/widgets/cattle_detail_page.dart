@@ -128,14 +128,14 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
     );
     String selectedSex = (record.sex == 'Male') ? 'Male' : 'Female';
     DateTime? selectedDob = record.dateOfBirth;
-    const List<String> validStages = <String>['Calf', 'Heifer', 'Steer'];
-    String? selectedLifeStage = validStages.contains(record.lifeStage) ? record.lifeStage : null;
+    const List<String> validStages = <String>['Calf', 'Heifer', 'Steer', 'Unknown'];
+    String selectedLifeStage = validStages.contains(record.lifeStage) ? record.lifeStage! : 'Unknown';
     const List<String> validRepro = <String>['Not Pregnant', 'Pregnant', 'Unknown'];
-    String? selectedReproductive = validRepro.contains(record.reproductiveStatus)
-        ? record.reproductiveStatus
+    String selectedReproductive = validRepro.contains(record.reproductiveStatus)
+        ? record.reproductiveStatus!
         : 'Unknown';
-    const List<String> validHealth = <String>['Healthy', 'Under Observation', 'Diseased', 'Recovered'];
-    String? selectedHealth = validHealth.contains(record.healthStatus) ? record.healthStatus : null;
+    const List<String> validHealth = <String>['Healthy', 'Under Observation', 'Diseased', 'Recovered', 'Unknown'];
+    String selectedHealth = validHealth.contains(record.healthStatus) ? record.healthStatus! : 'Unknown';
 
     await showDialog<void>(
       context: context,
@@ -160,6 +160,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
 
                     // Sex
                     DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: selectedSex,
                       decoration: const InputDecoration(
                         labelText: 'Sex',
@@ -174,9 +175,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                           setModalState(() {
                             selectedSex = val;
                             if (val == 'Male') {
-                              selectedReproductive = null;
-                            } else {
-                              selectedReproductive ??= 'Unknown';
+                              selectedReproductive = 'Unknown';
                             }
                           });
                         }
@@ -228,46 +227,46 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     const SizedBox(height: 12),
 
                     // Life Stage
-                    DropdownButtonFormField<String?>(
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: selectedLifeStage,
                       decoration: const InputDecoration(
                         labelText: 'Life Stage',
                         border: OutlineInputBorder(),
                       ),
-                      items: const <DropdownMenuItem<String?>>[
-                        DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text('Auto (Cow / Bull / Age)'),
-                        ),
-                        DropdownMenuItem<String?>(value: 'Calf', child: Text('Calf')),
-                        DropdownMenuItem<String?>(value: 'Heifer', child: Text('Heifer')),
-                        DropdownMenuItem<String?>(value: 'Steer', child: Text('Steer')),
+                      items: const <DropdownMenuItem<String>>[
+                        DropdownMenuItem(value: 'Unknown', child: Text('Unknown')),
+                        DropdownMenuItem(value: 'Calf', child: Text('Calf')),
+                        DropdownMenuItem(value: 'Heifer', child: Text('Heifer')),
+                        DropdownMenuItem(value: 'Steer', child: Text('Steer')),
                       ],
                       onChanged: (String? val) {
-                        setModalState(() => selectedLifeStage = val);
+                        if (val != null) {
+                          setModalState(() => selectedLifeStage = val);
+                        }
                       },
                     ),
 
-                    // Health Status (Auto or manual override)
+                    // Health Status
                     const SizedBox(height: 12),
-                    DropdownButtonFormField<String?>(
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: selectedHealth,
                       decoration: const InputDecoration(
                         labelText: 'Health Status',
                         border: OutlineInputBorder(),
                       ),
-                      items: const <DropdownMenuItem<String?>>[
-                        DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text('Auto (From Medical Records)'),
-                        ),
-                        DropdownMenuItem<String?>(value: 'Healthy', child: Text('Healthy')),
-                        DropdownMenuItem<String?>(value: 'Under Observation', child: Text('Under Observation')),
-                        DropdownMenuItem<String?>(value: 'Diseased', child: Text('Diseased')),
-                        DropdownMenuItem<String?>(value: 'Recovered', child: Text('Recovered')),
+                      items: const <DropdownMenuItem<String>>[
+                        DropdownMenuItem(value: 'Unknown', child: Text('Unknown')),
+                        DropdownMenuItem(value: 'Healthy', child: Text('Healthy')),
+                        DropdownMenuItem(value: 'Under Observation', child: Text('Under Observation')),
+                        DropdownMenuItem(value: 'Diseased', child: Text('Diseased')),
+                        DropdownMenuItem(value: 'Recovered', child: Text('Recovered')),
                       ],
                       onChanged: (String? val) {
-                        setModalState(() => selectedHealth = val);
+                        if (val != null) {
+                          setModalState(() => selectedHealth = val);
+                        }
                       },
                     ),
 
@@ -275,15 +274,16 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     if (selectedSex == 'Female') ...<Widget>[
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        initialValue: selectedReproductive ?? 'Unknown',
+                        isExpanded: true,
+                        initialValue: selectedReproductive,
                         decoration: const InputDecoration(
                           labelText: 'Reproductive Status',
                           border: OutlineInputBorder(),
                         ),
                         items: const <DropdownMenuItem<String>>[
+                          DropdownMenuItem(value: 'Unknown', child: Text('Unknown')),
                           DropdownMenuItem(value: 'Not Pregnant', child: Text('Not Pregnant')),
                           DropdownMenuItem(value: 'Pregnant', child: Text('Pregnant')),
-                          DropdownMenuItem(value: 'Unknown', child: Text('Unknown')),
                         ],
                         onChanged: (String? val) {
                           if (val != null) {
@@ -1774,7 +1774,17 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                             color: Color(0xFF2D6A4F),
                           ),
                         ),
-                        const SizedBox(height: 14),
+                        if (record.displayBreed == null) ...<Widget>[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Take a full-body photo to classify breed',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
                         Row(
                           children: <Widget>[
                             Container(
@@ -1799,7 +1809,9 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
                                   Text(
-                                    record.breedConfirmedByUser ? 'Confirmed Breed' : 'Predicted Breed',
+                                    record.breedConfirmedByUser
+                                        ? 'Confirmed Breed'
+                                        : (record.displayBreed != null ? 'Predicted Breed' : 'Breed'),
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.grey.shade600,
@@ -1808,7 +1820,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    record.displayBreed ?? localizations.noBreedClassificationYet,
+                                    record.displayBreed ?? 'Unknown',
                                     style: const TextStyle(
                                       fontSize: 17,
                                       fontWeight: FontWeight.bold,
