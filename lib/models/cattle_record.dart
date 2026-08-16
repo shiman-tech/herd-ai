@@ -91,7 +91,7 @@ class CattleRecord {
   }
 
   String get effectiveLifeStage {
-    if (lifeStage != null && lifeStage!.trim().isNotEmpty && lifeStage != 'Unknown') {
+    if (lifeStage != null && lifeStage!.trim().isNotEmpty) {
       return lifeStage!.trim();
     }
     final int? months = ageInMonths;
@@ -112,7 +112,7 @@ class CattleRecord {
     if (sex == 'Female') {
       return 'Cow';
     }
-    return lifeStage ?? 'Unknown';
+    return 'Unknown';
   }
 
   String get effectiveHealthStatus {

@@ -1090,15 +1090,29 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
         }
         return;
       }
-      await widget.database.saveBreedResult(
-        cattleId: _cattleId,
-        breedName: predictions.first.name,
-        breedConfidence: predictions.first.confidence,
-        alternatives: predictions,
-      );
-      if (mounted) {
-        setState(() {});
-        _showSnack(AppLocalizations.of(context)!.breedClassified);
+      final BreedPrediction topPrediction = predictions.first;
+      if (topPrediction.confidence < 0.60) {
+        await widget.database.saveBreedResult(
+          cattleId: _cattleId,
+          breedName: 'Unknown',
+          breedConfidence: topPrediction.confidence,
+          alternatives: predictions,
+        );
+        if (mounted) {
+          setState(() {});
+          _showSnack('Low confidence. Marked as Unknown.');
+        }
+      } else {
+        await widget.database.saveBreedResult(
+          cattleId: _cattleId,
+          breedName: topPrediction.name,
+          breedConfidence: topPrediction.confidence,
+          alternatives: predictions,
+        );
+        if (mounted) {
+          setState(() {});
+          _showSnack(AppLocalizations.of(context)!.breedClassified);
+        }
       }
     } catch (error) {
       if (mounted) {
@@ -1866,7 +1880,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                               final double topConfidence = record.breedConfidence ??
                                   (alternatives.isNotEmpty ? alternatives.first.confidence : 0.0);
 
-                              if (topConfidence < 0.40) {
+                              if (topConfidence < 0.60) {
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
