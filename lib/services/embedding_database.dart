@@ -1100,10 +1100,10 @@ class EmbeddingDatabase {
       confirmedBreed: existing.confirmedBreed,
       breedConfirmedByUser: existing.breedConfirmedByUser,
       sex: sex ?? existing.sex,
-      dateOfBirth: dateOfBirth ?? existing.dateOfBirth,
-      lifeStage: lifeStage ?? existing.lifeStage,
-      healthStatus: healthStatus ?? existing.healthStatus,
-      reproductiveStatus: reproductiveStatus ?? existing.reproductiveStatus,
+      dateOfBirth: dateOfBirth,
+      lifeStage: lifeStage,
+      healthStatus: healthStatus,
+      reproductiveStatus: reproductiveStatus,
     );
 
     final Database db = _db!;

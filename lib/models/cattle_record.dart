@@ -119,16 +119,26 @@ class CattleRecord {
     if (healthStatus != null && healthStatus!.trim().isNotEmpty) {
       return healthStatus!.trim();
     }
-    final bool hasOngoing = healthRecords.any(
-      (HealthRecord r) => r.status.trim().toLowerCase() == 'ongoing',
-    );
-    if (hasOngoing) {
+    if (healthRecords.isEmpty) {
+      return 'Healthy';
+    }
+    final List<HealthRecord> sorted = List<HealthRecord>.from(healthRecords)
+      ..sort((HealthRecord a, HealthRecord b) => b.date.compareTo(a.date));
+    final String latest = sorted.first.status.trim();
+    final String lower = latest.toLowerCase();
+    if (lower == 'ongoing' || lower == 'diseased') {
       return 'Diseased';
     }
-    if (healthRecords.isNotEmpty) {
+    if (lower == 'under observation') {
+      return 'Under Observation';
+    }
+    if (lower == 'recovered') {
       return 'Recovered';
     }
-    return 'Healthy';
+    if (lower == 'healthy') {
+      return 'Healthy';
+    }
+    return latest.isNotEmpty ? latest : 'Healthy';
   }
 
   String get effectiveReproductiveStatus {

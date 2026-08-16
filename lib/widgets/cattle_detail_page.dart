@@ -134,6 +134,8 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
     String? selectedReproductive = validRepro.contains(record.reproductiveStatus)
         ? record.reproductiveStatus
         : 'Unknown';
+    const List<String> validHealth = <String>['Healthy', 'Under Observation', 'Diseased', 'Recovered'];
+    String? selectedHealth = validHealth.contains(record.healthStatus) ? record.healthStatus : null;
 
     await showDialog<void>(
       context: context,
@@ -246,6 +248,29 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       },
                     ),
 
+                    // Health Status (Auto or manual override)
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String?>(
+                      initialValue: selectedHealth,
+                      decoration: const InputDecoration(
+                        labelText: 'Health Status',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const <DropdownMenuItem<String?>>[
+                        DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('Auto (From Medical Records)'),
+                        ),
+                        DropdownMenuItem<String?>(value: 'Healthy', child: Text('Healthy')),
+                        DropdownMenuItem<String?>(value: 'Under Observation', child: Text('Under Observation')),
+                        DropdownMenuItem<String?>(value: 'Diseased', child: Text('Diseased')),
+                        DropdownMenuItem<String?>(value: 'Recovered', child: Text('Recovered')),
+                      ],
+                      onChanged: (String? val) {
+                        setModalState(() => selectedHealth = val);
+                      },
+                    ),
+
                     // Reproductive Status (Female only)
                     if (selectedSex == 'Female') ...<Widget>[
                       const SizedBox(height: 12),
@@ -288,6 +313,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       sex: selectedSex,
                       dateOfBirth: selectedDob,
                       lifeStage: selectedLifeStage,
+                      healthStatus: selectedHealth,
                       reproductiveStatus: selectedReproductive,
                     );
                     if (!mounted) {
@@ -324,7 +350,20 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
     symptomsController.text = existing?.symptoms ?? '';
     treatmentController.text = existing?.treatmentNotes ?? '';
     DateTime selectedDate = existing?.date ?? DateTime.now();
-    String selectedStatus = existing?.status ?? 'Ongoing';
+    const List<String> validHealthOptions = <String>[
+      'Healthy',
+      'Under Observation',
+      'Diseased',
+      'Recovered',
+    ];
+    String selectedStatus = existing?.status ?? 'Diseased';
+    if (!validHealthOptions.contains(selectedStatus)) {
+      if (selectedStatus == 'Ongoing') {
+        selectedStatus = 'Diseased';
+      } else {
+        selectedStatus = 'Diseased';
+      }
+    }
 
     await showModalBottomSheet<void>(
       context: context,
@@ -377,14 +416,22 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       ),
                       DropdownButtonFormField<String>(
                         initialValue: selectedStatus,
-                        items: <DropdownMenuItem<String>>[
+                        items: const <DropdownMenuItem<String>>[
                           DropdownMenuItem<String>(
-                            value: 'Ongoing',
-                            child: Text(localizations.ongoing),
+                            value: 'Diseased',
+                            child: Text('Diseased'),
+                          ),
+                          DropdownMenuItem<String>(
+                            value: 'Under Observation',
+                            child: Text('Under Observation'),
                           ),
                           DropdownMenuItem<String>(
                             value: 'Recovered',
-                            child: Text(localizations.recovered),
+                            child: Text('Recovered'),
+                          ),
+                          DropdownMenuItem<String>(
+                            value: 'Healthy',
+                            child: Text('Healthy'),
                           ),
                         ],
                         onChanged: (String? value) {
@@ -1404,36 +1451,137 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
     Navigator.of(context).pop(AppLocalizations.of(context)!.cattleRecordDeleted);
   }
 
-  Widget _buildInfoRow(String label, String value, {Color? valueColor}) {
+  Widget _buildDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
+          Icon(icon, size: 18, color: Colors.black54),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.black54,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          Expanded(
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailStatusRow({
+    required IconData icon,
+    required String label,
+    required String status,
+    required Color bgColor,
+    required Color textColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: <Widget>[
+          Icon(icon, size: 18, color: Colors.black54),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.black54,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(6),
+            ),
             child: Text(
-              value,
+              status,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: valueColor ?? Colors.black87,
+                color: textColor,
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Color _getHealthBgColor(String status) {
+    switch (status) {
+      case 'Healthy':
+        return const Color(0xFFE8F5E9);
+      case 'Under Observation':
+        return const Color(0xFFFFF3E0);
+      case 'Diseased':
+        return const Color(0xFFFFEBEE);
+      case 'Recovered':
+        return const Color(0xFFE0F2F1);
+      default:
+        return const Color(0xFFEEEEEE);
+    }
+  }
+
+  Color _getHealthTextColor(String status) {
+    switch (status) {
+      case 'Healthy':
+        return const Color(0xFF2E7D32);
+      case 'Under Observation':
+        return const Color(0xFFE65100);
+      case 'Diseased':
+        return const Color(0xFFC62828);
+      case 'Recovered':
+        return const Color(0xFF00695C);
+      default:
+        return const Color(0xFF424242);
+    }
+  }
+
+  Color _getVaxBgColor(String status) {
+    switch (status) {
+      case 'Up to Date':
+        return const Color(0xFFE8F5E9);
+      case 'Due Soon':
+        return const Color(0xFFFFF8E1);
+      case 'Overdue':
+        return const Color(0xFFFFEBEE);
+      case 'No Record':
+      default:
+        return const Color(0xFFEEEEEE);
+    }
+  }
+
+  Color _getVaxTextColor(String status) {
+    switch (status) {
+      case 'Up to Date':
+        return const Color(0xFF2E7D32);
+      case 'Due Soon':
+        return const Color(0xFFF57F17);
+      case 'Overdue':
+        return const Color(0xFFC62828);
+      case 'No Record':
+      default:
+        return const Color(0xFF424242);
+    }
   }
 
   @override
@@ -1451,18 +1599,32 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(localizations.detailsHeader(record.id)),
+          title: Text(
+            localizations.detailsHeader(record.id),
+            style: const TextStyle(
+              color: Color(0xFF2D6A4F),
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+            ),
+          ),
+          iconTheme: const IconThemeData(color: Color(0xFF2D6A4F)),
           actions: <Widget>[
             IconButton(
               onPressed: _showBasicInfoDialog,
-              icon: const Icon(Icons.edit),
+              icon: const Icon(Icons.edit, color: Color(0xFF2D6A4F)),
             ),
             IconButton(
               onPressed: _confirmDeleteCattle,
-              icon: const Icon(Icons.delete_outline),
+              icon: const Icon(Icons.delete_outline, color: Color(0xFF2D6A4F)),
             ),
           ],
           bottom: TabBar(
+            labelColor: const Color(0xFF2D6A4F),
+            unselectedLabelColor: Colors.black87,
+            indicatorColor: const Color(0xFF2D6A4F),
+            indicatorWeight: 2.5,
+            labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
             tabs: <Widget>[
               Tab(text: localizations.tabOverview),
               Tab(text: localizations.tabMedical),
@@ -1476,195 +1638,286 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
             ListView(
               padding: const EdgeInsets.all(16),
               children: <Widget>[
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Text(
-                        localizations.basicInfo,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: kFarmAccent,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.edit, size: 18),
-                        onPressed: _showBasicInfoDialog,
-                      ),
-                    ],
+                // 1. Basic Information Card
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: Colors.grey.shade200),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      SizedBox(
-                        height: 100,
-                        width: 100,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: record.profileImagePath == null
-                              ? _imageOrPlaceholder(null, size: 100)
-                              : GestureDetector(
-                                  onTap: () => _showFullScreenImage(record.profileImagePath!),
-                                  child: _imageOrPlaceholder(
-                                    record.profileImagePath,
-                                    size: 100,
-                                  ),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        // Card Header
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Text(
-                              record.id,
+                              localizations.basicInfo,
                               style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF2D6A4F),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              localizations.registeredLabel(_formatDate(record.registrationDate)),
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 18, color: Colors.black87),
+                              onPressed: _showBasicInfoDialog,
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
                             ),
-                            const SizedBox(height: 8),
-                            _buildInfoRow('Sex:', record.effectiveSex),
-                            _buildInfoRow('Life Stage:', record.effectiveLifeStage),
-                            if (record.dateOfBirth != null)
-                              _buildInfoRow('Age:', record.ageDisplay),
-                            _buildInfoRow('Health:', record.effectiveHealthStatus,
-                                valueColor: record.effectiveHealthStatus == 'Healthy'
-                                    ? Colors.green
-                                    : (record.effectiveHealthStatus == 'Diseased' ? Colors.red : Colors.orange)),
-                            if (record.effectiveSex == 'Female' &&
-                                record.effectiveReproductiveStatus != 'Unknown' &&
-                                record.effectiveReproductiveStatus != 'Not Applicable')
-                              _buildInfoRow('Reproductive:', record.effectiveReproductiveStatus, valueColor: Colors.purple),
-                            _buildInfoRow('Vaccination:', record.calculatedVaccinationStatus),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          _SectionCard(
-            title: localizations.breedClassification,
-            buttonLabel: record.displayBreed == null
-                ? localizations.classifyBreed
-                : localizations.reClassify,
-            onAdd: _classifyBreed,
-            child: Builder(
-              builder: (BuildContext context) {
-                if (record.displayBreed == null &&
-                    record.breedAlternativesJson == null) {
-                  return Text(
-                    localizations.noBreedClassificationYet,
-                  );
-                }
+                        const SizedBox(height: 14),
 
-                final List<BreedPrediction> alternatives = _parseAlternatives(
-                  record.breedAlternativesJson,
-                );
+                        // Card Body
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            // Profile Image on left
+                            SizedBox(
+                              height: 155,
+                              width: 115,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: record.profileImagePath == null
+                                    ? _imageOrPlaceholder(null, size: 115)
+                                    : GestureDetector(
+                                        onTap: () => _showFullScreenImage(record.profileImagePath!),
+                                        child: _imageOrPlaceholder(
+                                          record.profileImagePath,
+                                          size: 115,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
 
-                if (record.breedConfirmedByUser) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        localizations.confirmedBreed(record.confirmedBreed ?? ''),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  );
-                }
-
-                final double topConfidence =
-                    record.breedConfidence ??
-                    (alternatives.isNotEmpty
-                        ? alternatives.first.confidence
-                        : 0.0);
-
-                if (topConfidence < 0.40) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        localizations.lowConfidenceWarning,
-                        style: const TextStyle(
-                          color: Colors.orange,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: <Widget>[
-                          OutlinedButton(
-                            onPressed: _chooseDifferentBreed,
-                            child: Text(localizations.setManually),
-                          ),
-                          OutlinedButton(
-                            onPressed: _setUnknownBreed,
-                            child: Text(localizations.unknownMixed),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(localizations.likelyBreedsVisual),
-                    const SizedBox(height: 8),
-                    ...alternatives.take(3).map((BreedPrediction p) {
-                      final int percent = (p.confidence * 100).round();
-                      return Text('• ${p.name} — $percent%');
-                    }),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: <Widget>[
-                        if (alternatives.isNotEmpty)
-                          FilledButton(
-                            onPressed: () =>
-                                _confirmBreed(alternatives.first.name),
-                            child: Text(localizations.confirmBreed(alternatives.first.name)),
-                          ),
-                        OutlinedButton(
-                          onPressed: _chooseDifferentBreed,
-                          child: Text(localizations.chooseDifferent),
-                        ),
-                        OutlinedButton(
-                          onPressed: _setUnknownBreed,
-                          child: Text(localizations.unknownMixed),
+                            // Right column rows
+                            Expanded(
+                              child: Column(
+                                children: <Widget>[
+                                  _buildDetailRow(
+                                    icon: Icons.calendar_today_outlined,
+                                    label: 'Registered On',
+                                    value: _formatDate(record.registrationDate),
+                                  ),
+                                  const Divider(height: 10, thickness: 0.8, color: Color(0xFFEEEEEE)),
+                                  _buildDetailRow(
+                                    icon: record.effectiveSex == 'Female'
+                                        ? Icons.female
+                                        : (record.effectiveSex == 'Male' ? Icons.male : Icons.transgender),
+                                    label: 'Sex',
+                                    value: record.effectiveSex,
+                                  ),
+                                  const Divider(height: 10, thickness: 0.8, color: Color(0xFFEEEEEE)),
+                                  _buildDetailRow(
+                                    icon: Icons.layers_outlined,
+                                    label: 'Life Stage',
+                                    value: record.effectiveLifeStage,
+                                  ),
+                                  const Divider(height: 10, thickness: 0.8, color: Color(0xFFEEEEEE)),
+                                  _buildDetailStatusRow(
+                                    icon: Icons.favorite_border,
+                                    label: 'Health Status',
+                                    status: record.effectiveHealthStatus,
+                                    bgColor: _getHealthBgColor(record.effectiveHealthStatus),
+                                    textColor: _getHealthTextColor(record.effectiveHealthStatus),
+                                  ),
+                                  const Divider(height: 10, thickness: 0.8, color: Color(0xFFEEEEEE)),
+                                  _buildDetailStatusRow(
+                                    icon: Icons.vaccines_outlined,
+                                    label: 'Vaccination Status',
+                                    status: record.calculatedVaccinationStatus,
+                                    bgColor: _getVaxBgColor(record.calculatedVaccinationStatus),
+                                    textColor: _getVaxTextColor(record.calculatedVaccinationStatus),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                );
-              },
+                  ),
+                ),
+
+                // 2. Breed Classification Card
+                Card(
+                  elevation: 0,
+                  margin: const EdgeInsets.only(top: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          localizations.breedClassification,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2D6A4F),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: <Widget>[
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F2),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: const Color(0xFFE2EBE5), width: 1.5),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.pets,
+                                  color: Color(0xFF2D6A4F),
+                                  size: 26,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    record.breedConfirmedByUser ? 'Confirmed Breed' : 'Predicted Breed',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    record.displayBreed ?? localizations.noBreedClassificationYet,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: _classifyBreed,
+                              icon: const Icon(Icons.sync, size: 18, color: Color(0xFF2D6A4F)),
+                              label: Text(
+                                record.displayBreed == null
+                                    ? localizations.classifyBreed
+                                    : localizations.reClassify,
+                                style: const TextStyle(
+                                  color: Color(0xFF2D6A4F),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFF2D6A4F)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Suggestions / manual override if not confirmed
+                        if (!record.breedConfirmedByUser &&
+                            record.breedAlternativesJson != null)
+                          Builder(
+                            builder: (BuildContext context) {
+                              final List<BreedPrediction> alternatives = _parseAlternatives(
+                                record.breedAlternativesJson,
+                              );
+                              final double topConfidence = record.breedConfidence ??
+                                  (alternatives.isNotEmpty ? alternatives.first.confidence : 0.0);
+
+                              if (topConfidence < 0.40) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      localizations.lowConfidenceWarning,
+                                      style: const TextStyle(
+                                        color: Colors.orange,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: <Widget>[
+                                        OutlinedButton(
+                                          onPressed: _chooseDifferentBreed,
+                                          child: Text(localizations.setManually),
+                                        ),
+                                        OutlinedButton(
+                                          onPressed: _setUnknownBreed,
+                                          child: Text(localizations.unknownMixed),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  const SizedBox(height: 12),
+                                  Text(localizations.likelyBreedsVisual),
+                                  const SizedBox(height: 6),
+                                  ...alternatives.take(3).map((BreedPrediction p) {
+                                    final int percent = (p.confidence * 100).round();
+                                    return Text('• ${p.name} — $percent%');
+                                  }),
+                                  const SizedBox(height: 10),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: <Widget>[
+                                      if (alternatives.isNotEmpty)
+                                        FilledButton(
+                                          onPressed: () => _confirmBreed(alternatives.first.name),
+                                          child: Text(localizations.confirmBreed(alternatives.first.name)),
+                                        ),
+                                      OutlinedButton(
+                                        onPressed: _chooseDifferentBreed,
+                                        child: Text(localizations.chooseDifferent),
+                                      ),
+                                      OutlinedButton(
+                                        onPressed: _setUnknownBreed,
+                                        child: Text(localizations.unknownMixed),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
       // Medical Tab
       ListView(
         padding: const EdgeInsets.all(16),
