@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'models/cattle_filter.dart';
 import 'models/cattle_record.dart';
 import 'models/embedding_reference.dart';
 import 'models/identification_result.dart';
@@ -14,6 +15,7 @@ import 'services/tflite_breed_service.dart';
 import 'services/tflite_embedding_service.dart';
 import 'widgets/auth_gate.dart';
 import 'widgets/cattle_detail_page.dart';
+import 'widgets/cattle_filter_sheet.dart';
 
 import 'l10n/app_localizations.dart';
 import 'services/app_language_service.dart';
@@ -137,6 +139,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
   final AppAuthService _appAuthService = AppAuthService();
   final EmbeddingDatabase _database = EmbeddingDatabase();
   final TextEditingController _searchController = TextEditingController();
+  final CattleFilterCriteria _filterCriteria = CattleFilterCriteria();
 
   File? _selectedImage;
   int _currentTab = 0;
@@ -146,6 +149,44 @@ class _HerdHomePageState extends State<HerdHomePage> {
   String? Function(BuildContext)? _statusResolver;
   IdentificationResult? _result;
   bool _ignoreSimilarWarning = false;
+
+  Future<void> _openFilterSheet() async {
+    final List<CattleRecord> allCattle = _database.getAllCattle();
+    final CattleFilterCriteria? updated =
+        await showModalBottomSheet<CattleFilterCriteria>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) => CattleFilterSheet(
+        initialFilter: _filterCriteria,
+        allCattle: allCattle,
+        searchQuery: _searchController.text,
+      ),
+    );
+    if (updated != null && mounted) {
+      setState(() {
+        _filterCriteria.selectedSexes
+          ..clear()
+          ..addAll(updated.selectedSexes);
+        _filterCriteria.selectedLifeStages
+          ..clear()
+          ..addAll(updated.selectedLifeStages);
+        _filterCriteria.selectedHealthStatuses
+          ..clear()
+          ..addAll(updated.selectedHealthStatuses);
+        _filterCriteria.selectedReproductiveStatuses
+          ..clear()
+          ..addAll(updated.selectedReproductiveStatuses);
+        _filterCriteria.selectedVaccinationStatuses
+          ..clear()
+          ..addAll(updated.selectedVaccinationStatuses);
+        _filterCriteria.selectedBreeds
+          ..clear()
+          ..addAll(updated.selectedBreeds);
+        _filterCriteria.sortOption = updated.sortOption;
+      });
+    }
+  }
 
   Widget _cattleAvatar(String? imagePath) {
     if (imagePath == null || !File(imagePath).existsSync()) {
@@ -1003,105 +1044,308 @@ class _HerdHomePageState extends State<HerdHomePage> {
 
   Widget _buildMyCattlesTab(ThemeData theme) {
     final localizations = AppLocalizations.of(context)!;
-    final String query = _searchController.text.trim().toLowerCase();
-    final List<CattleRecord> cattles = _database
-        .getAllCattle()
-        .where((CattleRecord cattle) => cattle.id.toLowerCase().contains(query))
-        .toList();
-    if (cattles.isEmpty) {
-      return Column(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                hintText: localizations.searchHint,
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                suffixIcon: query.isEmpty
-                    ? null
-                    : IconButton(
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {});
-                        },
-                        icon: const Icon(Icons.close),
-                      ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Center(
-              child: Text(localizations.noCattlesMessage),
-            ),
-          ),
-        ],
-      );
-    }
+    final List<CattleRecord> allCattle = _database.getAllCattle();
+    final List<CattleRecord> filteredCattle = _filterCriteria.filterAndSort(
+      allCattle,
+      _searchController.text,
+    );
+    final String query = _searchController.text.trim();
+    final List<ActiveFilterItem> activeFilters = _filterCriteria.activeFilterItems;
+    final int activeCount = _filterCriteria.activeFilterCount;
 
     return Column(
       children: <Widget>[
+        // Top Search + Filter Button Row
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-          child: TextField(
-            controller: _searchController,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              hintText: localizations.searchHint,
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              suffixIcon: query.isEmpty
-                  ? null
-                  : IconButton(
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {});
-                      },
-                      icon: const Icon(Icons.close),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    hintText: localizations.searchHint,
+                    prefixIcon: const Icon(Icons.search),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-            ),
+                    suffixIcon: query.isEmpty
+                        ? null
+                        : IconButton(
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {});
+                            },
+                            icon: const Icon(Icons.close),
+                          ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Badge(
+                isLabelVisible: activeCount > 0,
+                label: Text(
+                  '$activeCount',
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                backgroundColor: const Color(0xFF2D6A4F),
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    side: BorderSide(
+                      color: activeCount > 0 ? const Color(0xFF2D6A4F) : Colors.grey.shade400,
+                      width: activeCount > 0 ? 1.5 : 1.0,
+                    ),
+                  ),
+                  onPressed: _openFilterSheet,
+                  icon: Icon(
+                    Icons.tune,
+                    size: 20,
+                    color: activeCount > 0 ? const Color(0xFF2D6A4F) : Colors.black87,
+                  ),
+                  label: Text(
+                    'Filter',
+                    style: TextStyle(
+                      color: activeCount > 0 ? const Color(0xFF2D6A4F) : Colors.black87,
+                      fontWeight: activeCount > 0 ? FontWeight.w700 : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemBuilder: (BuildContext context, int index) {
-              final CattleRecord cattle = cattles[index];
-              return Card(
-                child: ListTile(
-                  onTap: () => _openCattleDetail(cattle.id),
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: _cattleAvatar(cattle.profileImagePath),
+
+        // Active filter chips row (if any)
+        if (activeFilters.isNotEmpty)
+          Container(
+            height: 38,
+            margin: const EdgeInsets.only(top: 4, bottom: 2),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              children: <Widget>[
+                ...activeFilters.map((ActiveFilterItem item) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: InputChip(
+                      label: Text('${item.category}: ${item.label}'),
+                      labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                      visualDensity: VisualDensity.compact,
+                      backgroundColor: const Color(0xFF2D6A4F).withValues(alpha: 0.08),
+                      deleteIcon: const Icon(Icons.cancel, size: 16),
+                      onDeleted: () {
+                        setState(() {
+                          _filterCriteria.removeFilter(item);
+                        });
+                      },
                     ),
+                  );
+                }),
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ActionChip(
+                    label: const Text('Clear all', style: TextStyle(fontSize: 12, color: Colors.red)),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: Colors.red.withValues(alpha: 0.08),
+                    onPressed: () {
+                      setState(() {
+                        _filterCriteria.reset();
+                      });
+                    },
                   ),
-                  title: Text(cattle.id),
-                  subtitle: Text(
-                    localizations.cattleSummarySubtitle(
-                      cattle.healthRecords.length,
-                      cattle.vaccinations.length,
-                      cattle.notes.length,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: false,
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
                 ),
-              );
-            },
-            separatorBuilder: (_, __) => const SizedBox(height: 4),
-            itemCount: cattles.length,
+              ],
+            ),
           ),
+
+        // Subtitle row: Showing X cattle + Sort indicator
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text(
+                'Showing ${filteredCattle.length} of ${allCattle.length} cattle',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontWeight: FontWeight.w500),
+              ),
+              InkWell(
+                onTap: _openFilterSheet,
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Row(
+                    children: <Widget>[
+                      const Icon(Icons.sort, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        _filterCriteria.sortOption.label,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // List / Empty state
+        Expanded(
+          child: allCattle.isEmpty
+              ? Center(
+                  child: Text(localizations.noCattlesMessage),
+                )
+              : filteredCattle.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Icon(Icons.search_off, size: 48, color: Colors.grey.shade400),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'No cattle match the selected filters.',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 8),
+                          FilledButton.tonal(
+                            onPressed: () {
+                              setState(() {
+                                _searchController.clear();
+                                _filterCriteria.reset();
+                              });
+                            },
+                            child: const Text('Reset Search & Filters'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(12),
+                      itemBuilder: (BuildContext context, int index) {
+                        final CattleRecord cattle = filteredCattle[index];
+                        return Card(
+                          elevation: 1.5,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ListTile(
+                            onTap: () => _openCattleDetail(cattle.id),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: SizedBox(
+                                width: 50,
+                                height: 50,
+                                child: _cattleAvatar(cattle.profileImagePath),
+                              ),
+                            ),
+                            title: Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: Text(
+                                    cattle.id,
+                                    style: const TextStyle(fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                Icon(
+                                  cattle.effectiveSex == 'Female'
+                                      ? Icons.female
+                                      : (cattle.effectiveSex == 'Male' ? Icons.male : Icons.transgender),
+                                  size: 16,
+                                  color: cattle.effectiveSex == 'Female' ? Colors.pink : Colors.blue,
+                                ),
+                              ],
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                const SizedBox(height: 3),
+                                Row(
+                                  children: <Widget>[
+                                    if (cattle.displayBreed != null) ...<Widget>[
+                                      Text(
+                                        cattle.effectiveBreed,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 12,
+                                          color: Color(0xFF2D6A4F),
+                                        ),
+                                      ),
+                                      const Text(' • ', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                    ],
+                                    Text(
+                                      cattle.effectiveLifeStage,
+                                      style: const TextStyle(fontSize: 12, color: Colors.black54),
+                                    ),
+                                    if (cattle.ageInMonths != null) ...<Widget>[
+                                      const Text(' • ', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                      Text(
+                                        cattle.ageDisplay,
+                                        style: const TextStyle(fontSize: 12, color: Colors.black54),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                                Row(
+                                  children: <Widget>[
+                                    // Health indicator dot
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: cattle.effectiveHealthStatus == 'Healthy'
+                                            ? Colors.green
+                                            : (cattle.effectiveHealthStatus == 'Diseased'
+                                                ? Colors.red
+                                                : Colors.orange),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      cattle.effectiveHealthStatus,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: cattle.effectiveHealthStatus == 'Healthy'
+                                            ? Colors.green.shade800
+                                            : (cattle.effectiveHealthStatus == 'Diseased'
+                                                ? Colors.red.shade800
+                                                : Colors.orange.shade800),
+                                      ),
+                                    ),
+                                    if (cattle.effectiveReproductiveStatus == 'Pregnant') ...<Widget>[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                        decoration: BoxDecoration(
+                                          color: Colors.purple.withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: const Text(
+                                          'Pregnant',
+                                          style: TextStyle(fontSize: 10, color: Colors.purple, fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ],
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                          ),
+                        );
+                      },
+                      separatorBuilder: (_, __) => const SizedBox(height: 4),
+                      itemCount: filteredCattle.length,
+                    ),
         ),
       ],
     );
