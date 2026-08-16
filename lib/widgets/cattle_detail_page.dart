@@ -1457,24 +1457,27 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
     required String value,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 2.5),
       child: Row(
         children: <Widget>[
-          Icon(icon, size: 18, color: Colors.black54),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.black54,
-              fontWeight: FontWeight.w500,
+          Icon(icon, size: 15, color: Colors.black54),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.black54,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 4),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Colors.black87,
             ),
@@ -1492,30 +1495,33 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
     required Color textColor,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 2.5),
       child: Row(
         children: <Widget>[
-          Icon(icon, size: 18, color: Colors.black54),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.black54,
-              fontWeight: FontWeight.w500,
+          Icon(icon, size: 15, color: Colors.black54),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.black54,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 4),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
             decoration: BoxDecoration(
               color: bgColor,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
               status,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: textColor,
               ),
@@ -1680,22 +1686,22 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                           children: <Widget>[
                             // Profile Image on left
                             SizedBox(
-                              height: 155,
-                              width: 115,
+                              height: 140,
+                              width: 105,
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: record.profileImagePath == null
-                                    ? _imageOrPlaceholder(null, size: 115)
+                                    ? _imageOrPlaceholder(null, size: 105)
                                     : GestureDetector(
                                         onTap: () => _showFullScreenImage(record.profileImagePath!),
                                         child: _imageOrPlaceholder(
                                           record.profileImagePath,
-                                          size: 115,
+                                          size: 105,
                                         ),
                                       ),
                               ),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: 12),
 
                             // Right column rows
                             Expanded(
@@ -1706,7 +1712,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                     label: 'Registered On',
                                     value: _formatDate(record.registrationDate),
                                   ),
-                                  const Divider(height: 10, thickness: 0.8, color: Color(0xFFEEEEEE)),
+                                  const Divider(height: 8, thickness: 0.8, color: Color(0xFFEEEEEE)),
                                   _buildDetailRow(
                                     icon: record.effectiveSex == 'Female'
                                         ? Icons.female
@@ -1714,13 +1720,13 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                     label: 'Sex',
                                     value: record.effectiveSex,
                                   ),
-                                  const Divider(height: 10, thickness: 0.8, color: Color(0xFFEEEEEE)),
+                                  const Divider(height: 8, thickness: 0.8, color: Color(0xFFEEEEEE)),
                                   _buildDetailRow(
                                     icon: Icons.layers_outlined,
                                     label: 'Life Stage',
                                     value: record.effectiveLifeStage,
                                   ),
-                                  const Divider(height: 10, thickness: 0.8, color: Color(0xFFEEEEEE)),
+                                  const Divider(height: 8, thickness: 0.8, color: Color(0xFFEEEEEE)),
                                   _buildDetailStatusRow(
                                     icon: Icons.favorite_border,
                                     label: 'Health Status',
@@ -1728,7 +1734,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                     bgColor: _getHealthBgColor(record.effectiveHealthStatus),
                                     textColor: _getHealthTextColor(record.effectiveHealthStatus),
                                   ),
-                                  const Divider(height: 10, thickness: 0.8, color: Color(0xFFEEEEEE)),
+                                  const Divider(height: 8, thickness: 0.8, color: Color(0xFFEEEEEE)),
                                   _buildDetailStatusRow(
                                     icon: Icons.vaccines_outlined,
                                     label: 'Vaccination Status',
@@ -1772,8 +1778,8 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                         Row(
                           children: <Widget>[
                             Container(
-                              width: 52,
-                              height: 52,
+                              width: 48,
+                              height: 48,
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF1F5F2),
                                 shape: BoxShape.circle,
@@ -1783,11 +1789,11 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                 child: Icon(
                                   Icons.pets,
                                   color: Color(0xFF2D6A4F),
-                                  size: 26,
+                                  size: 24,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1795,7 +1801,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                   Text(
                                     record.breedConfirmedByUser ? 'Confirmed Breed' : 'Predicted Breed',
                                     style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 11,
                                       color: Colors.grey.shade600,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -1804,7 +1810,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                   Text(
                                     record.displayBreed ?? localizations.noBreedClassificationYet,
                                     style: const TextStyle(
-                                      fontSize: 18,
+                                      fontSize: 17,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.black87,
                                     ),
@@ -1812,9 +1818,10 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                 ],
                               ),
                             ),
+                            const SizedBox(width: 8),
                             OutlinedButton.icon(
                               onPressed: _classifyBreed,
-                              icon: const Icon(Icons.sync, size: 18, color: Color(0xFF2D6A4F)),
+                              icon: const Icon(Icons.sync, size: 16, color: Color(0xFF2D6A4F)),
                               label: Text(
                                 record.displayBreed == null
                                     ? localizations.classifyBreed
@@ -1822,7 +1829,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                 style: const TextStyle(
                                   color: Color(0xFF2D6A4F),
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 13,
+                                  fontSize: 12,
                                 ),
                               ),
                               style: OutlinedButton.styleFrom(
@@ -1830,7 +1837,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               ),
                             ),
                           ],
