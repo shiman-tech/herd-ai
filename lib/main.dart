@@ -201,7 +201,10 @@ class _HerdHomePageState extends State<HerdHomePage> {
     }
     return Image.file(
       File(imagePath),
+      cacheWidth: 150,
+      cacheHeight: 150,
       fit: BoxFit.cover,
+      gaplessPlayback: true,
       errorBuilder: (_, __, ___) => const DecoratedBox(
         decoration: BoxDecoration(color: Color(0xFFECEEE8)),
         child: Icon(Icons.pets),
@@ -252,6 +255,9 @@ class _HerdHomePageState extends State<HerdHomePage> {
         _isReady = true;
         _statusResolver = (context) => AppLocalizations.of(context)!.readyToIdentify;
       });
+
+      // Pre-warm thumbnail images into memory in the background for instant rendering
+      _precacheThumbnails();
     } catch (error) {
       if (!mounted) {
         return;
@@ -265,6 +271,19 @@ class _HerdHomePageState extends State<HerdHomePage> {
         setState(() {
           _isBusy = false;
         });
+      }
+    }
+  }
+
+  void _precacheThumbnails() {
+    final List<CattleRecord> all = _database.getAllCattle();
+    for (final CattleRecord cattle in all) {
+      final String? path = cattle.profileImagePath;
+      if (path != null && File(path).existsSync()) {
+        precacheImage(
+          ResizeImage(FileImage(File(path)), width: 150, height: 150),
+          context,
+        );
       }
     }
   }
@@ -1350,9 +1369,13 @@ class _HerdHomePageState extends State<HerdHomePage> {
           ],
         ),
         body: SafeArea(
-          child: _currentTab == 0
-              ? _buildIdentifyTab(theme)
-              : _buildMyCattlesTab(theme),
+          child: IndexedStack(
+            index: _currentTab,
+            children: <Widget>[
+              _buildIdentifyTab(theme),
+              _buildMyCattlesTab(theme),
+            ],
+          ),
         ),
         bottomNavigationBar: NavigationBar(
           backgroundColor: const Color(0xFFFFFDF7),
