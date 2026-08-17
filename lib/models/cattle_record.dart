@@ -91,13 +91,13 @@ class CattleRecord {
   }
 
   String get effectiveLifeStage {
-    if (lifeStage != null && lifeStage!.trim().isNotEmpty) {
-      return lifeStage!.trim();
-    }
-    // Only infer Calf from age — never guess Cow/Bull/Heifer automatically
+    // If age is known and under 1 year (< 12 months), automatically set to Calf
     final int? months = ageInMonths;
     if (months != null && months < 12) {
       return 'Calf';
+    }
+    if (lifeStage != null && lifeStage!.trim().isNotEmpty) {
+      return lifeStage!.trim();
     }
     return 'Unknown';
   }

@@ -47,8 +47,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused) {
+    if (state == AppLifecycleState.paused) {
       if (_mode == _AuthMode.unlocked) {
         _lastBackgroundAt = DateTime.now();
       }
@@ -70,9 +69,12 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
             .inMilliseconds;
         _lastBackgroundAt = null;
         if (gapMs < 2500) {
-          // Ignore very short app switches (camera/gallery/native picker).
+          // Ignore transient backgrounding (pulling notification shade, taking screenshot, quick switches).
           return;
         }
+      } else {
+        // Returned from inactive without being paused (e.g. notification shade pulled down and closed).
+        return;
       }
       _lockOnResume();
     }

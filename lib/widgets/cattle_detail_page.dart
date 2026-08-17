@@ -1715,21 +1715,59 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            // Profile Image on left
+                            // Left side: Cattle ID + Profile Image
                             SizedBox(
-                              height: 140,
                               width: 105,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: record.profileImagePath == null
-                                    ? _imageOrPlaceholder(null, size: 105)
-                                    : GestureDetector(
-                                        onTap: () => _showFullScreenImage(record.profileImagePath!),
-                                        child: _imageOrPlaceholder(
-                                          record.profileImagePath,
-                                          size: 105,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE8F5E9),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: <Widget>[
+                                        const Icon(
+                                          Icons.tag,
+                                          size: 13,
+                                          color: Color(0xFF2D6A4F),
                                         ),
-                                      ),
+                                        const SizedBox(width: 3),
+                                        Flexible(
+                                          child: Text(
+                                            record.id,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF2D6A4F),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    height: 140,
+                                    width: 105,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: record.profileImagePath == null
+                                          ? _imageOrPlaceholder(null, size: 105)
+                                          : GestureDetector(
+                                              onTap: () => _showFullScreenImage(record.profileImagePath!),
+                                              child: _imageOrPlaceholder(
+                                                record.profileImagePath,
+                                                size: 105,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(width: 12),
