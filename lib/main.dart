@@ -27,7 +27,11 @@ const Color kFarmAccent = Color(0xFF8D6E63);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppLanguageService.instance.loadLocale();
+  // Start preloading language and database in parallel at app launch
+  await Future.wait(<Future<void>>[
+    AppLanguageService.instance.loadLocale(),
+    EmbeddingDatabase.instance.load(),
+  ]);
   runApp(const HerdAiApp());
 }
 
@@ -137,7 +141,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
   final TfliteEmbeddingService _embeddingService = TfliteEmbeddingService();
   final TfliteBreedService _breedService = TfliteBreedService();
   final AppAuthService _appAuthService = AppAuthService();
-  final EmbeddingDatabase _database = EmbeddingDatabase();
+  final EmbeddingDatabase _database = EmbeddingDatabase.instance;
   final TextEditingController _searchController = TextEditingController();
   final CattleFilterCriteria _filterCriteria = CattleFilterCriteria();
 
@@ -235,9 +239,12 @@ class _HerdHomePageState extends State<HerdHomePage> {
     });
 
     try {
-      await _embeddingService.loadModel();
-      await _breedService.loadModel();
-      await _database.load();
+      // Load all ML models and database in parallel rather than sequentially
+      await Future.wait(<Future<void>>[
+        _embeddingService.loadModel(),
+        _breedService.loadModel(),
+        _database.load(),
+      ]);
       if (!mounted) {
         return;
       }

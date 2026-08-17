@@ -19,6 +19,9 @@ class EmbeddingDatabase {
   static const String _imageDirName = 'cattle_images';
   static const int _dbVersion = 7;
 
+  /// Global singleton instance
+  static final EmbeddingDatabase instance = EmbeddingDatabase();
+
   /// Scores at or above this (but below [similarityThreshold]) trigger a
   /// pre-registration warning because the photo may match an existing cattle.
   static const double preRegistrationWarningThreshold =
@@ -29,6 +32,8 @@ class EmbeddingDatabase {
   final double similarityThreshold;
 
   Database? _db;
+  bool _isLoaded = false;
+  Future<void>? _loadFuture;
 
   EmbeddingDatabase({this.similarityThreshold = 0.75});
 
@@ -57,6 +62,19 @@ class EmbeddingDatabase {
   // ---------------------------------------------------------------------------
 
   Future<void> load() async {
+    if (_isLoaded) {
+      return;
+    }
+    if (_loadFuture != null) {
+      return _loadFuture;
+    }
+    _loadFuture = _doLoad();
+    await _loadFuture;
+    _isLoaded = true;
+    _loadFuture = null;
+  }
+
+  Future<void> _doLoad() async {
     _db = await _openDatabase();
     await _migrateFromJsonIfNeeded();
     await _loadAllIntoMemory();

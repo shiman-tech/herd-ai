@@ -277,10 +277,6 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    if (_mode == _AuthMode.unlocked) {
-      return widget.child;
-    }
-
     final localizations = AppLocalizations.of(context)!;
     final String message;
     switch (_messageKey) {
@@ -309,70 +305,88 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
         message = _messageKey;
     }
 
-    return Scaffold(
-      backgroundColor: kFarmBackground,
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text(
-                  localizations.appName,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: kFarmPrimary,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  localizations.appSubtitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: kFarmAccent),
-                ),
-                const SizedBox(height: 28),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: <Widget>[
-                        Text(
-                          message,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: kFarmPrimary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                        const SizedBox(height: 14),
-                        if (_mode == _AuthMode.loading) ...<Widget>[
-                          const CircularProgressIndicator(),
-                        ] else ...<Widget>[
-                          _PinDots(count: _pinEntry.length),
-                          const SizedBox(height: 16),
-                          if (_mode == _AuthMode.enterPin) ...<Widget>[
-                            OutlinedButton.icon(
-                              onPressed: _retryBiometric,
-                              icon: const Icon(Icons.fingerprint),
-                              label: Text(localizations.tryFingerprintFace),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                          _PinPad(onTap: _onKeyTap),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+    final bool isUnlocked = _mode == _AuthMode.unlocked;
+
+    return Stack(
+      children: <Widget>[
+        // Child (Home Page) is always mounted so it initializes and renders immediately
+        // When locked, it is hidden from focus and accessibility without destroying its state
+        ExcludeFocus(
+          excluding: !isUnlocked,
+          child: ExcludeSemantics(
+            excluding: !isUnlocked,
+            child: widget.child,
           ),
         ),
-      ),
+
+        // Auth Screen overlay (shown when locked)
+        if (!isUnlocked)
+          Scaffold(
+            backgroundColor: kFarmBackground,
+            body: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text(
+                        localizations.appName,
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          color: kFarmPrimary,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        localizations.appSubtitle,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyLarge?.copyWith(color: kFarmAccent),
+                      ),
+                      const SizedBox(height: 28),
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            children: <Widget>[
+                              Text(
+                                message,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      color: kFarmPrimary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                              const SizedBox(height: 14),
+                              if (_mode == _AuthMode.loading) ...<Widget>[
+                                const CircularProgressIndicator(),
+                              ] else ...<Widget>[
+                                _PinDots(count: _pinEntry.length),
+                                const SizedBox(height: 16),
+                                if (_mode == _AuthMode.enterPin) ...<Widget>[
+                                  OutlinedButton.icon(
+                                    onPressed: _retryBiometric,
+                                    icon: const Icon(Icons.fingerprint),
+                                    label: Text(localizations.tryFingerprintFace),
+                                  ),
+                                  const SizedBox(height: 8),
+                                ],
+                                _PinPad(onTap: _onKeyTap),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
