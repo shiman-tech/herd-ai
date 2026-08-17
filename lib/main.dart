@@ -81,9 +81,11 @@ class HerdAiApp extends StatelessWidget {
           style: FilledButton.styleFrom(
             backgroundColor: kFarmPrimary,
             foregroundColor: Colors.white,
+            elevation: 3,
+            shadowColor: Colors.black26,
             minimumSize: const Size(140, 50),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(28),
             ),
             textStyle: const TextStyle(
               fontSize: 16,
@@ -94,10 +96,10 @@ class HerdAiApp extends StatelessWidget {
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
             foregroundColor: kFarmAccent,
-            side: const BorderSide(color: kFarmAccent),
+            side: const BorderSide(color: kFarmAccent, width: 1.5),
             minimumSize: const Size(140, 50),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(28),
             ),
             textStyle: const TextStyle(
               fontSize: 16,
