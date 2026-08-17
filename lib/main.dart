@@ -202,7 +202,6 @@ class _HerdHomePageState extends State<HerdHomePage> {
     return Image.file(
       File(imagePath),
       cacheWidth: 150,
-      cacheHeight: 150,
       fit: BoxFit.cover,
       gaplessPlayback: true,
       errorBuilder: (_, __, ___) => const DecoratedBox(
@@ -281,7 +280,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
       final String? path = cattle.profileImagePath;
       if (path != null && File(path).existsSync()) {
         precacheImage(
-          ResizeImage(FileImage(File(path)), width: 150, height: 150),
+          ResizeImage(FileImage(File(path)), width: 150),
           context,
         );
       }
