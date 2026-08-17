@@ -183,7 +183,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     ),
                     const SizedBox(height: 12),
 
-                    // Date of Birth
+                    // Date of Birth / Age
                     InkWell(
                       onTap: () async {
                         final DateTime now = DateTime.now();
@@ -201,7 +201,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       },
                       child: InputDecorator(
                         decoration: InputDecoration(
-                          labelText: 'Date of Birth',
+                          labelText: 'Date of Birth (Age)',
                           border: const OutlineInputBorder(),
                           suffixIcon: selectedDob != null
                               ? IconButton(
@@ -214,13 +214,30 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                 )
                               : const Icon(Icons.calendar_today, size: 18),
                         ),
-                        child: Text(
-                          selectedDob != null
-                              ? '${_formatDate(selectedDob!)}${record.ageInMonths != null ? '  (${record.ageDisplay})' : ''}'
-                              : 'Not set',
-                          style: TextStyle(
-                            color: selectedDob != null ? Colors.black87 : Colors.grey,
-                          ),
+                        child: Builder(
+                          builder: (BuildContext context) {
+                            if (selectedDob == null) {
+                              return const Text('Not set', style: TextStyle(color: Colors.grey));
+                            }
+                            final DateTime now = DateTime.now();
+                            int months = (now.year - selectedDob!.year) * 12 + (now.month - selectedDob!.month);
+                            if (now.day < selectedDob!.day) months--;
+                            months = months >= 0 ? months : 0;
+                            final int years = months ~/ 12;
+                            final int remMonths = months % 12;
+                            String ageStr;
+                            if (years > 0 && remMonths > 0) {
+                              ageStr = '$years yr${years > 1 ? 's' : ''} $remMonths mo${remMonths > 1 ? 's' : ''}';
+                            } else if (years > 0) {
+                              ageStr = '$years yr${years > 1 ? 's' : ''}';
+                            } else {
+                              ageStr = '$remMonths mo${remMonths > 1 ? 's' : ''}';
+                            }
+                            return Text(
+                              '${_formatDate(selectedDob!)}  ($ageStr)',
+                              style: const TextStyle(color: Colors.black87),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -1736,10 +1753,24 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                   ),
                                   const Divider(height: 8, thickness: 0.8, color: Color(0xFFEEEEEE)),
                                   _buildDetailRow(
+                                    icon: Icons.cake_outlined,
+                                    label: 'Age',
+                                    value: record.ageDisplay,
+                                  ),
+                                  const Divider(height: 8, thickness: 0.8, color: Color(0xFFEEEEEE)),
+                                  _buildDetailRow(
                                     icon: Icons.layers_outlined,
                                     label: 'Life Stage',
                                     value: record.effectiveLifeStage,
                                   ),
+                                  if (record.effectiveSex == 'Female') ...<Widget>[
+                                    const Divider(height: 8, thickness: 0.8, color: Color(0xFFEEEEEE)),
+                                    _buildDetailRow(
+                                      icon: Icons.pregnant_woman_outlined,
+                                      label: 'Status',
+                                      value: record.effectiveReproductiveStatus,
+                                    ),
+                                  ],
                                   const Divider(height: 8, thickness: 0.8, color: Color(0xFFEEEEEE)),
                                   _buildDetailStatusRow(
                                     icon: Icons.favorite_border,

@@ -1300,85 +1300,8 @@ class _HerdHomePageState extends State<HerdHomePage> {
                                   cattle.effectiveSex == 'Female'
                                       ? Icons.female
                                       : (cattle.effectiveSex == 'Male' ? Icons.male : Icons.transgender),
-                                  size: 16,
+                                  size: 18,
                                   color: cattle.effectiveSex == 'Female' ? Colors.pink : Colors.blue,
-                                ),
-                              ],
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                const SizedBox(height: 3),
-                                Row(
-                                  children: <Widget>[
-                                    if (cattle.displayBreed != null) ...<Widget>[
-                                      Text(
-                                        cattle.effectiveBreed,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 12,
-                                          color: Color(0xFF2D6A4F),
-                                        ),
-                                      ),
-                                      const Text(' • ', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                    ],
-                                    Text(
-                                      cattle.effectiveLifeStage,
-                                      style: const TextStyle(fontSize: 12, color: Colors.black54),
-                                    ),
-                                    if (cattle.ageInMonths != null) ...<Widget>[
-                                      const Text(' • ', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                      Text(
-                                        cattle.ageDisplay,
-                                        style: const TextStyle(fontSize: 12, color: Colors.black54),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                const SizedBox(height: 3),
-                                Row(
-                                  children: <Widget>[
-                                    // Health indicator dot
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: cattle.effectiveHealthStatus == 'Healthy'
-                                            ? Colors.green
-                                            : (cattle.effectiveHealthStatus == 'Diseased'
-                                                ? Colors.red
-                                                : Colors.orange),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      cattle.effectiveHealthStatus,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: cattle.effectiveHealthStatus == 'Healthy'
-                                            ? Colors.green.shade800
-                                            : (cattle.effectiveHealthStatus == 'Diseased'
-                                                ? Colors.red.shade800
-                                                : Colors.orange.shade800),
-                                      ),
-                                    ),
-                                    if (cattle.effectiveReproductiveStatus == 'Pregnant') ...<Widget>[
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                        decoration: BoxDecoration(
-                                          color: Colors.purple.withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: const Text(
-                                          'Pregnant',
-                                          style: TextStyle(fontSize: 10, color: Colors.purple, fontWeight: FontWeight.w600),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
                                 ),
                               ],
                             ),
