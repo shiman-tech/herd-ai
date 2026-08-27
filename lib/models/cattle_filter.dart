@@ -46,13 +46,15 @@ class CattleFilterCriteria {
     Set<String>? selectedReproductiveStatuses,
     Set<String>? selectedVaccinationStatuses,
     Set<String>? selectedBreeds,
+    Set<String>? selectedMilkStatuses,
     this.sortOption = CattleSortOption.recentlyAdded,
   }) : selectedSexes = selectedSexes ?? <String>{},
        selectedLifeStages = selectedLifeStages ?? <String>{},
        selectedHealthStatuses = selectedHealthStatuses ?? <String>{},
        selectedReproductiveStatuses = selectedReproductiveStatuses ?? <String>{},
        selectedVaccinationStatuses = selectedVaccinationStatuses ?? <String>{},
-       selectedBreeds = selectedBreeds ?? <String>{};
+       selectedBreeds = selectedBreeds ?? <String>{},
+       selectedMilkStatuses = selectedMilkStatuses ?? <String>{};
 
   final Set<String> selectedSexes;
   final Set<String> selectedLifeStages;
@@ -60,6 +62,7 @@ class CattleFilterCriteria {
   final Set<String> selectedReproductiveStatuses;
   final Set<String> selectedVaccinationStatuses;
   final Set<String> selectedBreeds;
+  final Set<String> selectedMilkStatuses;
   CattleSortOption sortOption;
 
   int get activeFilterCount =>
@@ -68,7 +71,8 @@ class CattleFilterCriteria {
       selectedHealthStatuses.length +
       selectedReproductiveStatuses.length +
       selectedVaccinationStatuses.length +
-      selectedBreeds.length;
+      selectedBreeds.length +
+      selectedMilkStatuses.length;
 
   bool get hasActiveFilters => activeFilterCount > 0;
 
@@ -79,6 +83,7 @@ class CattleFilterCriteria {
     selectedReproductiveStatuses.clear();
     selectedVaccinationStatuses.clear();
     selectedBreeds.clear();
+    selectedMilkStatuses.clear();
     sortOption = CattleSortOption.recentlyAdded;
   }
 
@@ -90,6 +95,7 @@ class CattleFilterCriteria {
       selectedReproductiveStatuses: Set<String>.from(selectedReproductiveStatuses),
       selectedVaccinationStatuses: Set<String>.from(selectedVaccinationStatuses),
       selectedBreeds: Set<String>.from(selectedBreeds),
+      selectedMilkStatuses: Set<String>.from(selectedMilkStatuses),
       sortOption: sortOption,
     );
   }
@@ -114,6 +120,9 @@ class CattleFilterCriteria {
     for (final String breed in selectedBreeds) {
       items.add(ActiveFilterItem(category: 'Breed', value: breed, label: breed));
     }
+    for (final String milk in selectedMilkStatuses) {
+      items.add(ActiveFilterItem(category: 'Milk & Lactation', value: milk, label: milk));
+    }
     return items;
   }
 
@@ -137,6 +146,9 @@ class CattleFilterCriteria {
       case 'Breed':
         selectedBreeds.remove(item.value);
         break;
+      case 'Milk & Lactation':
+        selectedMilkStatuses.remove(item.value);
+        break;
     }
   }
 
@@ -149,7 +161,7 @@ class CattleFilterCriteria {
     );
   }
 
-  bool matches(CattleRecord record, String searchQuery) {
+  bool matches(CattleRecord record, String searchQuery, {Map<String, double>? cowAvgYields}) {
     // 1. Text search
     final String query = searchQuery.trim().toLowerCase();
     if (query.isNotEmpty) {
@@ -191,12 +203,53 @@ class CattleFilterCriteria {
       return false;
     }
 
+    // 8. Milk & Lactation filter
+    if (selectedMilkStatuses.isNotEmpty) {
+      bool matchedAnyMilkStatus = false;
+      final double cowYield = (cowAvgYields != null && cowAvgYields.containsKey(record.id))
+          ? cowAvgYields[record.id]!
+          : (record.expectedDailyYield ?? 0.0);
+
+      for (final String status in selectedMilkStatuses) {
+        if (status == 'Milking Cows' && record.isMilking) {
+          matchedAnyMilkStatus = true;
+          break;
+        }
+        if (status == 'Dry Cows' && !record.isMilking) {
+          matchedAnyMilkStatus = true;
+          break;
+        }
+        if (status == 'High Producers (>15 L/day)' && cowYield > 15.0) {
+          matchedAnyMilkStatus = true;
+          break;
+        }
+        if (status == 'Medium Producers (8–15 L/day)' && cowYield >= 8.0 && cowYield <= 15.0) {
+          matchedAnyMilkStatus = true;
+          break;
+        }
+        if (status == 'Low Producers (<8 L/day)' && cowYield > 0 && cowYield < 8.0) {
+          matchedAnyMilkStatus = true;
+          break;
+        }
+        if (status == 'Recently Calved') {
+          final int? dim = record.daysInMilk;
+          if (dim != null && dim <= 30) {
+            matchedAnyMilkStatus = true;
+            break;
+          }
+        }
+      }
+      if (!matchedAnyMilkStatus) {
+        return false;
+      }
+    }
+
     return true;
   }
 
-  List<CattleRecord> filterAndSort(List<CattleRecord> cattleList, String searchQuery) {
+  List<CattleRecord> filterAndSort(List<CattleRecord> cattleList, String searchQuery, {Map<String, double>? cowAvgYields}) {
     final List<CattleRecord> filtered = cattleList
-        .where((CattleRecord cattle) => matches(cattle, searchQuery))
+        .where((CattleRecord cattle) => matches(cattle, searchQuery, cowAvgYields: cowAvgYields))
         .toList();
 
     filtered.sort((CattleRecord a, CattleRecord b) {
