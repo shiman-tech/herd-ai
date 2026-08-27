@@ -21,6 +21,12 @@ class CattleRecord {
     this.lifeStage,
     this.healthStatus,
     this.reproductiveStatus,
+    this.isMilking = false,
+    this.isPregnant = false,
+    this.calvingDate,
+    this.inseminationDate,
+    this.dryOffDate,
+    this.expectedDailyYield,
   }) : embeddings = embeddings ?? <EmbeddingReference>[],
        healthRecords = healthRecords ?? <HealthRecord>[],
        vaccinations = vaccinations ?? <VaccinationRecord>[],
@@ -49,6 +55,14 @@ class CattleRecord {
   String? lifeStage; // 'Calf', 'Heifer', 'Cow', 'Bull', 'Steer'
   String? healthStatus; // 'Healthy', 'Under Observation', 'Diseased', 'Recovered'
   String? reproductiveStatus; // 'Pregnant', 'Not Pregnant', 'Unknown'
+
+  // Milk & Lactation Management Fields
+  bool isMilking;
+  bool isPregnant;
+  DateTime? calvingDate;       // Last calving date
+  DateTime? inseminationDate;  // Successful insemination date
+  DateTime? dryOffDate;        // Target or actual dry off date
+  double? expectedDailyYield;  // Target daily yield benchmark in Liters
 
   String? get displayBreed => confirmedBreed ?? breedName;
 
@@ -130,6 +144,9 @@ class CattleRecord {
   }
 
   String get effectiveReproductiveStatus {
+    if (isPregnant) {
+      return 'Pregnant';
+    }
     if (reproductiveStatus != null && reproductiveStatus!.trim().isNotEmpty) {
       return reproductiveStatus!.trim();
     }
@@ -143,6 +160,85 @@ class CattleRecord {
       return 'Not Pregnant';
     }
     return 'Unknown';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Lactation & Gestation Calculations
+  // ---------------------------------------------------------------------------
+
+  /// Days in Milk (DIM) = Today - Calving Date
+  int? get daysInMilk {
+    if (calvingDate == null) {
+      return null;
+    }
+    final DateTime now = DateTime.now();
+    final DateTime today = DateTime(now.year, now.month, now.day);
+    final DateTime calv = DateTime(calvingDate!.year, calvingDate!.month, calvingDate!.day);
+    final int diff = today.difference(calv).inDays;
+    return diff >= 0 ? diff : 0;
+  }
+
+  /// Estimated Days in Gestation from Insemination Date
+  int? get daysInGestation {
+    if (!isPregnant || inseminationDate == null) {
+      return null;
+    }
+    final DateTime now = DateTime.now();
+    final DateTime today = DateTime(now.year, now.month, now.day);
+    final DateTime insem = DateTime(inseminationDate!.year, inseminationDate!.month, inseminationDate!.day);
+    final int diff = today.difference(insem).inDays;
+    return diff >= 0 ? diff : 0;
+  }
+
+  /// Expected Calving Date (approx 283 days post-insemination when pregnant)
+  DateTime? get expectedCalvingDate {
+    if (!isPregnant || inseminationDate == null) {
+      return null;
+    }
+    return inseminationDate!.add(const Duration(days: 283));
+  }
+
+  /// Recommended Dry-Off Date (approx 220 days post-insemination, ~60 days before calving)
+  DateTime? get targetDryOffDate {
+    if (dryOffDate != null) {
+      return dryOffDate;
+    }
+    if (inseminationDate != null) {
+      return inseminationDate!.add(const Duration(days: 220));
+    }
+    if (calvingDate != null) {
+      // Standard 305 day lactation target
+      return calvingDate!.add(const Duration(days: 305));
+    }
+    return null;
+  }
+
+  /// Automatic Lactation Stage Classification
+  /// Fresh: 0–30 days
+  /// Early: 31–100 days
+  /// Mid: 101–200 days
+  /// Late: 201–305 days
+  /// Extended Lactation: >305 days (when isMilking == true)
+  /// Dry: isMilking == false
+  String get lactationStage {
+    if (!isMilking) {
+      return 'Dry';
+    }
+    final int? dim = daysInMilk;
+    if (dim == null) {
+      return 'Early';
+    }
+    if (dim <= 30) {
+      return 'Fresh';
+    } else if (dim <= 100) {
+      return 'Early';
+    } else if (dim <= 200) {
+      return 'Mid';
+    } else if (dim <= 305) {
+      return 'Late';
+    } else {
+      return 'Extended Lactation';
+    }
   }
 
   String get calculatedVaccinationStatus {
@@ -209,10 +305,19 @@ class CattleRecord {
       'lifeStage': lifeStage,
       'healthStatus': healthStatus,
       'reproductiveStatus': reproductiveStatus,
+      'isMilking': isMilking,
+      'isPregnant': isPregnant,
+      'calvingDate': calvingDate?.toIso8601String(),
+      'inseminationDate': inseminationDate?.toIso8601String(),
+      'dryOffDate': dryOffDate?.toIso8601String(),
+      'expectedDailyYield': expectedDailyYield,
     };
   }
 
   factory CattleRecord.fromJson(Map<String, dynamic> json) {
+    final bool isPreg = (json['isPregnant'] as bool?) ??
+        ((json['reproductiveStatus'] as String?)?.toLowerCase() == 'pregnant');
+
     return CattleRecord(
       id: json['id'] as String,
       registrationDate:
@@ -246,6 +351,12 @@ class CattleRecord {
       lifeStage: json['lifeStage'] as String?,
       healthStatus: json['healthStatus'] as String?,
       reproductiveStatus: json['reproductiveStatus'] as String?,
+      isMilking: (json['isMilking'] as bool?) ?? false,
+      isPregnant: isPreg,
+      calvingDate: DateTime.tryParse(json['calvingDate'] as String? ?? ''),
+      inseminationDate: DateTime.tryParse(json['inseminationDate'] as String? ?? ''),
+      dryOffDate: DateTime.tryParse(json['dryOffDate'] as String? ?? ''),
+      expectedDailyYield: (json['expectedDailyYield'] as num?)?.toDouble(),
     );
   }
 
@@ -299,7 +410,7 @@ class HealthRecord {
   HealthRecord({
     required this.diseaseName,
     required this.date,
-    required this.status,
+    this.status = 'Ongoing',
     this.symptoms = '',
     this.treatmentNotes = '',
   });
