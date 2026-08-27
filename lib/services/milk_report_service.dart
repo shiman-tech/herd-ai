@@ -18,6 +18,20 @@ class DailyReportItem {
   final String? notes;
 }
 
+class CowPerformanceItem {
+  const CowPerformanceItem({
+    required this.cattleId,
+    required this.totalYield,
+    required this.daysRecorded,
+    required this.averageDailyYield,
+  });
+
+  final String cattleId;
+  final double totalYield;
+  final int daysRecorded;
+  final double averageDailyYield;
+}
+
 class WeeklyReportSummary {
   const WeeklyReportSummary({
     required this.startDate,
@@ -29,6 +43,7 @@ class WeeklyReportSummary {
     required this.lowestProducingCow,
     required this.lowestProducingCowYield,
     required this.activeMilkingCowsCount,
+    required this.rankedCows,
   });
 
   final DateTime startDate;
@@ -40,6 +55,7 @@ class WeeklyReportSummary {
   final String? lowestProducingCow;
   final double lowestProducingCowYield;
   final int activeMilkingCowsCount;
+  final List<CowPerformanceItem> rankedCows;
 }
 
 class MonthlyReportSummary {
@@ -53,6 +69,7 @@ class MonthlyReportSummary {
     required this.lowestProducingCow,
     required this.lowestProducingCowYield,
     required this.activeMilkingCowsCount,
+    required this.rankedCows,
   });
 
   final int year;
@@ -64,6 +81,7 @@ class MonthlyReportSummary {
   final String? lowestProducingCow;
   final double lowestProducingCowYield;
   final int activeMilkingCowsCount;
+  final List<CowPerformanceItem> rankedCows;
 }
 
 class MilkReportService {
@@ -132,6 +150,7 @@ class MilkReportService {
     final DateTime end = start.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
 
     final Map<String, double> cowTotals = <String, double>{};
+    final Map<String, int> cowDaysMilked = <String, int>{};
     double totalWeekYield = 0.0;
 
     for (final MilkRecord r in allRecords) {
@@ -140,24 +159,34 @@ class MilkReportService {
         if (breed == null || cattleBreedMap[r.cattleId] == breed) {
           totalWeekYield += r.totalYield;
           cowTotals[r.cattleId] = (cowTotals[r.cattleId] ?? 0.0) + r.totalYield;
+          cowDaysMilked[r.cattleId] = (cowDaysMilked[r.cattleId] ?? 0) + 1;
         }
       }
     }
 
-    String? bestCow;
-    double bestYield = -1;
-    String? lowCow;
-    double lowYield = double.infinity;
+    final List<CowPerformanceItem> ranked = <CowPerformanceItem>[];
+    for (final String cId in cowTotals.keys) {
+      final double tot = cowTotals[cId]!;
+      final int days = cowDaysMilked[cId]!;
+      ranked.add(CowPerformanceItem(
+        cattleId: cId,
+        totalYield: tot,
+        daysRecorded: days,
+        averageDailyYield: days > 0 ? (tot / days) : 0.0,
+      ));
+    }
+    ranked.sort((CowPerformanceItem a, CowPerformanceItem b) => b.totalYield.compareTo(a.totalYield));
 
-    for (final MapEntry<String, double> entry in cowTotals.entries) {
-      if (entry.value > bestYield) {
-        bestYield = entry.value;
-        bestCow = entry.key;
-      }
-      if (entry.value < lowYield) {
-        lowYield = entry.value;
-        lowCow = entry.key;
-      }
+    String? bestCow;
+    double bestYield = 0.0;
+    String? lowCow;
+    double lowYield = 0.0;
+
+    if (ranked.isNotEmpty) {
+      bestCow = ranked.first.cattleId;
+      bestYield = ranked.first.totalYield;
+      lowCow = ranked.last.cattleId;
+      lowYield = ranked.last.totalYield;
     }
 
     final double avgDaily = totalWeekYield / 7.0;
@@ -168,37 +197,19 @@ class MilkReportService {
       totalYield: totalWeekYield,
       averageDailyYield: avgDaily,
       bestProducingCow: bestCow,
-      bestProducingCowYield: bestYield >= 0 ? bestYield : 0.0,
+      bestProducingCowYield: bestYield,
       lowestProducingCow: lowCow,
-      lowestProducingCowYield: (lowYield != double.infinity) ? lowYield : 0.0,
+      lowestProducingCowYield: lowYield,
       activeMilkingCowsCount: cowTotals.length,
+      rankedCows: ranked,
     );
   }
 
   /// Generate CSV string for Weekly Report
   String exportWeeklyReportCsv(DateTime startDate, {String? breed}) {
-    final List<MilkRecord> allRecords = _database.getAllMilkRecords();
-    final Map<String, String> cattleBreedMap = _getCattleBreedMap();
-
-    final DateTime start = DateTime(startDate.year, startDate.month, startDate.day);
-    final DateTime end = start.add(const Duration(days: 6));
-
-    final Map<String, double> cowTotals = <String, double>{};
-    final Map<String, int> cowDaysMilked = <String, int>{};
-
-    for (final MilkRecord r in allRecords) {
-      final DateTime rDate = DateTime(r.date.year, r.date.month, r.date.day);
-      if (!rDate.isBefore(start) && !rDate.isAfter(end)) {
-        if (breed == null || cattleBreedMap[r.cattleId] == breed) {
-          cowTotals[r.cattleId] = (cowTotals[r.cattleId] ?? 0.0) + r.totalYield;
-          cowDaysMilked[r.cattleId] = (cowDaysMilked[r.cattleId] ?? 0) + 1;
-        }
-      }
-    }
-
     final WeeklyReportSummary summary = getWeeklyReportSummary(startDate, breed: breed);
-    final String startStr = '${start.day}/${start.month}/${start.year}';
-    final String endStr = '${end.day}/${end.month}/${end.year}';
+    final String startStr = '${summary.startDate.day}/${summary.startDate.month}/${summary.startDate.year}';
+    final String endStr = '${summary.endDate.day}/${summary.endDate.month}/${summary.endDate.year}';
     final String breedHeader = breed != null ? ' - Breed: $breed' : ' - All Breeds';
     final String title = 'Herd AI - Weekly Milk Report ($startStr to $endStr)$breedHeader';
 
@@ -211,11 +222,8 @@ class MilkReportService {
     buffer.writeln('');
     buffer.writeln('Cattle ID,Days Recorded,Total Week Yield (L),Avg Yield/Day (L)');
 
-    for (final String cId in cowTotals.keys.toList()..sort()) {
-      final double tot = cowTotals[cId]!;
-      final int days = cowDaysMilked[cId]!;
-      final double avg = days > 0 ? (tot / days) : 0.0;
-      buffer.writeln('$cId,$days,${tot.toStringAsFixed(1)},${avg.toStringAsFixed(1)}');
+    for (final CowPerformanceItem item in summary.rankedCows) {
+      buffer.writeln('${item.cattleId},${item.daysRecorded},${item.totalYield.toStringAsFixed(1)},${item.averageDailyYield.toStringAsFixed(1)}');
     }
 
     return buffer.toString();
@@ -226,6 +234,7 @@ class MilkReportService {
     final List<MilkRecord> allRecords = _database.getAllMilkRecords();
     final Map<String, String> cattleBreedMap = _getCattleBreedMap();
     final Map<String, double> cowTotals = <String, double>{};
+    final Map<String, int> cowDaysMilked = <String, int>{};
     double totalMonthYield = 0.0;
 
     for (final MilkRecord r in allRecords) {
@@ -233,24 +242,34 @@ class MilkReportService {
         if (breed == null || cattleBreedMap[r.cattleId] == breed) {
           totalMonthYield += r.totalYield;
           cowTotals[r.cattleId] = (cowTotals[r.cattleId] ?? 0.0) + r.totalYield;
+          cowDaysMilked[r.cattleId] = (cowDaysMilked[r.cattleId] ?? 0) + 1;
         }
       }
     }
 
-    String? bestCow;
-    double bestYield = -1;
-    String? lowCow;
-    double lowYield = double.infinity;
+    final List<CowPerformanceItem> ranked = <CowPerformanceItem>[];
+    for (final String cId in cowTotals.keys) {
+      final double tot = cowTotals[cId]!;
+      final int days = cowDaysMilked[cId]!;
+      ranked.add(CowPerformanceItem(
+        cattleId: cId,
+        totalYield: tot,
+        daysRecorded: days,
+        averageDailyYield: days > 0 ? (tot / days) : 0.0,
+      ));
+    }
+    ranked.sort((CowPerformanceItem a, CowPerformanceItem b) => b.totalYield.compareTo(a.totalYield));
 
-    for (final MapEntry<String, double> entry in cowTotals.entries) {
-      if (entry.value > bestYield) {
-        bestYield = entry.value;
-        bestCow = entry.key;
-      }
-      if (entry.value < lowYield) {
-        lowYield = entry.value;
-        lowCow = entry.key;
-      }
+    String? bestCow;
+    double bestYield = 0.0;
+    String? lowCow;
+    double lowYield = 0.0;
+
+    if (ranked.isNotEmpty) {
+      bestCow = ranked.first.cattleId;
+      bestYield = ranked.first.totalYield;
+      lowCow = ranked.last.cattleId;
+      lowYield = ranked.last.totalYield;
     }
 
     final int daysInMonth = DateTime(year, month + 1, 0).day;
@@ -262,29 +281,16 @@ class MilkReportService {
       totalYield: totalMonthYield,
       averageDailyYield: avgDaily,
       bestProducingCow: bestCow,
-      bestProducingCowYield: bestYield >= 0 ? bestYield : 0.0,
+      bestProducingCowYield: bestYield,
       lowestProducingCow: lowCow,
-      lowestProducingCowYield: (lowYield != double.infinity) ? lowYield : 0.0,
+      lowestProducingCowYield: lowYield,
       activeMilkingCowsCount: cowTotals.length,
+      rankedCows: ranked,
     );
   }
 
   /// Generate CSV string for Monthly Report
   String exportMonthlyReportCsv(int year, int month, {String? breed}) {
-    final List<MilkRecord> allRecords = _database.getAllMilkRecords();
-    final Map<String, String> cattleBreedMap = _getCattleBreedMap();
-    final Map<String, double> cowTotals = <String, double>{};
-    final Map<String, int> cowDaysMilked = <String, int>{};
-
-    for (final MilkRecord r in allRecords) {
-      if (r.date.year == year && r.date.month == month) {
-        if (breed == null || cattleBreedMap[r.cattleId] == breed) {
-          cowTotals[r.cattleId] = (cowTotals[r.cattleId] ?? 0.0) + r.totalYield;
-          cowDaysMilked[r.cattleId] = (cowDaysMilked[r.cattleId] ?? 0) + 1;
-        }
-      }
-    }
-
     final MonthlyReportSummary summary = getMonthlyReportSummary(year, month, breed: breed);
     const List<String> monthNames = <String>[
       'January', 'February', 'March', 'April', 'May', 'June',
@@ -302,11 +308,8 @@ class MilkReportService {
     buffer.writeln('');
     buffer.writeln('Cattle ID,Days Recorded,Total Month Yield (L),Avg Yield/Day (L)');
 
-    for (final String cId in cowTotals.keys.toList()..sort()) {
-      final double tot = cowTotals[cId]!;
-      final int days = cowDaysMilked[cId]!;
-      final double avg = days > 0 ? (tot / days) : 0.0;
-      buffer.writeln('$cId,$days,${tot.toStringAsFixed(1)},${avg.toStringAsFixed(1)}');
+    for (final CowPerformanceItem item in summary.rankedCows) {
+      buffer.writeln('${item.cattleId},${item.daysRecorded},${item.totalYield.toStringAsFixed(1)},${item.averageDailyYield.toStringAsFixed(1)}');
     }
 
     return buffer.toString();
