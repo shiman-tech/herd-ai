@@ -334,7 +334,44 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                   }).toList(),
                 ),
 
-                // 7. Breed
+                // 7. Milk & Lactation Status
+                _buildSectionHeader('Milk & Lactation', icon: Icons.water_drop_outlined),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: <String>[
+                    'Milking Cows',
+                    'Dry Cows',
+                    'High Producers (>15 L/day)',
+                    'Medium Producers (8–15 L/day)',
+                    'Low Producers (<8 L/day)',
+                    'Recently Calved',
+                  ].map((String milkStatus) {
+                    Color? activeColor;
+                    if (milkStatus.contains('High')) {
+                      activeColor = const Color(0xFF2E7D32);
+                    } else if (milkStatus.contains('Medium')) {
+                      activeColor = const Color(0xFF1976D2);
+                    } else if (milkStatus.contains('Low')) {
+                      activeColor = const Color(0xFFE65100);
+                    } else if (milkStatus == 'Milking Cows') {
+                      activeColor = const Color(0xFF2D6A4F);
+                    } else if (milkStatus == 'Dry Cows') {
+                      activeColor = const Color(0xFF795548);
+                    } else {
+                      activeColor = const Color(0xFF6A1B9A);
+                    }
+                    return _buildChip(
+                      label: milkStatus,
+                      activeColor: activeColor,
+                      isSelected: _filter.selectedMilkStatuses.contains(milkStatus),
+                      onSelected: () =>
+                          _toggleSetItem(_filter.selectedMilkStatuses, milkStatus),
+                    );
+                  }).toList(),
+                ),
+
+                // 8. Breed
                 _buildSectionHeader('Breed', icon: Icons.category),
                 Wrap(
                   spacing: 8,
