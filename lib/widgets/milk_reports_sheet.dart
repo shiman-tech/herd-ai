@@ -88,10 +88,12 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
       final File file = File('${dir.path}/$fileName');
       await file.writeAsString(csv, flush: true);
       if (!mounted) return;
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Report saved: $fileName'),
           behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
           action: SnackBarAction(
             label: 'Copy CSV',
             onPressed: () => Clipboard.setData(ClipboardData(text: csv)),
@@ -102,10 +104,12 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
       // Fallback to clipboard if file write fails
       Clipboard.setData(ClipboardData(text: csv));
       if (!mounted) return;
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Copied to clipboard (file save failed).'),
           behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
         ),
       );
     }
@@ -339,6 +343,8 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           worstCow: worstCow,
           worstYield: worstYield,
           cowCount: items.length,
+          periodLabel: '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+          avgLabel: 'Daily Avg',
         ),
         const SizedBox(height: 10),
         _buildSortToggle(),
@@ -493,21 +499,42 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
         padding: const EdgeInsets.all(14),
         child: Column(
           children: <Widget>[
+            // Period Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text(
+                  periodLabel,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2D6A4F),
+                  ),
+                ),
+                Text(
+                  '$cowCount cows recorded',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
             Row(
               children: <Widget>[
                 Expanded(
-                  child: _summaryTile(periodLabel, '${totalYield.toStringAsFixed(1)} L'),
+                  child: _statBox('Total Yield', '${totalYield.toStringAsFixed(1)} L', Colors.black87),
                 ),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: _summaryTile(avgLabel, '${avgYield.toStringAsFixed(1)} L/day'),
-                ),
-                Expanded(
-                  child: _summaryTile('Total Herd Size', '$cowCount cows'),
+                  child: _statBox(avgLabel, '${avgYield.toStringAsFixed(1)} L/day', const Color(0xFF2D6A4F)),
                 ),
               ],
             ),
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
+              padding: EdgeInsets.symmetric(vertical: 10),
               child: Divider(height: 1, color: Colors.black12),
             ),
             Row(
@@ -561,14 +588,28 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
     );
   }
 
-  Widget _summaryTile(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 3),
-        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-      ],
+  Widget _statBox(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            label,
+            style: TextStyle(fontSize: 10.5, color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color),
+          ),
+        ],
+      ),
     );
   }
 
@@ -688,6 +729,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
   }
 
   Widget _emptyReportState() {
+    final String breedText = widget.breed != null ? ' for ${widget.breed}' : '';
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -695,7 +737,8 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           Icon(Icons.notes_outlined, size: 48, color: Colors.grey.shade400),
           const SizedBox(height: 8),
           Text(
-            'No milk records found for this period${widget.breed != null ? " ($widget.breed)" : ""}.',
+            'No milk records found for this period$breedText.',
+            textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey.shade600),
           ),
         ],
