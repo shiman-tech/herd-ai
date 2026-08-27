@@ -5,6 +5,7 @@ import '../services/milk_analytics_service.dart';
 import 'milk_chart_widgets.dart';
 import 'milk_entry_dialog.dart';
 import 'milk_reports_sheet.dart';
+import 'notifications_sheet.dart';
 
 class MilkYieldManagementPage extends StatefulWidget {
   const MilkYieldManagementPage({
@@ -31,11 +32,12 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
     _analyticsService = MilkAnalyticsService(database: widget.database);
   }
 
-  Future<void> _openMilkEntryDialog([String? cattleId]) async {
+  Future<void> _openMilkEntryDialog([String? cattleId, DateTime? date]) async {
     final bool? saved = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => MilkEntryDialog(
         initialCattleId: cattleId,
+        initialDate: date,
         database: widget.database,
       ),
     );
@@ -44,12 +46,27 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
     }
   }
 
+  void _openNotificationsSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) => NotificationsSheet(
+        database: widget.database,
+        onOpenCattleDetail: widget.onOpenCattleDetail,
+      ),
+    );
+  }
+
   void _openReportsSheet() {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (BuildContext context) => MilkReportsSheet(database: widget.database),
+      builder: (BuildContext context) => MilkReportsSheet(
+        database: widget.database,
+        breed: _selectedBreedFilter,
+      ),
     );
   }
 
@@ -432,7 +449,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                     ),
                     if (alert.type == 'missing_entry')
                       TextButton(
-                        onPressed: () => _openMilkEntryDialog(alert.cattleId),
+                        onPressed: () => _openMilkEntryDialog(alert.cattleId, alert.date),
                         style: TextButton.styleFrom(
                           visualDensity: VisualDensity.compact,
                           padding: EdgeInsets.zero,
@@ -443,6 +460,16 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                 ),
               );
             }),
+            if (alerts.length > 3) ...<Widget>[
+              const SizedBox(height: 4),
+              Center(
+                child: TextButton.icon(
+                  onPressed: _openNotificationsSheet,
+                  icon: const Icon(Icons.notifications_outlined, size: 16),
+                  label: Text('View All Notifications (${alerts.length})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
           ],
         ),
       ),
