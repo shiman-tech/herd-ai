@@ -1398,7 +1398,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
                       onPressed: _showNotificationsSheet,
                       icon: Icon(
                         alertCount > 0 ? Icons.notifications_active : Icons.notifications_outlined,
-                        color: alertCount > 0 ? const Color(0xFFC62828) : null,
+                        color: const Color(0xFF2D6A4F),
                       ),
                       tooltip: 'Notifications',
                     ),
