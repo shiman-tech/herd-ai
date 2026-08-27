@@ -227,23 +227,31 @@ class MilkAnalyticsService {
       final List<MilkRecord> records = _database.getMilkRecordsForCattle(cattle.id)
         ..sort((MilkRecord a, MilkRecord b) => b.date.compareTo(a.date));
 
-      // 1. Missing Entry Alert (Milking cow with no record today)
+      // 1. Missing Entry Alerts (Milking cow with missing records for past 7 days)
       if (cattle.isMilking) {
-        final bool hasTodayRecord = records.any((MilkRecord r) {
-          final DateTime d = DateTime(r.date.year, r.date.month, r.date.day);
-          return d.isAtSameMomentAs(today);
-        });
+        for (int dayOffset = 0; dayOffset < 7; dayOffset++) {
+          final DateTime checkDate = today.subtract(Duration(days: dayOffset));
+          final bool hasRecord = records.any((MilkRecord r) {
+            final DateTime d = DateTime(r.date.year, r.date.month, r.date.day);
+            return d.isAtSameMomentAs(checkDate);
+          });
 
-        if (!hasTodayRecord) {
-          alerts.add(MilkAlert(
-            id: 'missing_entry_${cattle.id}',
-            cattleId: cattle.id,
-            title: 'Missing Milk Entry',
-            message: 'No milk record entered today for Cow #${cattle.id}.',
-            severity: AlertSeverity.info,
-            type: 'missing_entry',
-            date: today,
-          ));
+          if (!hasRecord) {
+            final String dateLabel = dayOffset == 0
+                ? 'today'
+                : (dayOffset == 1
+                    ? 'yesterday'
+                    : 'on ${checkDate.day}/${checkDate.month}/${checkDate.year}');
+            alerts.add(MilkAlert(
+              id: 'missing_entry_${cattle.id}_${checkDate.year}_${checkDate.month}_${checkDate.day}',
+              cattleId: cattle.id,
+              title: dayOffset == 0 ? 'Missing Milk Entry Today' : 'Missing Milk Entry (${checkDate.day}/${checkDate.month})',
+              message: 'No milk record entered $dateLabel for Cow #${cattle.id}.',
+              severity: dayOffset <= 1 ? AlertSeverity.info : AlertSeverity.warning,
+              type: 'missing_entry',
+              date: checkDate,
+            ));
+          }
         }
       }
 
