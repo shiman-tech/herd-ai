@@ -88,26 +88,26 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
       final File file = File('${dir.path}/$fileName');
       await file.writeAsString(csv, flush: true);
       if (!mounted) return;
+      final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.clearSnackBars();
+      messenger.showSnackBar(
         SnackBar(
           content: Text('Report saved: $fileName'),
           behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: 'Copy CSV',
-            onPressed: () => Clipboard.setData(ClipboardData(text: csv)),
-          ),
+          duration: const Duration(seconds: 2),
         ),
       );
     } catch (e) {
       // Fallback to clipboard if file write fails
       Clipboard.setData(ClipboardData(text: csv));
       if (!mounted) return;
+      final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.clearSnackBars();
+      messenger.showSnackBar(
         const SnackBar(
-          content: Text('Copied to clipboard (file save failed).'),
+          content: Text('Report copied to clipboard!'),
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 2),
         ),
