@@ -5,7 +5,6 @@ import '../services/milk_analytics_service.dart';
 import 'milk_chart_widgets.dart';
 import 'milk_entry_dialog.dart';
 import 'milk_reports_sheet.dart';
-import 'notifications_sheet.dart';
 
 class MilkYieldManagementPage extends StatefulWidget {
   const MilkYieldManagementPage({
@@ -46,18 +45,6 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
     }
   }
 
-  void _openNotificationsSheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) => NotificationsSheet(
-        database: widget.database,
-        onOpenCattleDetail: widget.onOpenCattleDetail,
-      ),
-    );
-  }
-
   void _openReportsSheet() {
     showModalBottomSheet<void>(
       context: context,
@@ -73,7 +60,6 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
   @override
   Widget build(BuildContext context) {
     final HerdMilkSummary summary = _analyticsService.getHerdSummary(breed: _selectedBreedFilter);
-    final List<MilkAlert> alerts = _analyticsService.generateSmartAlerts();
     final List<MilkRecord> recentRecords = widget.database.getAllMilkRecords().take(20).toList();
 
     // Get unique breeds list from database
@@ -139,12 +125,6 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
           // 1. Top Action Banner / Quick Stats
           _buildTodayHeroCard(summary),
           const SizedBox(height: 14),
-
-          // 2. Smart Alerts Section
-          if (alerts.isNotEmpty) ...<Widget>[
-            _buildSmartAlertsSection(alerts),
-            const SizedBox(height: 14),
-          ],
 
           // 3. Weekly & Monthly Summary Cards
           _buildPeriodTotalsRow(summary),
@@ -367,116 +347,6 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
       ),
     );
   }
-
-  Widget _buildSmartAlertsSection(List<MilkAlert> alerts) {
-    return Card(
-      elevation: 1.5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                const Icon(Icons.notifications_active_outlined, color: Colors.orange, size: 18),
-                const SizedBox(width: 6),
-                const Text(
-                  'Smart Alerts & Reminders',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade100,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '${alerts.length}',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.orange.shade900),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            ...alerts.take(3).map((MilkAlert alert) {
-              Color bgColor;
-              Color iconColor;
-              IconData icon;
-              if (alert.severity == AlertSeverity.danger) {
-                bgColor = const Color(0xFFFFEBEE);
-                iconColor = const Color(0xFFC62828);
-                icon = Icons.error_outline;
-              } else if (alert.severity == AlertSeverity.warning) {
-                bgColor = const Color(0xFFFFF3E0);
-                iconColor = const Color(0xFFE65100);
-                icon = Icons.warning_amber_rounded;
-              } else {
-                bgColor = const Color(0xFFE3F2FD);
-                iconColor = const Color(0xFF1565C0);
-                icon = Icons.info_outline;
-              }
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                decoration: BoxDecoration(
-                  color: bgColor,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: iconColor.withValues(alpha: 0.2)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Icon(icon, size: 16, color: iconColor),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            alert.title,
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: iconColor),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            alert.message,
-                            style: const TextStyle(fontSize: 11.5, color: Colors.black87),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (alert.type == 'missing_entry')
-                      TextButton(
-                        onPressed: () => _openMilkEntryDialog(alert.cattleId, alert.date),
-                        style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
-                        ),
-                        child: const Text('Enter', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                      ),
-                  ],
-                ),
-              );
-            }),
-            if (alerts.length > 3) ...<Widget>[
-              const SizedBox(height: 4),
-              Center(
-                child: TextButton.icon(
-                  onPressed: _openNotificationsSheet,
-                  icon: const Icon(Icons.notifications_outlined, size: 16),
-                  label: Text('View All Notifications (${alerts.length})', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-
 
   Widget _buildRangeSelector() {
     final List<String> ranges = <String>['7D', '30D', '90D'];
