@@ -8,11 +8,15 @@ import 'package:image_picker/image_picker.dart';
 import '../models/breed_prediction.dart';
 import '../models/cattle_image.dart';
 import '../models/cattle_record.dart';
+import '../models/milk_record.dart';
 import '../services/app_lock_controller.dart';
 import '../services/embedding_database.dart';
+import '../services/milk_analytics_service.dart';
 import '../services/tflite_breed_service.dart';
 import '../services/tflite_embedding_service.dart';
 import '../utils/math_utils.dart';
+import 'milk_chart_widgets.dart';
+import 'milk_entry_dialog.dart';
 
 const Color kFarmPrimary = Color(0xFF2D6A4F);
 const Color kFarmSecondary = Color(0xFF95A97F);
@@ -40,6 +44,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
   final ImagePicker _picker = ImagePicker();
   late String _cattleId;
   bool _isBusy = false;
+  String _selectedChartRange = '30D';
 
   @override
   void initState() {
@@ -136,6 +141,14 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
         : 'Unknown';
     const List<String> validHealth = <String>['Healthy', 'Under Observation', 'Diseased', 'Recovered', 'Unknown'];
     String selectedHealth = validHealth.contains(record.effectiveHealthStatus) ? record.effectiveHealthStatus : 'Unknown';
+    bool selectedMilking = record.isMilking;
+    bool selectedPregnant = record.isPregnant;
+    DateTime? selectedCalvingDate = record.calvingDate;
+    DateTime? selectedInseminationDate = record.inseminationDate;
+    DateTime? selectedDryOffDate = record.dryOffDate;
+    final TextEditingController expectedYieldController = TextEditingController(
+      text: record.expectedDailyYield != null ? record.expectedDailyYield.toString() : '',
+    );
 
     await showDialog<void>(
       context: context,
@@ -287,26 +300,149 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       },
                     ),
 
-                    // Reproductive Status (Female only)
+                    // Reproductive & Dairy Status (Female only)
                     if (selectedSex == 'Female') ...<Widget>[
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: selectedReproductive,
-                        decoration: const InputDecoration(
-                          labelText: 'Reproductive Status',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: const <DropdownMenuItem<String>>[
-                          DropdownMenuItem(value: 'Unknown', child: Text('Unknown')),
-                          DropdownMenuItem(value: 'Not Pregnant', child: Text('Not Pregnant')),
-                          DropdownMenuItem(value: 'Pregnant', child: Text('Pregnant')),
-                        ],
-                        onChanged: (String? val) {
-                          if (val != null) {
-                            setModalState(() => selectedReproductive = val);
+                      const SizedBox(height: 14),
+                      const Divider(),
+                      const Text(
+                        'Milk & Lactation Profile',
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF2D6A4F)),
+                      ),
+                      const SizedBox(height: 8),
+
+                      SwitchListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Currently Milking', style: TextStyle(fontWeight: FontWeight.w600)),
+                        value: selectedMilking,
+                        activeThumbColor: const Color(0xFF2D6A4F),
+                        onChanged: (bool val) {
+                          setModalState(() => selectedMilking = val);
+                        },
+                      ),
+
+                      SwitchListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Pregnant', style: TextStyle(fontWeight: FontWeight.w600)),
+                        value: selectedPregnant,
+                        activeThumbColor: const Color(0xFF8E24AA),
+                        onChanged: (bool val) {
+                          setModalState(() {
+                            selectedPregnant = val;
+                            selectedReproductive = val ? 'Pregnant' : 'Not Pregnant';
+                          });
+                        },
+                      ),
+
+                      // Last Calving Date
+                      const SizedBox(height: 6),
+                      InkWell(
+                        onTap: () async {
+                          final DateTime now = DateTime.now();
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            firstDate: DateTime(2020),
+                            lastDate: now,
+                            initialDate: selectedCalvingDate ?? now,
+                          );
+                          if (picked != null) {
+                            setModalState(() {
+                              // If a new calving date is set, automatically reset pregnancy & insemination
+                              final bool isNewCalving = record.calvingDate == null ||
+                                  picked.isAfter(record.calvingDate!) ||
+                                  selectedPregnant;
+                              selectedCalvingDate = picked;
+                              if (isNewCalving) {
+                                selectedMilking = true;
+                                selectedPregnant = false;
+                                selectedReproductive = 'Not Pregnant';
+                                selectedInseminationDate = null;
+                                selectedDryOffDate = null;
+                              }
+                            });
                           }
                         },
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'Last Calving Date',
+                            border: const OutlineInputBorder(),
+                            suffixIcon: selectedCalvingDate != null
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear, size: 18),
+                                    onPressed: () {
+                                      setModalState(() {
+                                        selectedCalvingDate = null;
+                                      });
+                                    },
+                                  )
+                                : const Icon(Icons.calendar_today, size: 18),
+                          ),
+                          child: Text(
+                            selectedCalvingDate != null
+                                ? _formatDate(selectedCalvingDate!)
+                                : 'Not set',
+                            style: TextStyle(
+                              color: selectedCalvingDate != null ? Colors.black87 : Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Insemination Date
+                      const SizedBox(height: 12),
+                      InkWell(
+                        onTap: () async {
+                          final DateTime now = DateTime.now();
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            firstDate: DateTime(2020),
+                            lastDate: now,
+                            initialDate: selectedInseminationDate ?? now,
+                          );
+                          if (picked != null) {
+                            setModalState(() {
+                              selectedInseminationDate = picked;
+                            });
+                          }
+                        },
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'Insemination Date',
+                            border: const OutlineInputBorder(),
+                            suffixIcon: selectedInseminationDate != null
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear, size: 18),
+                                    onPressed: () {
+                                      setModalState(() {
+                                        selectedInseminationDate = null;
+                                      });
+                                    },
+                                  )
+                                : const Icon(Icons.calendar_today, size: 18),
+                          ),
+                          child: Text(
+                            selectedInseminationDate != null
+                                ? _formatDate(selectedInseminationDate!)
+                                : 'Not set',
+                            style: TextStyle(
+                              color: selectedInseminationDate != null ? Colors.black87 : Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Expected Daily Yield
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: expectedYieldController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'Expected Daily Yield (Benchmark)',
+                          hintText: 'e.g. 15.0',
+                          suffixText: 'L/day',
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                     ],
                   ],
@@ -323,6 +459,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     if (newId.isEmpty) {
                       return;
                     }
+                    final double? expYield = double.tryParse(expectedYieldController.text.trim());
                     final NavigatorState navigator = Navigator.of(context);
                     await widget.database.updateCattleBasicInfo(
                       oldCattleId: record.id,
@@ -332,6 +469,12 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       lifeStage: selectedLifeStage,
                       healthStatus: selectedHealth,
                       reproductiveStatus: selectedReproductive,
+                      isMilking: selectedMilking,
+                      isPregnant: selectedPregnant,
+                      calvingDate: selectedCalvingDate,
+                      inseminationDate: selectedInseminationDate,
+                      dryOffDate: selectedDryOffDate,
+                      expectedDailyYield: expYield,
                     );
                     if (!mounted) {
                       return;
@@ -1632,8 +1775,10 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
       );
     }
 
+    final bool isFemale = record.effectiveSex == 'Female';
+
     return DefaultTabController(
-      length: 3,
+      length: isFemale ? 4 : 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text(
@@ -1656,6 +1801,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
             ),
           ],
           bottom: TabBar(
+            isScrollable: isFemale,
             labelColor: const Color(0xFF2D6A4F),
             unselectedLabelColor: Colors.black87,
             indicatorColor: const Color(0xFF2D6A4F),
@@ -1665,6 +1811,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
             tabs: <Widget>[
               Tab(text: localizations.tabOverview),
               Tab(text: localizations.tabMedical),
+              if (isFemale) const Tab(text: 'Milk Production'),
               Tab(text: localizations.tabGalleryNotes),
             ],
           ),
@@ -2119,6 +2266,8 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
           ),
         ],
       ),
+      if (isFemale)
+        _buildMilkProductionTab(record),
       // Gallery & Notes Tab
       ListView(
         padding: const EdgeInsets.all(16),
@@ -2347,6 +2496,414 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
       ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildChartRangeSelector() {
+    final List<String> ranges = <String>['7D', '30D', '90D'];
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: ranges.map((String range) {
+          final bool isSelected = range == _selectedChartRange;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedChartRange = range;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isSelected ? const Color(0xFF2D6A4F) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  range,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                    color: isSelected ? Colors.white : Colors.grey.shade600,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildMilkProductionTab(CattleRecord record) {
+    final MilkAnalyticsService analytics = MilkAnalyticsService(database: widget.database);
+    final CattleMilkStats stats = analytics.getStatsForCattle(record.id);
+    final List<MilkRecord> records = widget.database.getMilkRecordsForCattle(record.id)
+      ..sort((MilkRecord a, MilkRecord b) => b.date.compareTo(a.date));
+
+    final DateTime now = DateTime.now();
+    final DateTime today = DateTime(now.year, now.month, now.day);
+
+    int trendDays = 30;
+    if (_selectedChartRange == '7D') {
+      trendDays = 7;
+    } else if (_selectedChartRange == '30D') {
+      trendDays = 30;
+    } else if (_selectedChartRange == '90D') {
+      trendDays = 90;
+    }
+
+    final List<MapEntry<DateTime, double>> dailyTrends = <MapEntry<DateTime, double>>[];
+    for (int i = trendDays - 1; i >= 0; i--) {
+      final DateTime date = today.subtract(Duration(days: i));
+      double sum = 0.0;
+      for (final MilkRecord r in records) {
+        final DateTime rDate = DateTime(r.date.year, r.date.month, r.date.day);
+        if (rDate.isAtSameMomentAs(date)) {
+          sum += r.totalYield;
+        }
+      }
+      dailyTrends.add(MapEntry<DateTime, double>(date, sum));
+    }
+
+    final bool isCalvingOverdue = record.isPregnant &&
+        record.expectedCalvingDate != null &&
+        record.expectedCalvingDate!.isBefore(today);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: <Widget>[
+        if (isCalvingOverdue) ...<Widget>[
+          Card(
+            color: const Color(0xFFFFEBEE),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Color(0xFFEF5350)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: <Widget>[
+                  const Icon(Icons.warning_amber_rounded, color: Color(0xFFC62828), size: 28),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const Text(
+                          'Calving Date Overdue',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFC62828), fontSize: 13),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Expected calving (${_formatDate(record.expectedCalvingDate!)}) has passed. Update calving information or pregnancy status.',
+                          style: const TextStyle(fontSize: 11.5, color: Color(0xFFB71C1C)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _showBasicInfoDialog,
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFC62828),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    child: const Text('Log Calving', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+
+        // 1. Lactation Status Card
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Row(
+                      children: <Widget>[
+                        Icon(Icons.water_drop, color: Color(0xFF2D6A4F), size: 20),
+                        SizedBox(width: 6),
+                        Text(
+                          'Lactation Status',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                    _lactationBadge(stats.lactationStage),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: _infoBox(
+                        label: 'Milking',
+                        value: stats.isMilking ? 'Yes' : 'No',
+                        color: stats.isMilking ? const Color(0xFF2D6A4F) : Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _infoBox(
+                        label: 'Days in Milk (DIM)',
+                        value: stats.daysInMilk != null ? '${stats.daysInMilk} days' : 'N/A',
+                        color: const Color(0xFF1565C0),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: _infoBox(
+                        label: 'Last Calving',
+                        value: record.calvingDate != null ? _formatDate(record.calvingDate!) : 'Not set',
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _infoBox(
+                        label: 'Pregnant',
+                        value: stats.isPregnant ? 'Yes' : 'No',
+                        color: stats.isPregnant ? const Color(0xFF8E24AA) : Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+                if (record.inseminationDate != null) ...<Widget>[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: _infoBox(
+                          label: 'Insemination Date',
+                          value: _formatDate(record.inseminationDate!),
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _infoBox(
+                          label: 'Est. Next Calving',
+                          value: stats.expectedCalvingDate != null ? _formatDate(stats.expectedCalvingDate!) : 'N/A',
+                          color: const Color(0xFFC2185B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const Divider(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const Text('30-Day Average', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        Text(
+                          '${stats.average30DayYield.toStringAsFixed(1)} L/day',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2D6A4F)),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: <Widget>[
+                        const Text('Total This Month', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        Text(
+                          '${stats.monthTotalYield.toStringAsFixed(1)} L',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+
+
+        // 2. Individual Production Trend Line Chart
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const Text(
+                  'Recent Milk Yield Trend',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 12),
+                _buildChartRangeSelector(),
+                const SizedBox(height: 14),
+                Builder(
+                  builder: (BuildContext context) {
+                    const List<String> months = <String>['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    return MilkLineChart(
+                      dataPoints: dailyTrends.map((MapEntry<DateTime, double> e) => e.value).toList(),
+                      xLabels: dailyTrends.map((MapEntry<DateTime, double> e) => '${months[e.key.month - 1]} ${e.key.day}').toList(),
+                      originalDates: dailyTrends.map((MapEntry<DateTime, double> e) => e.key).toList(),
+                      lineColor: const Color(0xFF2D6A4F),
+                      height: 150,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // 3. Milk Records History & Add Button
+        _SectionCard(
+          title: 'Daily Milk Records',
+          buttonLabel: 'Record Milk',
+          onAdd: () async {
+            final bool? saved = await showDialog<bool>(
+              context: context,
+              builder: (BuildContext context) => MilkEntryDialog(
+                initialCattleId: record.id,
+                database: widget.database,
+              ),
+            );
+            if (saved == true && mounted) {
+              setState(() {});
+            }
+          },
+          child: records.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text('No daily milk yields recorded for this cow yet.', style: TextStyle(color: Colors.grey)),
+                )
+              : Column(
+                  children: records.map((MilkRecord r) {
+                    final String dStr = '${r.date.day.toString().padLeft(2, '0')}/${r.date.month.toString().padLeft(2, '0')}/${r.date.year}';
+                    return ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.water_drop_outlined, color: Color(0xFF2D6A4F)),
+                      title: Text('$dStr: ${r.totalYield.toStringAsFixed(1)} Liters', style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(
+                        'Morning: ${r.morningYield.toStringAsFixed(1)} L • Evening: ${r.eveningYield.toStringAsFixed(1)} L'
+                        '${r.notes != null ? '\nNote: ${r.notes}' : ''}',
+                      ),
+                      trailing: PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert, size: 18),
+                        onSelected: (String action) async {
+                          if (action == 'edit') {
+                            await showDialog<bool>(
+                              context: context,
+                              builder: (BuildContext context) => MilkEntryDialog(
+                                initialCattleId: record.id,
+                                initialDate: r.date,
+                                database: widget.database,
+                              ),
+                            );
+                            setState(() {});
+                          } else if (action == 'delete') {
+                            await widget.database.deleteMilkRecord(r.id);
+                            setState(() {});
+                          }
+                        },
+                        itemBuilder: (_) => <PopupMenuEntry<String>>[
+                          const PopupMenuItem<String>(value: 'edit', child: Text('Edit')),
+                          const PopupMenuItem<String>(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _infoBox({required String label, required String value, required Color color}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(label, style: TextStyle(fontSize: 10.5, color: Colors.grey.shade700, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 2),
+          Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color)),
+        ],
+      ),
+    );
+  }
+
+  Widget _lactationBadge(String stage) {
+    Color bg;
+    Color fg;
+    switch (stage) {
+      case 'Fresh':
+        bg = const Color(0xFFE8F5E9);
+        fg = const Color(0xFF2E7D32);
+        break;
+      case 'Early':
+        bg = const Color(0xFFE3F2FD);
+        fg = const Color(0xFF1565C0);
+        break;
+      case 'Mid':
+        bg = const Color(0xFFF3E5F5);
+        fg = const Color(0xFF7B1FA2);
+        break;
+      case 'Late':
+        bg = const Color(0xFFFFF3E0);
+        fg = const Color(0xFFE65100);
+        break;
+      case 'Extended Lactation':
+        bg = const Color(0xFFFFF8E1);
+        fg = const Color(0xFFF57F17);
+        break;
+      case 'Dry':
+      default:
+        bg = const Color(0xFFEFEBE9);
+        fg = const Color(0xFF5D4037);
+        break;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: fg.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        '$stage Stage',
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: fg),
       ),
     );
   }
