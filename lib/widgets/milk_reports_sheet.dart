@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import '../services/embedding_database.dart';
 import '../services/milk_report_service.dart';
 
@@ -20,6 +22,7 @@ class MilkReportsSheet extends StatefulWidget {
 class _MilkReportsSheetState extends State<MilkReportsSheet> {
   late final MilkReportService _reportService;
   int _reportTypeIndex = 0; // 0 = Daily, 1 = Weekly, 2 = Monthly
+  bool _sortAscending = false;
   late DateTime _selectedDate; // Daily date
   late DateTime _selectedWeekStart; // Weekly start date
   late int _selectedYear;
@@ -64,23 +67,48 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
     }
   }
 
-  void _exportCsv() {
+  Future<void> _downloadCsv() async {
     String csv;
+    String fileName;
+    final DateTime now = DateTime.now();
+    final String ts = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
     if (_reportTypeIndex == 0) {
       csv = _reportService.exportDailyReportCsv(_selectedDate, breed: widget.breed);
+      fileName = 'milk_daily_$ts.csv';
     } else if (_reportTypeIndex == 1) {
       csv = _reportService.exportWeeklyReportCsv(_selectedWeekStart, breed: widget.breed);
+      fileName = 'milk_weekly_$ts.csv';
     } else {
       csv = _reportService.exportMonthlyReportCsv(_selectedYear, _selectedMonth, breed: widget.breed);
+      fileName = 'milk_monthly_${_selectedYear}_${_selectedMonth.toString().padLeft(2, '0')}.csv';
     }
 
-    Clipboard.setData(ClipboardData(text: csv));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('CSV ${_getReportTypeName()} Report copied to clipboard!'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    try {
+      final Directory dir = await getApplicationDocumentsDirectory();
+      final File file = File('${dir.path}/$fileName');
+      await file.writeAsString(csv, flush: true);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Report saved: $fileName'),
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'Copy CSV',
+            onPressed: () => Clipboard.setData(ClipboardData(text: csv)),
+          ),
+        ),
+      );
+    } catch (e) {
+      // Fallback to clipboard if file write fails
+      Clipboard.setData(ClipboardData(text: csv));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Copied to clipboard (file save failed).'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   String _getReportTypeName() {
@@ -270,9 +298,9 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
 
           // Export Button
           FilledButton.icon(
-            onPressed: _exportCsv,
-            icon: const Icon(Icons.copy),
-            label: Text('Copy ${_getReportTypeName()} CSV Report'),
+            onPressed: _downloadCsv,
+            icon: const Icon(Icons.download_rounded),
+            label: Text('Download ${_getReportTypeName()} CSV Report'),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF2D6A4F),
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -285,49 +313,51 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
   }
 
   Widget _buildDailyReportView() {
-    final List<DailyReportItem> items = _reportService.getDailyReport(_selectedDate, breed: widget.breed);
+    final List<DailyReportItem> rawItems = _reportService.getDailyReport(_selectedDate, breed: widget.breed);
 
-    if (items.isEmpty) {
+    if (rawItems.isEmpty) {
       return _emptyReportState();
     }
 
-    final double total = items.fold(0.0, (double sum, DailyReportItem item) => sum + item.totalYield);
-    final String bestCow = items.first.cattleId;
-    final double bestYield = items.first.totalYield;
-    final String worstCow = items.last.cattleId;
-    final double worstYield = items.last.totalYield;
+    // rawItems already sorted best→worst; reverse if ascending
+    final List<DailyReportItem> items = _sortAscending ? rawItems.reversed.toList() : rawItems;
+
+    final double total = rawItems.fold(0.0, (double sum, DailyReportItem item) => sum + item.totalYield);
+    final String bestCow = rawItems.first.cattleId;
+    final double bestYield = rawItems.first.totalYield;
+    final String worstCow = rawItems.last.cattleId;
+    final double worstYield = rawItems.last.totalYield;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         _buildHerdPerformanceCard(
           totalYield: total,
-          avgYield: total / items.length,
+          avgYield: items.isNotEmpty ? total / items.length : 0,
           bestCow: bestCow,
           bestYield: bestYield,
           worstCow: worstCow,
           worstYield: worstYield,
           cowCount: items.length,
         ),
-        const SizedBox(height: 12),
-        const Text(
-          'Ranked Performance (Best → Lowest Daily Yield)',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
-        ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 10),
+        _buildSortToggle(),
+        const SizedBox(height: 4),
         Expanded(
           child: ListView.separated(
             itemCount: items.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (BuildContext context, int i) {
               final DailyReportItem item = items[i];
+              final bool isBest = item.cattleId == bestCow && rawItems.length > 1;
+              final bool isWorst = item.cattleId == worstCow && rawItems.length > 1;
               return _buildRankItem(
-                rank: i + 1,
+                rank: _sortAscending ? (items.length - i) : (i + 1),
                 cattleId: item.cattleId,
                 totalYield: item.totalYield,
                 detailText: 'Morning: ${item.morningYield.toStringAsFixed(1)} L  •  Evening: ${item.eveningYield.toStringAsFixed(1)} L',
-                isBest: i == 0,
-                isWorst: i == items.length - 1 && items.length > 1,
+                isBest: isBest,
+                isWorst: isWorst,
               );
             },
           ),
@@ -345,6 +375,10 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
       return _emptyReportState();
     }
 
+    final List<CowPerformanceItem> items = _sortAscending
+        ? summary.rankedCows.reversed.toList()
+        : summary.rankedCows;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -356,28 +390,27 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           worstCow: summary.lowestProducingCow,
           worstYield: summary.lowestProducingCowYield,
           cowCount: summary.activeMilkingCowsCount,
-          periodLabel: 'Weekly Total\n($startStr - $endStr)',
+          periodLabel: '$startStr – $endStr',
           avgLabel: 'Daily Avg',
         ),
-        const SizedBox(height: 12),
-        const Text(
-          'Ranked Performance (Best → Lowest Weekly Total)',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
-        ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 10),
+        _buildSortToggle(),
+        const SizedBox(height: 4),
         Expanded(
           child: ListView.separated(
-            itemCount: summary.rankedCows.length,
+            itemCount: items.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (BuildContext context, int i) {
-              final CowPerformanceItem item = summary.rankedCows[i];
+              final CowPerformanceItem item = items[i];
+              final bool isBest = item.cattleId == summary.bestProducingCow && items.length > 1;
+              final bool isWorst = item.cattleId == summary.lowestProducingCow && items.length > 1;
               return _buildRankItem(
-                rank: i + 1,
+                rank: _sortAscending ? (items.length - i) : (i + 1),
                 cattleId: item.cattleId,
                 totalYield: item.totalYield,
                 detailText: 'Recorded: ${item.daysRecorded}/7 days  •  Avg: ${item.averageDailyYield.toStringAsFixed(1)} L/day',
-                isBest: i == 0,
-                isWorst: i == summary.rankedCows.length - 1 && summary.rankedCows.length > 1,
+                isBest: isBest,
+                isWorst: isWorst,
               );
             },
           ),
@@ -393,6 +426,10 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
       return _emptyReportState();
     }
 
+    final List<CowPerformanceItem> items = _sortAscending
+        ? summary.rankedCows.reversed.toList()
+        : summary.rankedCows;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -404,28 +441,27 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           worstCow: summary.lowestProducingCow,
           worstYield: summary.lowestProducingCowYield,
           cowCount: summary.activeMilkingCowsCount,
-          periodLabel: 'Monthly Total',
+          periodLabel: '$monthName $_selectedYear',
           avgLabel: 'Daily Avg',
         ),
-        const SizedBox(height: 12),
-        const Text(
-          'Ranked Performance (Best → Lowest Monthly Total)',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
-        ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 10),
+        _buildSortToggle(),
+        const SizedBox(height: 4),
         Expanded(
           child: ListView.separated(
-            itemCount: summary.rankedCows.length,
+            itemCount: items.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (BuildContext context, int i) {
-              final CowPerformanceItem item = summary.rankedCows[i];
+              final CowPerformanceItem item = items[i];
+              final bool isBest = item.cattleId == summary.bestProducingCow && items.length > 1;
+              final bool isWorst = item.cattleId == summary.lowestProducingCow && items.length > 1;
               return _buildRankItem(
-                rank: i + 1,
+                rank: _sortAscending ? (items.length - i) : (i + 1),
                 cattleId: item.cattleId,
                 totalYield: item.totalYield,
                 detailText: 'Recorded: ${item.daysRecorded} entries  •  Avg: ${item.averageDailyYield.toStringAsFixed(1)} L/day',
-                isBest: i == 0,
-                isWorst: i == summary.rankedCows.length - 1 && summary.rankedCows.length > 1,
+                isBest: isBest,
+                isWorst: isWorst,
               );
             },
           ),
@@ -463,7 +499,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
                   child: _summaryTile(periodLabel, '${totalYield.toStringAsFixed(1)} L'),
                 ),
                 Expanded(
-                  child: _summaryTile(avgLabel, '${avgYield.toStringAsFixed(1)} L/cow'),
+                  child: _summaryTile(avgLabel, '${avgYield.toStringAsFixed(1)} L/day'),
                 ),
                 Expanded(
                   child: _summaryTile('Total Herd Size', '$cowCount cows'),
@@ -485,9 +521,9 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            const Text('Best Cow', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+                            const Text('Best', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
                             Text(
-                              bestCow != null ? 'Cow #$bestCow (${bestYield.toStringAsFixed(1)} L)' : 'N/A',
+                              bestCow != null ? '#$bestCow  •  ${bestYield.toStringAsFixed(1)} L' : 'N/A',
                               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
                             ),
                           ],
@@ -506,9 +542,9 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            const Text('Worst Cow', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+                            const Text('Worst', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
                             Text(
-                              worstCow != null ? 'Cow #$worstCow (${worstYield.toStringAsFixed(1)} L)' : 'N/A',
+                              worstCow != null ? '#$worstCow  •  ${worstYield.toStringAsFixed(1)} L' : 'N/A',
                               style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red.shade600),
                             ),
                           ],
@@ -578,7 +614,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'Cow #$cattleId',
+                  '#$cattleId',
                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                 ),
                 Text(
@@ -598,6 +634,56 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSortToggle() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: <Widget>[
+        Text(
+          'Order:',
+          style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(width: 6),
+        GestureDetector(
+          onTap: () => setState(() => _sortAscending = !_sortAscending),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: _sortAscending
+                  ? const Color(0xFFFFEBEE)
+                  : const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: _sortAscending
+                    ? const Color(0xFFC62828).withValues(alpha: 0.4)
+                    : const Color(0xFF2D6A4F).withValues(alpha: 0.4),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(
+                  _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                  size: 13,
+                  color: _sortAscending ? const Color(0xFFC62828) : const Color(0xFF2D6A4F),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _sortAscending ? 'Worst → Best' : 'Best → Worst',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: _sortAscending ? const Color(0xFFC62828) : const Color(0xFF2D6A4F),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

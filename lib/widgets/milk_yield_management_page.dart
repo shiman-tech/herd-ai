@@ -258,7 +258,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                       Flexible(
                         child: Text(
                           summary.topProducerToday != null
-                              ? 'Top: Cow #${summary.topProducerToday} (${summary.topProducerYield.toStringAsFixed(1)} L)'
+                              ? 'Top: #${summary.topProducerToday} (${summary.topProducerYield.toStringAsFixed(1)} L)'
                               : 'Top Producer: None yet',
                           style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w500),
                           overflow: TextOverflow.ellipsis,
@@ -541,7 +541,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                         ),
                         title: Row(
                           children: <Widget>[
-                            Text('Cow #${record.cattleId}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                            Text('#${record.cattleId}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                             const Spacer(),
                             Text('${record.totalYield.toStringAsFixed(1)} L', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF2D6A4F))),
                           ],
