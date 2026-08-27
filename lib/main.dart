@@ -13,10 +13,12 @@ import 'services/app_lock_controller.dart';
 import 'services/embedding_database.dart';
 import 'services/tflite_breed_service.dart';
 import 'services/tflite_embedding_service.dart';
+import 'services/milk_analytics_service.dart';
 import 'widgets/auth_gate.dart';
 import 'widgets/cattle_detail_page.dart';
 import 'widgets/cattle_filter_sheet.dart';
 import 'widgets/milk_yield_management_page.dart';
+import 'widgets/notifications_sheet.dart';
 
 import 'l10n/app_localizations.dart';
 import 'services/app_language_service.dart';
@@ -1352,6 +1354,18 @@ class _HerdHomePageState extends State<HerdHomePage> {
     );
   }
 
+  void _showNotificationsSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) => NotificationsSheet(
+        database: _database,
+        onOpenCattleDetail: _openCattleDetail,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -1373,12 +1387,55 @@ class _HerdHomePageState extends State<HerdHomePage> {
                 : (_currentTab == 1 ? localizations.yourHerd : 'Milk & Lactation'),
           ),
           actions: <Widget>[
-            if (_currentTab == 0)
-              IconButton(
-                onPressed: _showSettingsSheet,
-                icon: const Icon(Icons.settings_outlined),
-                tooltip: localizations.settings,
-              ),
+            Builder(
+              builder: (BuildContext context) {
+                final List<MilkAlert> alerts = MilkAnalyticsService(database: _database).generateSmartAlerts();
+                final int alertCount = alerts.length;
+                return Stack(
+                  alignment: Alignment.center,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: _showNotificationsSheet,
+                      icon: Icon(
+                        alertCount > 0 ? Icons.notifications_active : Icons.notifications_outlined,
+                        color: alertCount > 0 ? const Color(0xFFC62828) : null,
+                      ),
+                      tooltip: 'Notifications',
+                    ),
+                    if (alertCount > 0)
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFC62828),
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '$alertCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+            IconButton(
+              onPressed: _showSettingsSheet,
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: localizations.settings,
+            ),
           ],
         ),
         body: SafeArea(
