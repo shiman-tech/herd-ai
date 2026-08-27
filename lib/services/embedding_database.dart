@@ -10,6 +10,7 @@ import '../models/cattle_image.dart';
 import '../models/cattle_record.dart';
 import '../models/embedding_reference.dart';
 import '../models/identification_result.dart';
+import '../models/milk_record.dart';
 import '../utils/math_utils.dart';
 import 'tflite_embedding_service.dart';
 
@@ -17,7 +18,7 @@ class EmbeddingDatabase {
   static const String _dbFileName = 'herd_ai.db';
   static const String _legacyJsonFileName = 'cattle_records.json';
   static const String _imageDirName = 'cattle_images';
-  static const int _dbVersion = 7;
+  static const int _dbVersion = 8;
 
   /// Global singleton instance
   static final EmbeddingDatabase instance = EmbeddingDatabase();
@@ -28,6 +29,7 @@ class EmbeddingDatabase {
       IdentificationResult.borderlineThreshold;
 
   final Map<String, CattleRecord> _recordsByCattle = <String, CattleRecord>{};
+  final List<MilkRecord> _milkRecords = <MilkRecord>[];
 
   final double similarityThreshold;
 
@@ -113,6 +115,28 @@ class EmbeddingDatabase {
           await db.execute('ALTER TABLE cattle ADD COLUMN health_status TEXT');
           await db.execute('ALTER TABLE cattle ADD COLUMN reproductive_status TEXT');
         }
+        if (oldVersion < 8) {
+          await db.execute('ALTER TABLE cattle ADD COLUMN is_milking INTEGER DEFAULT 0');
+          await db.execute('ALTER TABLE cattle ADD COLUMN is_pregnant INTEGER DEFAULT 0');
+          await db.execute('ALTER TABLE cattle ADD COLUMN calving_date TEXT');
+          await db.execute('ALTER TABLE cattle ADD COLUMN insemination_date TEXT');
+          await db.execute('ALTER TABLE cattle ADD COLUMN dry_off_date TEXT');
+          await db.execute('ALTER TABLE cattle ADD COLUMN expected_daily_yield REAL');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS milk_records (
+              id TEXT PRIMARY KEY,
+              cattle_id TEXT NOT NULL,
+              date TEXT NOT NULL,
+              morning_yield REAL NOT NULL DEFAULT 0.0,
+              evening_yield REAL NOT NULL DEFAULT 0.0,
+              total_yield REAL NOT NULL DEFAULT 0.0,
+              notes TEXT,
+              created_at TEXT NOT NULL,
+              FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE,
+              UNIQUE(cattle_id, date)
+            )
+          ''');
+        }
       },
     );
   }
@@ -133,7 +157,27 @@ class EmbeddingDatabase {
         date_of_birth TEXT,
         life_stage TEXT,
         health_status TEXT,
-        reproductive_status TEXT
+        reproductive_status TEXT,
+        is_milking INTEGER DEFAULT 0,
+        is_pregnant INTEGER DEFAULT 0,
+        calving_date TEXT,
+        insemination_date TEXT,
+        dry_off_date TEXT,
+        expected_daily_yield REAL
+      )
+    ''');
+    batch.execute('''
+      CREATE TABLE IF NOT EXISTS milk_records (
+        id TEXT PRIMARY KEY,
+        cattle_id TEXT NOT NULL,
+        date TEXT NOT NULL,
+        morning_yield REAL NOT NULL DEFAULT 0.0,
+        evening_yield REAL NOT NULL DEFAULT 0.0,
+        total_yield REAL NOT NULL DEFAULT 0.0,
+        notes TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE,
+        UNIQUE(cattle_id, date)
       )
     ''');
     batch.execute('''
@@ -347,8 +391,23 @@ class EmbeddingDatabase {
         lifeStage: row['life_stage'] as String?,
         healthStatus: row['health_status'] as String?,
         reproductiveStatus: row['reproductive_status'] as String?,
+        isMilking: ((row['is_milking'] as int?) ?? 0) == 1,
+        isPregnant: ((row['is_pregnant'] as int?) ?? 0) == 1,
+        calvingDate: DateTime.tryParse(row['calving_date'] as String? ?? ''),
+        inseminationDate: DateTime.tryParse(row['insemination_date'] as String? ?? ''),
+        dryOffDate: DateTime.tryParse(row['dry_off_date'] as String? ?? ''),
+        expectedDailyYield: (row['expected_daily_yield'] as num?)?.toDouble(),
       );
       _recordsByCattle[cattleId] = record;
+    }
+
+    _milkRecords.clear();
+    final List<Map<String, Object?>> milkRows = await db.query(
+      'milk_records',
+      orderBy: 'date DESC, created_at DESC',
+    );
+    for (final Map<String, Object?> row in milkRows) {
+      _milkRecords.add(MilkRecord.fromMap(row));
     }
 
     final List<Map<String, Object?>> healthRows = await db.query(
@@ -1093,6 +1152,12 @@ class EmbeddingDatabase {
     String? lifeStage,
     String? healthStatus,
     String? reproductiveStatus,
+    bool? isMilking,
+    bool? isPregnant,
+    DateTime? calvingDate,
+    DateTime? inseminationDate,
+    DateTime? dryOffDate,
+    double? expectedDailyYield,
   }) async {
     final CattleRecord? existing = _recordsByCattle[oldCattleId];
     if (existing == null) {
@@ -1118,10 +1183,16 @@ class EmbeddingDatabase {
       confirmedBreed: existing.confirmedBreed,
       breedConfirmedByUser: existing.breedConfirmedByUser,
       sex: sex ?? existing.sex,
-      dateOfBirth: dateOfBirth,
-      lifeStage: lifeStage,
-      healthStatus: healthStatus,
-      reproductiveStatus: reproductiveStatus,
+      dateOfBirth: dateOfBirth ?? existing.dateOfBirth,
+      lifeStage: lifeStage ?? existing.lifeStage,
+      healthStatus: healthStatus ?? existing.healthStatus,
+      reproductiveStatus: reproductiveStatus ?? existing.reproductiveStatus,
+      isMilking: isMilking ?? existing.isMilking,
+      isPregnant: isPregnant ?? existing.isPregnant,
+      calvingDate: calvingDate ?? existing.calvingDate,
+      inseminationDate: inseminationDate ?? existing.inseminationDate,
+      dryOffDate: dryOffDate ?? existing.dryOffDate,
+      expectedDailyYield: expectedDailyYield ?? existing.expectedDailyYield,
     );
 
     final Database db = _db!;
@@ -1144,6 +1215,12 @@ class EmbeddingDatabase {
           'life_stage': updated.lifeStage,
           'health_status': updated.healthStatus,
           'reproductive_status': updated.reproductiveStatus,
+          'is_milking': updated.isMilking ? 1 : 0,
+          'is_pregnant': updated.isPregnant ? 1 : 0,
+          'calving_date': updated.calvingDate?.toIso8601String(),
+          'insemination_date': updated.inseminationDate?.toIso8601String(),
+          'dry_off_date': updated.dryOffDate?.toIso8601String(),
+          'expected_daily_yield': updated.expectedDailyYield,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -1155,6 +1232,7 @@ class EmbeddingDatabase {
         'vaccinations',
         'notes',
         'images',
+        'milk_records',
       ]) {
         await txn.update(
           table,
@@ -1176,8 +1254,80 @@ class EmbeddingDatabase {
 
     if (oldCattleId != trimmedId) {
       _recordsByCattle.remove(oldCattleId);
+      for (int i = 0; i < _milkRecords.length; i++) {
+        if (_milkRecords[i].cattleId == oldCattleId) {
+          _milkRecords[i] = _milkRecords[i].copyWith(cattleId: trimmedId);
+        }
+      }
     }
     _recordsByCattle[trimmedId] = updated;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Milk & Lactation Records CRUD
+  // ---------------------------------------------------------------------------
+
+  List<MilkRecord> getAllMilkRecords() {
+    return List<MilkRecord>.unmodifiable(_milkRecords);
+  }
+
+  List<MilkRecord> getMilkRecordsForCattle(String cattleId) {
+    return _milkRecords.where((MilkRecord r) => r.cattleId == cattleId).toList();
+  }
+
+  MilkRecord? getMilkRecord(String cattleId, DateTime date) {
+    final DateTime targetDate = DateTime(date.year, date.month, date.day);
+    for (final MilkRecord r in _milkRecords) {
+      final DateTime rDate = DateTime(r.date.year, r.date.month, r.date.day);
+      if (r.cattleId == cattleId && rDate.isAtSameMomentAs(targetDate)) {
+        return r;
+      }
+    }
+    return null;
+  }
+
+  Future<void> saveMilkRecord(MilkRecord record) async {
+    final Database db = _db!;
+    final DateTime targetDate = DateTime(record.date.year, record.date.month, record.date.day);
+    final String dateStr = targetDate.toIso8601String();
+
+    // Check if record exists for same cow on same date
+    final int existingIndex = _milkRecords.indexWhere((MilkRecord r) {
+      final DateTime rDate = DateTime(r.date.year, r.date.month, r.date.day);
+      return r.cattleId == record.cattleId && rDate.isAtSameMomentAs(targetDate);
+    });
+
+    await db.insert(
+      'milk_records',
+      <String, Object?>{
+        'id': record.id,
+        'cattle_id': record.cattleId,
+        'date': dateStr,
+        'morning_yield': record.morningYield,
+        'evening_yield': record.eveningYield,
+        'total_yield': record.totalYield,
+        'notes': record.notes,
+        'created_at': record.createdAt.toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    if (existingIndex >= 0) {
+      _milkRecords[existingIndex] = record;
+    } else {
+      _milkRecords.insert(0, record);
+    }
+    _milkRecords.sort((MilkRecord a, MilkRecord b) => b.date.compareTo(a.date));
+  }
+
+  Future<void> deleteMilkRecord(String recordId) async {
+    final Database db = _db!;
+    _milkRecords.removeWhere((MilkRecord r) => r.id == recordId);
+    await db.delete(
+      'milk_records',
+      where: 'id = ?',
+      whereArgs: <Object?>[recordId],
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -1251,6 +1401,7 @@ class EmbeddingDatabase {
 
   Future<void> deleteCattle(String cattleId) async {
     _recordsByCattle.remove(cattleId);
+    _milkRecords.removeWhere((MilkRecord r) => r.cattleId == cattleId);
 
     final Database db = _db!;
     await db.transaction((Transaction txn) async {
@@ -1260,6 +1411,7 @@ class EmbeddingDatabase {
         'vaccinations',
         'notes',
         'images',
+        'milk_records',
       ]) {
         await txn.delete(table, where: 'cattle_id = ?', whereArgs: <Object?>[cattleId]);
       }
