@@ -16,6 +16,7 @@ import 'services/tflite_embedding_service.dart';
 import 'widgets/auth_gate.dart';
 import 'widgets/cattle_detail_page.dart';
 import 'widgets/cattle_filter_sheet.dart';
+import 'widgets/milk_yield_management_page.dart';
 
 import 'l10n/app_localizations.dart';
 import 'services/app_language_service.dart';
@@ -745,7 +746,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
   }
 
   Future<void> _handleBackNavigation() async {
-    if (_currentTab == 1) {
+    if (_currentTab != 0) {
       setState(() {
         _currentTab = 0;
       });
@@ -1332,6 +1333,13 @@ class _HerdHomePageState extends State<HerdHomePage> {
                                 ),
                               ],
                             ),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                '${cattle.effectiveBreed} • ${cattle.ageDisplay}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
                             trailing: const Icon(Icons.chevron_right),
                           ),
                         );
@@ -1359,7 +1367,11 @@ class _HerdHomePageState extends State<HerdHomePage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_currentTab == 0 ? localizations.identifyCattle : localizations.yourHerd),
+          title: Text(
+            _currentTab == 0
+                ? localizations.identifyCattle
+                : (_currentTab == 1 ? localizations.yourHerd : 'Milk & Lactation'),
+          ),
           actions: <Widget>[
             if (_currentTab == 0)
               IconButton(
@@ -1375,6 +1387,10 @@ class _HerdHomePageState extends State<HerdHomePage> {
             children: <Widget>[
               _buildIdentifyTab(theme),
               _buildMyCattlesTab(theme),
+              MilkYieldManagementPage(
+                database: _database,
+                onOpenCattleDetail: _openCattleDetail,
+              ),
             ],
           ),
         ),
@@ -1390,6 +1406,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
           destinations: <NavigationDestination>[
             NavigationDestination(icon: const Icon(Icons.search), label: localizations.identifyTab),
             NavigationDestination(icon: const Icon(Icons.list_alt), label: localizations.cattleTab),
+            const NavigationDestination(icon: Icon(Icons.water_drop_outlined), selectedIcon: Icon(Icons.water_drop), label: 'Milk Yield'),
           ],
         ),
       ),
