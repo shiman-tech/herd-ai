@@ -337,6 +337,14 @@ class MilkAnalyticsService {
       }
     }
 
+    // Sort alerts chronologically (most recent date first, null dates at the end)
+    alerts.sort((MilkAlert a, MilkAlert b) {
+      if (a.date == null && b.date == null) return 0;
+      if (a.date == null) return 1;
+      if (b.date == null) return -1;
+      return b.date!.compareTo(a.date!);
+    });
+
     return alerts;
   }
 
