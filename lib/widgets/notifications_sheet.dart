@@ -19,6 +19,7 @@ class NotificationsSheet extends StatefulWidget {
 
 class _NotificationsSheetState extends State<NotificationsSheet> {
   late MilkAnalyticsService _analyticsService;
+  final Set<String> _dismissedIds = <String>{};
 
   @override
   void initState() {
@@ -30,6 +31,20 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
     if (mounted) {
       setState(() {});
     }
+  }
+
+  void _dismissAlert(String alertId) {
+    setState(() {
+      _dismissedIds.add(alertId);
+    });
+  }
+
+  void _clearAll(List<MilkAlert> alerts) {
+    setState(() {
+      for (final MilkAlert a in alerts) {
+        _dismissedIds.add(a.id);
+      }
+    });
   }
 
   Future<void> _handleAlertAction(MilkAlert alert) async {
@@ -55,7 +70,10 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final List<MilkAlert> alerts = _analyticsService.generateSmartAlerts();
+    final List<MilkAlert> allAlerts = _analyticsService.generateSmartAlerts();
+    final List<MilkAlert> alerts = allAlerts
+        .where((MilkAlert a) => !_dismissedIds.contains(a.id))
+        .toList();
 
     return Container(
       constraints: BoxConstraints(
@@ -86,29 +104,34 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(
-                children: <Widget>[
-                  const Icon(Icons.notifications_active_outlined, color: Color(0xFF2D6A4F)),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Notifications & Smart Alerts',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-                  ),
-                  if (alerts.isNotEmpty) ...<Widget>[
+              Expanded(
+                child: Row(
+                  children: <Widget>[
+                    const Icon(Icons.notifications_active_outlined, color: Color(0xFF2D6A4F)),
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFC62828),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '${alerts.length}',
-                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                    Flexible(
+                      child: const Text(
+                        'Notifications & Smart Alerts',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    if (alerts.isNotEmpty) ...<Widget>[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC62828),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${alerts.length}',
+                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.grey),
@@ -116,7 +139,28 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+
+          // Clear All Button
+          if (alerts.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => _clearAll(alerts),
+                  icon: Icon(Icons.clear_all, size: 16, color: Colors.grey.shade700),
+                  label: Text(
+                    'Clear All',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ),
+            ),
 
           Expanded(
             child: alerts.isEmpty
@@ -132,7 +176,7 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'No pending notifications or missing milk records.',
+                          'No pending notifications or alerts.',
                           style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                         ),
                       ],
@@ -175,11 +219,14 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
         break;
     }
 
-    String actionLabel = 'Take Action';
+    String actionLabel = 'View';
     if (alert.type == 'missing_entry') {
       actionLabel = 'Record Milk';
     } else if (alert.type == 'calving_overdue' || alert.type == 'calving_reminder') {
       actionLabel = 'Log Calving';
+    } else if (alert.type == 'vaccination_overdue' || alert.type == 'vaccination_due') {
+      actionLabel = 'Vaccinate';
+      iconData = Icons.vaccines;
     }
 
     return Card(
@@ -190,40 +237,61 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
         side: BorderSide(color: borderColor),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(12, 6, 4, 12),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Icon(iconData, color: borderColor.withValues(alpha: 0.9), size: 24),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    alert.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+            // Dismiss button row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: IconButton(
+                    onPressed: () => _dismissAlert(alert.id),
+                    icon: Icon(Icons.close, size: 14, color: Colors.grey.shade600),
+                    padding: EdgeInsets.zero,
+                    tooltip: 'Dismiss',
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    alert.message,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade800, height: 1.3),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: () => _handleAlertAction(alert),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2D6A4F),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: Text(actionLabel, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Icon(iconData, color: borderColor.withValues(alpha: 0.9), size: 24),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        alert.title,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        alert.message,
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade800, height: 1.3),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => _handleAlertAction(alert),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2D6A4F),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: Text(actionLabel, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                ),
+              ],
             ),
           ],
         ),
