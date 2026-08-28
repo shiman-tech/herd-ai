@@ -216,6 +216,22 @@ class MilkAnalyticsService {
     );
   }
 
+  static final Set<String> _dismissedAlertIds = <String>{};
+
+  static void dismissAlert(String alertId) {
+    _dismissedAlertIds.add(alertId);
+  }
+
+  static void clearAllAlerts(List<MilkAlert> alerts) {
+    for (final MilkAlert alert in alerts) {
+      _dismissedAlertIds.add(alert.id);
+    }
+  }
+
+  static void resetDismissedAlerts() {
+    _dismissedAlertIds.clear();
+  }
+
   /// Generates real-time Smart Alerts
   List<MilkAlert> generateSmartAlerts() {
     final List<MilkAlert> alerts = <MilkAlert>[];
@@ -391,7 +407,7 @@ class MilkAnalyticsService {
       return b.date!.compareTo(a.date!);
     });
 
-    return alerts;
+    return alerts.where((MilkAlert a) => !_dismissedAlertIds.contains(a.id)).toList();
   }
 
   /// Daily Production Trend: Daily totals for the last N days (default 14 days)
