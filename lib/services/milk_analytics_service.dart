@@ -1,3 +1,5 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/cattle_record.dart';
 import '../models/milk_record.dart';
 import 'embedding_database.dart';
@@ -217,19 +219,36 @@ class MilkAnalyticsService {
   }
 
   static final Set<String> _dismissedAlertIds = <String>{};
+  static const String _dismissedAlertsKey = 'dismissed_alerts';
+
+  static Future<void> init() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final List<String>? saved = prefs.getStringList(_dismissedAlertsKey);
+    if (saved != null) {
+      _dismissedAlertIds.addAll(saved);
+    }
+  }
+
+  static Future<void> _saveDismissedAlerts() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_dismissedAlertsKey, _dismissedAlertIds.toList());
+  }
 
   static void dismissAlert(String alertId) {
     _dismissedAlertIds.add(alertId);
+    _saveDismissedAlerts();
   }
 
   static void clearAllAlerts(List<MilkAlert> alerts) {
     for (final MilkAlert alert in alerts) {
       _dismissedAlertIds.add(alert.id);
     }
+    _saveDismissedAlerts();
   }
 
   static void resetDismissedAlerts() {
     _dismissedAlertIds.clear();
+    _saveDismissedAlerts();
   }
 
   /// Generates real-time Smart Alerts

@@ -34,6 +34,7 @@ void main() async {
   await Future.wait(<Future<void>>[
     AppLanguageService.instance.loadLocale(),
     EmbeddingDatabase.instance.load(),
+    MilkAnalyticsService.init(),
   ]);
   runApp(const HerdAiApp());
 }
