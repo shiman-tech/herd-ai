@@ -23,11 +23,25 @@ subprojects {
         compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
     }
 
-    plugins.withId("com.android.library") {
-        extensions.configure<LibraryExtension>("android") {
+    afterEvaluate {
+        extensions.findByType<LibraryExtension>()?.apply {
             compileOptions {
                 sourceCompatibility = JavaVersion.VERSION_17
                 targetCompatibility = JavaVersion.VERSION_17
+            }
+        }
+        extensions.findByName("android")?.let { android ->
+            if (android is com.android.build.gradle.AppExtension) {
+                android.compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
+                }
+            }
+            if (android is LibraryExtension) {
+                android.compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
+                }
             }
         }
     }
