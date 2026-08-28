@@ -1362,6 +1362,9 @@ class _HerdHomePageState extends State<HerdHomePage> {
       builder: (BuildContext context) => NotificationsSheet(
         database: _database,
         onOpenCattleDetail: _openCattleDetail,
+        onAlertsChanged: () {
+          setState(() {});
+        },
       ),
     );
   }

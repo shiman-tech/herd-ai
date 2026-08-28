@@ -8,10 +8,12 @@ class NotificationsSheet extends StatefulWidget {
     super.key,
     required this.database,
     this.onOpenCattleDetail,
+    this.onAlertsChanged,
   });
 
   final EmbeddingDatabase database;
   final void Function(String cattleId)? onOpenCattleDetail;
+  final VoidCallback? onAlertsChanged;
 
   @override
   State<NotificationsSheet> createState() => _NotificationsSheetState();
@@ -29,13 +31,15 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
   void _refresh() {
     if (mounted) {
       setState(() {});
+      if (widget.onAlertsChanged != null) {
+        widget.onAlertsChanged!();
+      }
     }
   }
 
   void _clearAll(List<MilkAlert> alerts) {
-    setState(() {
-      MilkAnalyticsService.clearAllAlerts(alerts);
-    });
+    MilkAnalyticsService.clearAllAlerts(alerts);
+    _refresh();
   }
 
   Future<void> _handleAlertAction(MilkAlert alert) async {
@@ -262,9 +266,8 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
             const SizedBox(width: 8),
             InkWell(
               onTap: () {
-                setState(() {
-                  MilkAnalyticsService.dismissAlert(alert.id);
-                });
+                MilkAnalyticsService.dismissAlert(alert.id);
+                _refresh();
               },
               child: Padding(
                 padding: const EdgeInsets.all(4),
