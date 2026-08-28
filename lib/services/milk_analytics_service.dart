@@ -227,10 +227,24 @@ class MilkAnalyticsService {
       final List<MilkRecord> records = _database.getMilkRecordsForCattle(cattle.id)
         ..sort((MilkRecord a, MilkRecord b) => b.date.compareTo(a.date));
 
-      // 1. Missing Entry Alerts (Milking cow with missing records for past 7 days)
-      if (cattle.isMilking) {
+      // 1. Missing Entry Alerts — only from the day of the FIRST milk record
+      if (cattle.isMilking && records.isNotEmpty) {
+        // The earliest recorded date is the start of milking tracking
+        final DateTime earliestRecord = records.reduce(
+          (MilkRecord a, MilkRecord b) => a.date.isBefore(b.date) ? a : b,
+        ).date;
+        final DateTime milkingStartDate = DateTime(
+          earliestRecord.year, earliestRecord.month, earliestRecord.day,
+        );
+
         for (int dayOffset = 0; dayOffset < 7; dayOffset++) {
           final DateTime checkDate = today.subtract(Duration(days: dayOffset));
+
+          // Don't alert for days before milking started
+          if (checkDate.isBefore(milkingStartDate)) {
+            break;
+          }
+
           final bool hasRecord = records.any((MilkRecord r) {
             final DateTime d = DateTime(r.date.year, r.date.month, r.date.day);
             return d.isAtSameMomentAs(checkDate);
@@ -262,7 +276,6 @@ class MilkAnalyticsService {
         
         // Only evaluate if latest record was recent (within last 3 days)
         if (today.difference(latestDate).inDays <= 3) {
-          // Calculate 30-day average excluding the latest record
           double sumPast = 0.0;
           int countPast = 0;
           final DateTime thirtyDaysBeforeLatest = latestDate.subtract(const Duration(days: 30));
@@ -293,7 +306,7 @@ class MilkAnalyticsService {
         }
       }
 
-      // 3. Dry-Off Reminder (Pregnant cow, target dry-off within 60 days of expected calving)
+      // 3. Dry-Off Reminder
       if (cattle.isPregnant && cattle.expectedCalvingDate != null) {
         final DateTime expectedCalving = cattle.expectedCalvingDate!;
         final int daysToCalving = expectedCalving.difference(today).inDays;
@@ -312,7 +325,6 @@ class MilkAnalyticsService {
 
         // 4. Calving Reminder & Overdue Alert
         if (daysToCalving < 0) {
-          // Expected calving date has passed!
           final int daysOverdue = daysToCalving.abs();
           alerts.add(MilkAlert(
             id: 'calving_overdue_${cattle.id}',
@@ -335,9 +347,43 @@ class MilkAnalyticsService {
           ));
         }
       }
+
+      // 5. Vaccination Overdue / Due Soon Alerts
+      for (final dynamic vax in cattle.vaccinations) {
+        final DateTime? nextDue = vax.nextDueDate as DateTime?;
+        if (nextDue == null) continue;
+        final DateTime dueDate = DateTime(nextDue.year, nextDue.month, nextDue.day);
+        final int daysUntilDue = dueDate.difference(today).inDays;
+        final String vacName = (vax.vaccineName as String?) ?? 'Vaccine';
+
+        if (daysUntilDue < 0) {
+          // Overdue
+          final int overdueDays = daysUntilDue.abs();
+          alerts.add(MilkAlert(
+            id: 'vax_overdue_${cattle.id}_${vacName.replaceAll(' ', '_')}',
+            cattleId: cattle.id,
+            title: 'Vaccination Overdue',
+            message: '#${cattle.id} — $vacName was due $overdueDays day${overdueDays == 1 ? '' : 's'} ago (${dueDate.day}/${dueDate.month}/${dueDate.year}).',
+            severity: AlertSeverity.danger,
+            type: 'vaccination_overdue',
+            date: dueDate,
+          ));
+        } else if (daysUntilDue <= 30) {
+          // Due Soon
+          alerts.add(MilkAlert(
+            id: 'vax_due_${cattle.id}_${vacName.replaceAll(' ', '_')}',
+            cattleId: cattle.id,
+            title: 'Vaccination Due Soon',
+            message: '#${cattle.id} — $vacName due in $daysUntilDue day${daysUntilDue == 1 ? '' : 's'} (${dueDate.day}/${dueDate.month}/${dueDate.year}).',
+            severity: AlertSeverity.warning,
+            type: 'vaccination_due',
+            date: dueDate,
+          ));
+        }
+      }
     }
 
-    // Sort alerts chronologically (most recent date first, null dates at the end)
+    // Sort chronologically (most recent / most urgent first)
     alerts.sort((MilkAlert a, MilkAlert b) {
       if (a.date == null && b.date == null) return 0;
       if (a.date == null) return 1;
