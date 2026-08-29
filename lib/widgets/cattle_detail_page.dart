@@ -14,6 +14,7 @@ import '../services/embedding_database.dart';
 import '../services/milk_analytics_service.dart';
 import '../services/tflite_breed_service.dart';
 import '../services/tflite_embedding_service.dart';
+import '../utils/localized_labels.dart';
 import '../utils/math_utils.dart';
 import 'milk_chart_widgets.dart';
 import 'milk_entry_dialog.dart';
@@ -128,6 +129,8 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
       return;
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     final TextEditingController idController = TextEditingController(
       text: record.id,
     );
@@ -156,7 +159,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return AlertDialog(
-              title: const Text('Edit Cattle Details'),
+              title: Text(l10n.editCattleDetails),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -175,13 +178,13 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     DropdownButtonFormField<String>(
                       isExpanded: true,
                       initialValue: selectedSex,
-                      decoration: const InputDecoration(
-                        labelText: 'Sex',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l10n.sexLabel,
+                        border: const OutlineInputBorder(),
                       ),
-                      items: const <DropdownMenuItem<String>>[
-                        DropdownMenuItem(value: 'Female', child: Text('Female')),
-                        DropdownMenuItem(value: 'Male', child: Text('Male')),
+                      items: <DropdownMenuItem<String>>[
+                        DropdownMenuItem(value: 'Female', child: Text(LocalizedLabels.sex(context, 'Female'))),
+                        DropdownMenuItem(value: 'Male', child: Text(LocalizedLabels.sex(context, 'Male'))),
                       ],
                       onChanged: (String? val) {
                         if (val != null) {
@@ -214,7 +217,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       },
                       child: InputDecorator(
                         decoration: InputDecoration(
-                          labelText: 'Date of Birth (Age)',
+                          labelText: l10n.dateOfBirthAge,
                           border: const OutlineInputBorder(),
                           suffixIcon: selectedDob != null
                               ? IconButton(
@@ -230,22 +233,9 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                         child: Builder(
                           builder: (BuildContext context) {
                             if (selectedDob == null) {
-                              return const Text('Not set', style: TextStyle(color: Colors.grey));
+                              return Text(l10n.notSet, style: const TextStyle(color: Colors.grey));
                             }
-                            final DateTime now = DateTime.now();
-                            int months = (now.year - selectedDob!.year) * 12 + (now.month - selectedDob!.month);
-                            if (now.day < selectedDob!.day) months--;
-                            months = months >= 0 ? months : 0;
-                            final int years = months ~/ 12;
-                            final int remMonths = months % 12;
-                            String ageStr;
-                            if (years > 0 && remMonths > 0) {
-                              ageStr = '$years yr${years > 1 ? 's' : ''} $remMonths mo${remMonths > 1 ? 's' : ''}';
-                            } else if (years > 0) {
-                              ageStr = '$years yr${years > 1 ? 's' : ''}';
-                            } else {
-                              ageStr = '$remMonths mo${remMonths > 1 ? 's' : ''}';
-                            }
+                            final String ageStr = LocalizedLabels.ageDisplay(context, selectedDob);
                             return Text(
                               '${_formatDate(selectedDob!)}  ($ageStr)',
                               style: const TextStyle(color: Colors.black87),
@@ -260,15 +250,15 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     DropdownButtonFormField<String>(
                       isExpanded: true,
                       initialValue: selectedLifeStage,
-                      decoration: const InputDecoration(
-                        labelText: 'Life Stage',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l10n.lifeStageLabel,
+                        border: const OutlineInputBorder(),
                       ),
-                      items: const <DropdownMenuItem<String>>[
-                        DropdownMenuItem(value: 'Unknown', child: Text('Unknown')),
-                        DropdownMenuItem(value: 'Calf', child: Text('Calf')),
-                        DropdownMenuItem(value: 'Heifer', child: Text('Heifer')),
-                        DropdownMenuItem(value: 'Steer', child: Text('Steer')),
+                      items: <DropdownMenuItem<String>>[
+                        DropdownMenuItem(value: 'Unknown', child: Text(LocalizedLabels.lifeStage(context, 'Unknown'))),
+                        DropdownMenuItem(value: 'Calf', child: Text(LocalizedLabels.lifeStage(context, 'Calf'))),
+                        DropdownMenuItem(value: 'Heifer', child: Text(LocalizedLabels.lifeStage(context, 'Heifer'))),
+                        DropdownMenuItem(value: 'Steer', child: Text(LocalizedLabels.lifeStage(context, 'Steer'))),
                       ],
                       onChanged: (String? val) {
                         if (val != null) {
@@ -282,16 +272,16 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     DropdownButtonFormField<String>(
                       isExpanded: true,
                       initialValue: selectedHealth,
-                      decoration: const InputDecoration(
-                        labelText: 'Health Status',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l10n.healthStatusLabel,
+                        border: const OutlineInputBorder(),
                       ),
-                      items: const <DropdownMenuItem<String>>[
-                        DropdownMenuItem(value: 'Unknown', child: Text('Unknown')),
-                        DropdownMenuItem(value: 'Healthy', child: Text('Healthy')),
-                        DropdownMenuItem(value: 'Under Observation', child: Text('Under Observation')),
-                        DropdownMenuItem(value: 'Diseased', child: Text('Diseased')),
-                        DropdownMenuItem(value: 'Recovered', child: Text('Recovered')),
+                      items: <DropdownMenuItem<String>>[
+                        DropdownMenuItem(value: 'Unknown', child: Text(LocalizedLabels.healthStatus(context, 'Unknown'))),
+                        DropdownMenuItem(value: 'Healthy', child: Text(LocalizedLabels.healthStatus(context, 'Healthy'))),
+                        DropdownMenuItem(value: 'Under Observation', child: Text(LocalizedLabels.healthStatus(context, 'Under Observation'))),
+                        DropdownMenuItem(value: 'Diseased', child: Text(LocalizedLabels.healthStatus(context, 'Diseased'))),
+                        DropdownMenuItem(value: 'Recovered', child: Text(LocalizedLabels.healthStatus(context, 'Recovered'))),
                       ],
                       onChanged: (String? val) {
                         if (val != null) {
@@ -304,16 +294,16 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     if (selectedSex == 'Female') ...<Widget>[
                       const SizedBox(height: 14),
                       const Divider(),
-                      const Text(
-                        'Milk & Lactation Profile',
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF2D6A4F)),
+                      Text(
+                        l10n.milkAndLactationProfile,
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF2D6A4F)),
                       ),
                       const SizedBox(height: 8),
 
                       SwitchListTile(
                         dense: true,
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Currently Milking', style: TextStyle(fontWeight: FontWeight.w600)),
+                        title: Text(l10n.currentlyMilking, style: const TextStyle(fontWeight: FontWeight.w600)),
                         value: selectedMilking,
                         activeThumbColor: const Color(0xFF2D6A4F),
                         onChanged: (bool val) {
@@ -324,7 +314,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       SwitchListTile(
                         dense: true,
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Pregnant', style: TextStyle(fontWeight: FontWeight.w600)),
+                        title: Text(LocalizedLabels.reproductiveStatus(context, 'Pregnant'), style: const TextStyle(fontWeight: FontWeight.w600)),
                         value: selectedPregnant,
                         activeThumbColor: const Color(0xFF8E24AA),
                         onChanged: (bool val) {
@@ -354,18 +344,18 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                                   selectedPregnant;
                               selectedCalvingDate = picked;
                               if (isNewCalving) {
-                                selectedMilking = true;
-                                selectedPregnant = false;
-                                selectedReproductive = 'Not Pregnant';
-                                selectedInseminationDate = null;
-                                selectedDryOffDate = null;
+                                  selectedMilking = true;
+                                  selectedPregnant = false;
+                                  selectedReproductive = 'Not Pregnant';
+                                  selectedInseminationDate = null;
+                                  selectedDryOffDate = null;
                               }
                             });
                           }
                         },
                         child: InputDecorator(
                           decoration: InputDecoration(
-                            labelText: 'Last Calving Date',
+                            labelText: l10n.lastCalvingDate,
                             border: const OutlineInputBorder(),
                             suffixIcon: selectedCalvingDate != null
                                 ? IconButton(
@@ -381,7 +371,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                           child: Text(
                             selectedCalvingDate != null
                                 ? _formatDate(selectedCalvingDate!)
-                                : 'Not set',
+                                : l10n.notSet,
                             style: TextStyle(
                               color: selectedCalvingDate != null ? Colors.black87 : Colors.grey,
                             ),
@@ -408,7 +398,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                         },
                         child: InputDecorator(
                           decoration: InputDecoration(
-                            labelText: 'Insemination Date',
+                            labelText: l10n.inseminationDate,
                             border: const OutlineInputBorder(),
                             suffixIcon: selectedInseminationDate != null
                                 ? IconButton(
@@ -424,7 +414,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                           child: Text(
                             selectedInseminationDate != null
                                 ? _formatDate(selectedInseminationDate!)
-                                : 'Not set',
+                                : l10n.notSet,
                             style: TextStyle(
                               color: selectedInseminationDate != null ? Colors.black87 : Colors.grey,
                             ),
@@ -437,11 +427,11 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       TextField(
                         controller: expectedYieldController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: const InputDecoration(
-                          labelText: 'Expected Daily Yield (Benchmark)',
-                          hintText: 'e.g. 15.0',
+                        decoration: InputDecoration(
+                          labelText: l10n.expectedDailyYieldBenchmark,
+                          hintText: l10n.benchmarkHint,
                           suffixText: 'L/day',
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                     ],
@@ -451,7 +441,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
               actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
+                  child: Text(l10n.cancel),
                 ),
                 FilledButton(
                   onPressed: () async {
@@ -483,9 +473,9 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       _cattleId = newId;
                     });
                     navigator.pop();
-                    _showSnack('Cattle details updated');
+                    _showSnack(l10n.cattleDetailsUpdated);
                   },
-                  child: const Text('Save'),
+                  child: Text(l10n.save),
                 ),
               ],
             );
@@ -1801,7 +1791,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
             ),
           ],
           bottom: TabBar(
-            isScrollable: isFemale,
+            isScrollable: true,
             labelColor: const Color(0xFF2D6A4F),
             unselectedLabelColor: Colors.black87,
             indicatorColor: const Color(0xFF2D6A4F),
@@ -1811,7 +1801,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
             tabs: <Widget>[
               Tab(text: localizations.tabOverview),
               Tab(text: localizations.tabMedical),
-              if (isFemale) const Tab(text: 'Milk Production'),
+              if (isFemale) Tab(text: localizations.milkProductionTab),
               Tab(text: localizations.tabGalleryNotes),
             ],
           ),
@@ -2543,6 +2533,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
   }
 
   Widget _buildMilkProductionTab(CattleRecord record) {
+    final localizations = AppLocalizations.of(context)!;
     final MilkAnalyticsService analytics = MilkAnalyticsService(database: widget.database);
     final CattleMilkStats stats = analytics.getStatsForCattle(record.id);
     final List<MilkRecord> records = widget.database.getMilkRecordsForCattle(record.id)
@@ -2598,13 +2589,13 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        const Text(
-                          'Calving Date Overdue',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFC62828), fontSize: 13),
+                        Text(
+                          localizations.calvingDateOverdue,
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFC62828), fontSize: 13),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Expected calving (${_formatDate(record.expectedCalvingDate!)}) has passed. Update calving information or pregnancy status.',
+                          localizations.calvingOverdueMessage(_formatDate(record.expectedCalvingDate!)),
                           style: const TextStyle(fontSize: 11.5, color: Color(0xFFB71C1C)),
                         ),
                       ],
@@ -2617,7 +2608,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       visualDensity: VisualDensity.compact,
                     ),
-                    child: const Text('Log Calving', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    child: Text(localizations.logCalving, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                   ),
                 ],
               ),
@@ -2638,13 +2629,13 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    const Row(
+                    Row(
                       children: <Widget>[
-                        Icon(Icons.water_drop, color: Color(0xFF2D6A4F), size: 20),
-                        SizedBox(width: 6),
+                        const Icon(Icons.water_drop, color: Color(0xFF2D6A4F), size: 20),
+                        const SizedBox(width: 6),
                         Text(
-                          'Lactation Status',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                          localizations.lactationStatus,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                         ),
                       ],
                     ),
@@ -2657,16 +2648,16 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                   children: <Widget>[
                     Expanded(
                       child: _infoBox(
-                        label: 'Milking',
-                        value: stats.isMilking ? 'Yes' : 'No',
+                        label: localizations.currentlyMilking,
+                        value: stats.isMilking ? localizations.yes : localizations.no,
                         color: stats.isMilking ? const Color(0xFF2D6A4F) : Colors.grey,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: _infoBox(
-                        label: 'Days in Milk (DIM)',
-                        value: stats.daysInMilk != null ? '${stats.daysInMilk} days' : 'N/A',
+                        label: localizations.daysInMilk,
+                        value: stats.daysInMilk != null ? localizations.daysUnit(stats.daysInMilk!) : 'N/A',
                         color: const Color(0xFF1565C0),
                       ),
                     ),
@@ -2677,16 +2668,16 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                   children: <Widget>[
                     Expanded(
                       child: _infoBox(
-                        label: 'Last Calving',
-                        value: record.calvingDate != null ? _formatDate(record.calvingDate!) : 'Not set',
+                        label: localizations.lastCalving,
+                        value: record.calvingDate != null ? _formatDate(record.calvingDate!) : localizations.notSet,
                         color: Colors.black87,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: _infoBox(
-                        label: 'Pregnant',
-                        value: stats.isPregnant ? 'Yes' : 'No',
+                        label: LocalizedLabels.reproductiveStatus(context, 'Pregnant'),
+                        value: stats.isPregnant ? localizations.yes : localizations.no,
                         color: stats.isPregnant ? const Color(0xFF8E24AA) : Colors.black87,
                       ),
                     ),
@@ -2698,7 +2689,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     children: <Widget>[
                       Expanded(
                         child: _infoBox(
-                          label: 'Insemination Date',
+                          label: localizations.inseminationDate,
                           value: _formatDate(record.inseminationDate!),
                           color: Colors.black87,
                         ),
@@ -2706,7 +2697,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       const SizedBox(width: 8),
                       Expanded(
                         child: _infoBox(
-                          label: 'Est. Next Calving',
+                          label: localizations.estNextCalving,
                           value: stats.expectedCalvingDate != null ? _formatDate(stats.expectedCalvingDate!) : 'N/A',
                           color: const Color(0xFFC2185B),
                         ),
@@ -2721,9 +2712,9 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        const Text('30-Day Average', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        Text(localizations.thirtyDayAverage, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                         Text(
-                          '${stats.average30DayYield.toStringAsFixed(1)} L/day',
+                          localizations.litersPerDay(stats.average30DayYield.toStringAsFixed(1)),
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2D6A4F)),
                         ),
                       ],
@@ -2731,7 +2722,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: <Widget>[
-                        const Text('Total This Month', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        Text(localizations.totalThisMonth, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                         Text(
                           '${stats.monthTotalYield.toStringAsFixed(1)} L',
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1565C0)),
@@ -2757,9 +2748,9 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Text(
-                  'Recent Milk Yield Trend',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                Text(
+                  localizations.recentMilkYieldTrend,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 12),
                 _buildChartRangeSelector(),
@@ -2784,8 +2775,8 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
 
         // 3. Milk Records History & Add Button
         _SectionCard(
-          title: 'Daily Milk Records',
-          buttonLabel: 'Record Milk',
+          title: localizations.dailyMilkRecords,
+          buttonLabel: localizations.recordMilk,
           onAdd: () async {
             final bool? saved = await showDialog<bool>(
               context: context,
@@ -2799,9 +2790,9 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
             }
           },
           child: records.isEmpty
-              ? const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text('No daily milk yields recorded for this cow yet.', style: TextStyle(color: Colors.grey)),
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(localizations.noDailyMilkRecords, style: const TextStyle(color: Colors.grey)),
                 )
               : Column(
                   children: records.map((MilkRecord r) {
@@ -2810,10 +2801,10 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       dense: true,
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.water_drop_outlined, color: Color(0xFF2D6A4F)),
-                      title: Text('$dStr: ${r.totalYield.toStringAsFixed(1)} Liters', style: const TextStyle(fontWeight: FontWeight.w600)),
+                      title: Text('$dStr: ${r.totalYield.toStringAsFixed(1)} ${localizations.liters}', style: const TextStyle(fontWeight: FontWeight.w600)),
                       subtitle: Text(
-                        'Morning: ${r.morningYield.toStringAsFixed(1)} L • Evening: ${r.eveningYield.toStringAsFixed(1)} L'
-                        '${r.notes != null ? '\nNote: ${r.notes}' : ''}',
+                        '${localizations.morningEveningBreakdown(r.morningYield.toStringAsFixed(1), r.eveningYield.toStringAsFixed(1))}'
+                        '${r.notes != null ? '\n${localizations.notes}: ${r.notes}' : ''}',
                       ),
                       trailing: PopupMenuButton<String>(
                         icon: const Icon(Icons.more_vert, size: 18),
@@ -2834,8 +2825,8 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                           }
                         },
                         itemBuilder: (_) => <PopupMenuEntry<String>>[
-                          const PopupMenuItem<String>(value: 'edit', child: Text('Edit')),
-                          const PopupMenuItem<String>(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+                          PopupMenuItem<String>(value: 'edit', child: Text(localizations.edit)),
+                          PopupMenuItem<String>(value: 'delete', child: Text(localizations.delete, style: const TextStyle(color: Colors.red))),
                         ],
                       ),
                     );
@@ -2894,6 +2885,8 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
         fg = const Color(0xFF5D4037);
         break;
     }
+    final localizations = AppLocalizations.of(context)!;
+    final String localizedStage = LocalizedLabels.lactationStage(context, stage);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -2902,7 +2895,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
         border: Border.all(color: fg.withValues(alpha: 0.3)),
       ),
       child: Text(
-        '$stage Stage',
+        localizations.stageSuffix(localizedStage),
         style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: fg),
       ),
     );
