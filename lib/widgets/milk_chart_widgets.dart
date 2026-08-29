@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 // ─────────────────────────────────────────────────────────
 //  MilkBarChart  –  Daily production bar chart
@@ -57,6 +58,11 @@ class _MilkBarChartState extends State<MilkBarChart> {
   @override
   void didUpdateWidget(covariant MilkBarChart oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (_selectedIndex != null &&
+        (_selectedIndex! >= widget.dataPoints.length ||
+            _selectedIndex! >= widget.xLabels.length)) {
+      _selectedIndex = null;
+    }
     if (oldWidget.dataPoints.length != widget.dataPoints.length ||
         oldWidget.dataPoints != widget.dataPoints) {
       _scrollToRecent();
@@ -80,7 +86,13 @@ class _MilkBarChartState extends State<MilkBarChart> {
   @override
   Widget build(BuildContext context) {
     if (widget.dataPoints.isEmpty) {
-      return _emptyState();
+      return _emptyState(context);
+    }
+
+    if (_selectedIndex != null &&
+        (_selectedIndex! >= widget.dataPoints.length ||
+            _selectedIndex! >= widget.xLabels.length)) {
+      _selectedIndex = null;
     }
 
     final double maxVal = widget.dataPoints.reduce(math.max);
@@ -92,6 +104,11 @@ class _MilkBarChartState extends State<MilkBarChart> {
 
     // Chart area height (between topPadding and the 0L baseline)
     final double chartHeight = widget.height - _topPadding - _xLabelHeight;
+
+    final bool hasValidSelection = _selectedIndex != null &&
+        _selectedIndex! >= 0 &&
+        _selectedIndex! < widget.dataPoints.length &&
+        _selectedIndex! < widget.xLabels.length;
 
     return Container(
       height: widget.height,
@@ -173,7 +190,9 @@ class _MilkBarChartState extends State<MilkBarChart> {
                             SizedBox(
                               width: widget.barWidthPx,
                               child: Text(
-                                widget.xLabels[i],
+                                (i < widget.xLabels.length)
+                                    ? widget.xLabels[i]
+                                    : '',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 8.0,
@@ -194,11 +213,11 @@ class _MilkBarChartState extends State<MilkBarChart> {
                       ),
                     ),
                     // Tooltip overlay
-                    if (_selectedIndex != null)
+                    if (hasValidSelection)
                       Positioned(
                         left: _tooltipLeft(_selectedIndex!),
                         top: _topPadding + 4,
-                        child: _buildTooltip(_selectedIndex!),
+                        child: _buildTooltip(_selectedIndex!, context),
                       ),
                   ],
                 ),
@@ -283,9 +302,16 @@ class _MilkBarChartState extends State<MilkBarChart> {
     );
   }
 
-  Widget _buildTooltip(int index) {
+  Widget _buildTooltip(int index, BuildContext context) {
+    if (index < 0 || index >= widget.dataPoints.length) {
+      return const SizedBox.shrink();
+    }
+    final l10n = AppLocalizations.of(context);
     final double value = widget.dataPoints[index];
-    final String label = widget.xLabels[index];
+    final String label =
+        (index < widget.xLabels.length) ? widget.xLabels[index] : '';
+    final String noRecordText = l10n?.noRecord ?? 'No Record';
+
     return Container(
       padding:
           const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -311,7 +337,7 @@ class _MilkBarChartState extends State<MilkBarChart> {
           const SizedBox(height: 2),
           Text(
             value <= 0
-                ? 'No Record'
+                ? noRecordText
                 : '${value.toStringAsFixed(1)} ${widget.unit}',
             style: const TextStyle(
                 color: Colors.white,
@@ -329,7 +355,8 @@ class _MilkBarChartState extends State<MilkBarChart> {
     return (x - 30).clamp(0.0, double.infinity);
   }
 
-  Widget _emptyState() {
+  Widget _emptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       height: widget.height,
       width: double.infinity,
@@ -339,10 +366,10 @@ class _MilkBarChartState extends State<MilkBarChart> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
       ),
-      child: const Text(
-        'No milk records yet.\nStart recording to see production trends.',
+      child: Text(
+        l10n.noMilkChartRecords,
         textAlign: TextAlign.center,
-        style: TextStyle(color: Colors.grey, fontSize: 13, height: 1.4),
+        style: const TextStyle(color: Colors.grey, fontSize: 13, height: 1.4),
       ),
     );
   }
