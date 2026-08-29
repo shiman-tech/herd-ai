@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'cattle_record.dart';
 
 enum CattleSortOption {
@@ -22,6 +24,24 @@ enum CattleSortOption {
         return 'Age (Youngest)';
       case CattleSortOption.ageDesc:
         return 'Age (Oldest)';
+    }
+  }
+
+  String localizedLabel(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (this) {
+      case CattleSortOption.recentlyAdded:
+        return l10n.sortRecentlyAdded;
+      case CattleSortOption.oldestAdded:
+        return l10n.sortOldestAdded;
+      case CattleSortOption.nameAsc:
+        return l10n.sortNameAsc;
+      case CattleSortOption.nameDesc:
+        return l10n.sortNameDesc;
+      case CattleSortOption.ageAsc:
+        return l10n.sortAgeAsc;
+      case CattleSortOption.ageDesc:
+        return l10n.sortAgeDesc;
     }
   }
 }
