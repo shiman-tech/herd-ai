@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../services/embedding_database.dart';
 import '../services/milk_analytics_service.dart';
+import '../utils/localized_alerts.dart';
 import 'milk_entry_dialog.dart';
 
 class NotificationsSheet extends StatefulWidget {
@@ -65,6 +67,7 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final List<MilkAlert> alerts = _analyticsService.generateSmartAlerts();
 
     return Container(
@@ -102,9 +105,9 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                     const Icon(Icons.notifications_active_outlined, color: Color(0xFF2D6A4F)),
                     const SizedBox(width: 8),
                     Flexible(
-                      child: const Text(
-                        'Notifications & Smart Alerts',
-                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                      child: Text(
+                        l10n.notificationsAndSmartAlerts,
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -142,7 +145,7 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                   onPressed: () => _clearAll(alerts),
                   icon: Icon(Icons.clear_all, size: 16, color: Colors.grey.shade700),
                   label: Text(
-                    'Clear All',
+                    l10n.clearAll,
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
                   ),
                   style: TextButton.styleFrom(
@@ -162,13 +165,13 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                       children: <Widget>[
                         Icon(Icons.check_circle_outline, size: 56, color: Colors.green.shade400),
                         const SizedBox(height: 12),
-                        const Text(
-                          'All Clear!',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        Text(
+                          l10n.allClear,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'No pending notifications or alerts.',
+                          l10n.noPendingAlerts,
                           style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                         ),
                       ],
@@ -179,7 +182,7 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (BuildContext context, int index) {
                       final MilkAlert alert = alerts[index];
-                      return _buildAlertCard(alert);
+                      return _buildAlertCard(alert, l10n);
                     },
                   ),
           ),
@@ -188,7 +191,7 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
     );
   }
 
-  Widget _buildAlertCard(MilkAlert alert) {
+  Widget _buildAlertCard(MilkAlert alert, AppLocalizations l10n) {
     Color cardColor;
     Color borderColor;
     IconData iconData;
@@ -211,13 +214,13 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
         break;
     }
 
-    String actionLabel = 'View';
+    String actionLabel = l10n.viewAction;
     if (alert.type == 'missing_entry') {
-      actionLabel = 'Record Milk';
+      actionLabel = l10n.recordMilkAction;
     } else if (alert.type == 'calving_overdue' || alert.type == 'calving_reminder') {
-      actionLabel = 'Log Calving';
+      actionLabel = l10n.logCalvingAction;
     } else if (alert.type == 'vaccination_overdue' || alert.type == 'vaccination_due') {
-      actionLabel = 'Vaccinate';
+      actionLabel = l10n.vaccinateAction;
       iconData = Icons.vaccines;
     }
 
@@ -240,19 +243,19 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    alert.title,
+                    LocalizedAlerts.getTitle(context, alert),
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    alert.message,
+                    LocalizedAlerts.getMessage(context, alert),
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade800, height: 1.3),
                   ),
                   const SizedBox(height: 8),
                   GestureDetector(
                     onTap: () => _handleAlertAction(alert),
                     child: Text(
-                      actionLabel.toUpperCase(),
+                      actionLabel,
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -280,3 +283,4 @@ class _NotificationsSheetState extends State<NotificationsSheet> {
     );
   }
 }
+
