@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../models/milk_record.dart';
 import '../services/embedding_database.dart';
 import '../services/milk_analytics_service.dart';
@@ -59,6 +60,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final HerdMilkSummary summary = _analyticsService.getHerdSummary(breed: _selectedBreedFilter);
     final List<MilkRecord> recentRecords = widget.database.getAllMilkRecords().take(20).toList();
 
@@ -78,15 +80,20 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         children: <Widget>[
           // Breed Selector Dropdown (Filters all analytics stats and charts on this page)
+          // Breed Selector Dropdown (Filters all analytics stats and charts on this page)
           Padding(
             padding: const EdgeInsets.only(bottom: 12.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                const Text(
-                  'Breed Analytics Filter:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF2D6A4F)),
+                Expanded(
+                  child: Text(
+                    l10n.breedAnalyticsFilter,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF2D6A4F)),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
+                const SizedBox(width: 8),
                 SizedBox(
                   width: 160,
                   height: 38,
@@ -96,13 +103,13 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      hintText: 'All Breeds',
+                      hintText: l10n.allBreeds,
                       hintStyle: const TextStyle(fontSize: 11),
                     ),
                     items: <DropdownMenuItem<String?>>[
-                      const DropdownMenuItem<String?>(
+                      DropdownMenuItem<String?>(
                         value: null,
-                        child: Text('All Breeds', style: TextStyle(fontSize: 11)),
+                        child: Text(l10n.allBreeds, style: const TextStyle(fontSize: 11)),
                       ),
                       ...uniqueBreeds.map((String b) {
                         return DropdownMenuItem<String?>(
@@ -123,11 +130,11 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
           ),
 
           // 1. Top Action Banner / Quick Stats
-          _buildTodayHeroCard(summary),
+          _buildTodayHeroCard(summary, l10n),
           const SizedBox(height: 14),
 
           // 3. Weekly & Monthly Summary Cards
-          _buildPeriodTotalsRow(summary),
+          _buildPeriodTotalsRow(summary, l10n),
           const SizedBox(height: 14),
 
           // 4. Quick Action Buttons Row
@@ -137,7 +144,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                 child: FilledButton.icon(
                   onPressed: () => _openMilkEntryDialog(),
                   icon: const Icon(Icons.add, size: 20),
-                  label: const Text('Record Milk'),
+                  label: Text(l10n.recordMilk),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF2D6A4F),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -150,7 +157,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                 child: OutlinedButton.icon(
                   onPressed: _openReportsSheet,
                   icon: const Icon(Icons.picture_as_pdf_outlined, size: 18, color: Color(0xFF2D6A4F)),
-                  label: const Text('Reports', style: TextStyle(color: Color(0xFF2D6A4F), fontWeight: FontWeight.w600)),
+                  label: Text(l10n.reports, style: const TextStyle(color: Color(0xFF2D6A4F), fontWeight: FontWeight.w600)),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFF2D6A4F), width: 1.5),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -163,18 +170,18 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
           const SizedBox(height: 18),
 
           // 5. Analytics & Trend Charts Card
-          _buildAnalyticsCard(),
+          _buildAnalyticsCard(l10n),
           const SizedBox(height: 18),
 
           // 6. Recent Daily Milk Log Feed
-          _buildRecentRecordsCard(recentRecords),
+          _buildRecentRecordsCard(recentRecords, l10n),
           const SizedBox(height: 24),
         ],
       ),
     );
   }
 
-  Widget _buildTodayHeroCard(HerdMilkSummary summary) {
+  Widget _buildTodayHeroCard(HerdMilkSummary summary, AppLocalizations l10n) {
     return Card(
       elevation: 3,
       shadowColor: const Color(0x1A2D6A4F),
@@ -188,16 +195,22 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                const Row(
-                  children: <Widget>[
-                    Icon(Icons.water_drop, color: Colors.white, size: 20),
-                    SizedBox(width: 6),
-                    Text(
-                      "Today's Milk Production",
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
-                    ),
-                  ],
+                Expanded(
+                  child: Row(
+                    children: <Widget>[
+                      const Icon(Icons.water_drop, color: Colors.white, size: 20),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          l10n.todaysMilkProduction,
+                          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
@@ -205,7 +218,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${summary.todayMilkingCows} cows milked',
+                    l10n.cowsMilked(summary.todayMilkingCows),
                     style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -228,15 +241,15 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                   ),
                 ),
                 const SizedBox(width: 6),
-                const Text(
-                  'Liters',
-                  style: TextStyle(fontSize: 16, color: Colors.white70, fontWeight: FontWeight.w600),
+                Text(
+                  l10n.liters,
+                  style: const TextStyle(fontSize: 16, color: Colors.white70, fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
-                    const Text('Average / Cow', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                    Text(l10n.averagePerCow, style: const TextStyle(color: Colors.white70, fontSize: 11)),
                     Text(
                       '${summary.todayAveragePerCow.toStringAsFixed(1)} L',
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
@@ -258,8 +271,8 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                       Flexible(
                         child: Text(
                           summary.topProducerToday != null
-                              ? 'Top: #${summary.topProducerToday} (${summary.topProducerYield.toStringAsFixed(1)} L)'
-                              : 'Top Producer: None yet',
+                              ? l10n.topProducer(summary.topProducerToday!, summary.topProducerYield.toStringAsFixed(1))
+                              : l10n.topProducerNone,
                           style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w500),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -269,7 +282,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                 ),
                 if (summary.lowestProducerToday != null)
                   Text(
-                    'Low: #${summary.lowestProducerToday} (${summary.lowestProducerYield.toStringAsFixed(1)} L)',
+                    l10n.lowestProducer(summary.lowestProducerToday!, summary.lowestProducerYield.toStringAsFixed(1)),
                     style: const TextStyle(color: Colors.white70, fontSize: 11.5),
                   ),
               ],
@@ -280,12 +293,12 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
     );
   }
 
-  Widget _buildPeriodTotalsRow(HerdMilkSummary summary) {
+  Widget _buildPeriodTotalsRow(HerdMilkSummary summary, AppLocalizations l10n) {
     return Row(
       children: <Widget>[
         Expanded(
           child: _periodCard(
-            label: 'This Week',
+            label: l10n.thisWeek,
             value: '${summary.thisWeekTotal.toStringAsFixed(1)} L',
             icon: Icons.calendar_view_week_outlined,
             color: const Color(0xFF1565C0),
@@ -294,7 +307,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
         const SizedBox(width: 12),
         Expanded(
           child: _periodCard(
-            label: 'This Month',
+            label: l10n.thisMonth,
             value: '${summary.thisMonthTotal.toStringAsFixed(1)} L',
             icon: Icons.calendar_month_outlined,
             color: const Color(0xFF6A1B9A),
@@ -303,8 +316,8 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
         const SizedBox(width: 12),
         Expanded(
           child: _periodCard(
-            label: 'Milking Herd',
-            value: '${summary.totalMilkingHerdSize} cows',
+            label: l10n.milkingHerd,
+            value: l10n.cowsCount(summary.totalMilkingHerdSize),
             icon: Icons.pets_outlined,
             color: const Color(0xFF2E7D32),
           ),
@@ -331,9 +344,13 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
               children: <Widget>[
                 Icon(icon, size: 14, color: color),
                 const SizedBox(width: 4),
-                Text(
-                  label,
-                  style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
+                  ),
                 ),
               ],
             ),
@@ -390,7 +407,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
     );
   }
 
-  Widget _buildAnalyticsCard() {
+  Widget _buildAnalyticsCard(AppLocalizations l10n) {
     int trendDays = 30;
     if (_selectedRange == '7D') {
       trendDays = 7;
@@ -413,13 +430,13 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Row(
+            Row(
               children: <Widget>[
-                Icon(Icons.show_chart, color: Color(0xFF2D6A4F), size: 20),
-                SizedBox(width: 8),
+                const Icon(Icons.show_chart, color: Color(0xFF2D6A4F), size: 20),
+                const SizedBox(width: 8),
                 Text(
-                  'Production Analytics',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  l10n.productionAnalytics,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -445,7 +462,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
     );
   }
 
-  Widget _buildRecentRecordsCard(List<MilkRecord> records) {
+  Widget _buildRecentRecordsCard(List<MilkRecord> records, AppLocalizations l10n) {
     // Group records by unique date string (YYYY-MM-DD)
     final Map<String, List<MilkRecord>> groupedMap = <String, List<MilkRecord>>{};
     for (final MilkRecord r in records) {
@@ -467,22 +484,22 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                const Text(
-                  'Milk History',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                Text(
+                  l10n.milkHistory,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 Text(
-                  '${sortedDates.length} days logged',
+                  l10n.daysLogged(sortedDates.length),
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             if (sortedDates.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
-                  child: Text('No milk records saved yet. Tap "Record Milk" to start.', style: TextStyle(color: Colors.grey)),
+                  child: Text(l10n.noMilkRecordsSavedYet, style: const TextStyle(color: Colors.grey)),
                 ),
               )
             else
@@ -509,7 +526,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                     ),
                     subtitle: Text(
-                      '$cowCount cow${cowCount == 1 ? '' : 's'} recorded',
+                      l10n.cowsRecordedCount(cowCount, cowCount == 1 ? '' : 's'),
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     trailing: Row(
@@ -547,7 +564,7 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                           ],
                         ),
                         subtitle: Text(
-                          'M: ${record.morningYield.toStringAsFixed(1)} L • E: ${record.eveningYield.toStringAsFixed(1)} L'
+                          '${l10n.morningShort}: ${record.morningYield.toStringAsFixed(1)} L • ${l10n.eveningShort}: ${record.eveningYield.toStringAsFixed(1)} L'
                           '${record.notes != null ? '\nNote: ${record.notes}' : ''}',
                           style: const TextStyle(fontSize: 11),
                         ),
@@ -562,8 +579,8 @@ class _MilkYieldManagementPageState extends State<MilkYieldManagementPage> {
                             }
                           },
                           itemBuilder: (_) => <PopupMenuEntry<String>>[
-                            const PopupMenuItem<String>(value: 'edit', child: Text('Edit')),
-                            const PopupMenuItem<String>(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+                            PopupMenuItem<String>(value: 'edit', child: Text(l10n.edit)),
+                            PopupMenuItem<String>(value: 'delete', child: Text(l10n.delete, style: const TextStyle(color: Colors.red))),
                           ],
                         ),
                         onTap: () {
