@@ -1463,6 +1463,1072 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No symptoms noted'**
   String get noSymptomsNoted;
+
+  /// No description provided for @milkYieldTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Milk Yield'**
+  String get milkYieldTab;
+
+  /// No description provided for @milkAndLactationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Milk & Lactation'**
+  String get milkAndLactationTitle;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @filterButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get filterButton;
+
+  /// No description provided for @clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get clearAll;
+
+  /// No description provided for @showingCattleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {filtered} of {total} cattle'**
+  String showingCattleCount(int filtered, int total);
+
+  /// No description provided for @noCattleMatchFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'No cattle match the selected filters.'**
+  String get noCattleMatchFilter;
+
+  /// No description provided for @resetSearchAndFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Search & Filters'**
+  String get resetSearchAndFilters;
+
+  /// No description provided for @filterAndSortCattle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter & Sort Cattle'**
+  String get filterAndSortCattle;
+
+  /// No description provided for @sortOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort Order'**
+  String get sortOrder;
+
+  /// No description provided for @resetAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset All'**
+  String get resetAll;
+
+  /// No description provided for @showMatchingCattle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {count} Cattle'**
+  String showMatchingCattle(int count);
+
+  /// No description provided for @sexLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex'**
+  String get sexLabel;
+
+  /// No description provided for @lifeStageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Life Stage'**
+  String get lifeStageLabel;
+
+  /// No description provided for @healthStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Status'**
+  String get healthStatusLabel;
+
+  /// No description provided for @reproductiveStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reproductive Status'**
+  String get reproductiveStatusLabel;
+
+  /// No description provided for @vaccinationStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaccination'**
+  String get vaccinationStatusLabel;
+
+  /// No description provided for @milkAndLactation.
+  ///
+  /// In en, this message translates to:
+  /// **'Milk & Lactation'**
+  String get milkAndLactation;
+
+  /// No description provided for @breedCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Breed'**
+  String get breedCategory;
+
+  /// No description provided for @female.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get female;
+
+  /// No description provided for @male.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get male;
+
+  /// No description provided for @calf.
+  ///
+  /// In en, this message translates to:
+  /// **'Calf'**
+  String get calf;
+
+  /// No description provided for @heifer.
+  ///
+  /// In en, this message translates to:
+  /// **'Heifer'**
+  String get heifer;
+
+  /// No description provided for @cow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cow'**
+  String get cow;
+
+  /// No description provided for @bull.
+  ///
+  /// In en, this message translates to:
+  /// **'Bull'**
+  String get bull;
+
+  /// No description provided for @steer.
+  ///
+  /// In en, this message translates to:
+  /// **'Steer'**
+  String get steer;
+
+  /// No description provided for @healthy.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy'**
+  String get healthy;
+
+  /// No description provided for @underObservation.
+  ///
+  /// In en, this message translates to:
+  /// **'Under Observation'**
+  String get underObservation;
+
+  /// No description provided for @diseased.
+  ///
+  /// In en, this message translates to:
+  /// **'Diseased'**
+  String get diseased;
+
+  /// No description provided for @unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// No description provided for @pregnant.
+  ///
+  /// In en, this message translates to:
+  /// **'Pregnant'**
+  String get pregnant;
+
+  /// No description provided for @notPregnant.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Pregnant'**
+  String get notPregnant;
+
+  /// No description provided for @upToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to Date'**
+  String get upToDate;
+
+  /// No description provided for @dueSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Due Soon'**
+  String get dueSoon;
+
+  /// No description provided for @overdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get overdue;
+
+  /// No description provided for @noRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'No Record'**
+  String get noRecord;
+
+  /// No description provided for @milkingCows.
+  ///
+  /// In en, this message translates to:
+  /// **'Milking Cows'**
+  String get milkingCows;
+
+  /// No description provided for @dryCows.
+  ///
+  /// In en, this message translates to:
+  /// **'Dry Cows'**
+  String get dryCows;
+
+  /// No description provided for @highProducers.
+  ///
+  /// In en, this message translates to:
+  /// **'High Producers (>15 L/day)'**
+  String get highProducers;
+
+  /// No description provided for @mediumProducers.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium Producers (8–15 L/day)'**
+  String get mediumProducers;
+
+  /// No description provided for @lowProducers.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Producers (<8 L/day)'**
+  String get lowProducers;
+
+  /// No description provided for @recentlyCalved.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently Calved'**
+  String get recentlyCalved;
+
+  /// No description provided for @sortRecentlyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently Added'**
+  String get sortRecentlyAdded;
+
+  /// No description provided for @sortOldestAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest Added'**
+  String get sortOldestAdded;
+
+  /// No description provided for @sortNameAsc.
+  ///
+  /// In en, this message translates to:
+  /// **'ID (A → Z)'**
+  String get sortNameAsc;
+
+  /// No description provided for @sortNameDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'ID (Z → A)'**
+  String get sortNameDesc;
+
+  /// No description provided for @sortAgeAsc.
+  ///
+  /// In en, this message translates to:
+  /// **'Age (Youngest)'**
+  String get sortAgeAsc;
+
+  /// No description provided for @sortAgeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Age (Oldest)'**
+  String get sortAgeDesc;
+
+  /// No description provided for @todaysMilkProduction.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Milk Production'**
+  String get todaysMilkProduction;
+
+  /// No description provided for @cowsMilked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} cows milked'**
+  String cowsMilked(int count);
+
+  /// No description provided for @liters.
+  ///
+  /// In en, this message translates to:
+  /// **'Liters'**
+  String get liters;
+
+  /// No description provided for @averagePerCow.
+  ///
+  /// In en, this message translates to:
+  /// **'Average / Cow'**
+  String get averagePerCow;
+
+  /// No description provided for @topProducer.
+  ///
+  /// In en, this message translates to:
+  /// **'Top: #{id} ({yield} L)'**
+  String topProducer(String id, String yield);
+
+  /// No description provided for @topProducerNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Producer: None yet'**
+  String get topProducerNone;
+
+  /// No description provided for @lowestProducer.
+  ///
+  /// In en, this message translates to:
+  /// **'Low: #{id} ({yield} L)'**
+  String lowestProducer(String id, String yield);
+
+  /// No description provided for @thisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get thisWeek;
+
+  /// No description provided for @thisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get thisMonth;
+
+  /// No description provided for @milkingHerd.
+  ///
+  /// In en, this message translates to:
+  /// **'Milking Herd'**
+  String get milkingHerd;
+
+  /// No description provided for @cowsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} cows'**
+  String cowsCount(int count);
+
+  /// No description provided for @recordMilk.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Milk'**
+  String get recordMilk;
+
+  /// No description provided for @reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get reports;
+
+  /// No description provided for @productionAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Production Analytics'**
+  String get productionAnalytics;
+
+  /// No description provided for @milkHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Milk History'**
+  String get milkHistory;
+
+  /// No description provided for @daysLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days logged'**
+  String daysLogged(int count);
+
+  /// No description provided for @noMilkRecordsSavedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No milk records saved yet. Tap \"Record Milk\" to start.'**
+  String get noMilkRecordsSavedYet;
+
+  /// No description provided for @breedAnalyticsFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Breed Analytics Filter:'**
+  String get breedAnalyticsFilter;
+
+  /// No description provided for @allBreeds.
+  ///
+  /// In en, this message translates to:
+  /// **'All Breeds'**
+  String get allBreeds;
+
+  /// No description provided for @cowsRecordedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} cow{plural} recorded'**
+  String cowsRecordedCount(int count, String plural);
+
+  /// No description provided for @morningShort.
+  ///
+  /// In en, this message translates to:
+  /// **'M'**
+  String get morningShort;
+
+  /// No description provided for @eveningShort.
+  ///
+  /// In en, this message translates to:
+  /// **'E'**
+  String get eveningShort;
+
+  /// No description provided for @editMilkRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Milk Record'**
+  String get editMilkRecord;
+
+  /// No description provided for @recordMilkYield.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Milk Yield'**
+  String get recordMilkYield;
+
+  /// No description provided for @recordExistsWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'A record for this cow on this date already exists. Saving will update it.'**
+  String get recordExistsWarning;
+
+  /// No description provided for @cattleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cattle'**
+  String get cattleLabel;
+
+  /// No description provided for @selectCow.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Cow'**
+  String get selectCow;
+
+  /// No description provided for @milkingBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Milking'**
+  String get milkingBadge;
+
+  /// No description provided for @recordDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Date'**
+  String get recordDate;
+
+  /// No description provided for @morningLiters.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning (L)'**
+  String get morningLiters;
+
+  /// No description provided for @eveningLiters.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening (L)'**
+  String get eveningLiters;
+
+  /// No description provided for @totalDailyYield.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Daily Yield'**
+  String get totalDailyYield;
+
+  /// No description provided for @notesOptionalMilk.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (Optional)'**
+  String get notesOptionalMilk;
+
+  /// No description provided for @notesHintMilk.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Fed silage, normal appetite'**
+  String get notesHintMilk;
+
+  /// No description provided for @updateRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Record'**
+  String get updateRecord;
+
+  /// No description provided for @saveRecordButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Record'**
+  String get saveRecordButton;
+
+  /// No description provided for @pleaseSelectCattle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a cattle'**
+  String get pleaseSelectCattle;
+
+  /// No description provided for @milkProductionReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Milk Production Reports'**
+  String get milkProductionReports;
+
+  /// No description provided for @breedFilterBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Breed Filter: {breed}'**
+  String breedFilterBadge(String breed);
+
+  /// No description provided for @dailyTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get dailyTab;
+
+  /// No description provided for @weeklyTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get weeklyTab;
+
+  /// No description provided for @monthlyTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get monthlyTab;
+
+  /// No description provided for @reportDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Report Date: '**
+  String get reportDateLabel;
+
+  /// No description provided for @weekStartLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Week Start: '**
+  String get weekStartLabel;
+
+  /// No description provided for @downloadCsvReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Download {type} CSV Report'**
+  String downloadCsvReport(String type);
+
+  /// No description provided for @reportSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Report saved: {fileName}'**
+  String reportSaved(String fileName);
+
+  /// No description provided for @reportCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Report copied to clipboard!'**
+  String get reportCopied;
+
+  /// No description provided for @dailyAvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Avg'**
+  String get dailyAvg;
+
+  /// No description provided for @totalYieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Yield'**
+  String get totalYieldLabel;
+
+  /// No description provided for @bestLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get bestLabel;
+
+  /// No description provided for @worstLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Worst'**
+  String get worstLabel;
+
+  /// No description provided for @orderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Order:'**
+  String get orderLabel;
+
+  /// No description provided for @bestToWorst.
+  ///
+  /// In en, this message translates to:
+  /// **'Best → Worst'**
+  String get bestToWorst;
+
+  /// No description provided for @worstToBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Worst → Best'**
+  String get worstToBest;
+
+  /// No description provided for @noMilkRecordsForPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No milk records found for this period{breedText}.'**
+  String noMilkRecordsForPeriod(String breedText);
+
+  /// No description provided for @recordedOutOfDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded: {recorded}/{total} days'**
+  String recordedOutOfDays(int recorded, int total);
+
+  /// No description provided for @recordedEntriesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded: {count} entries'**
+  String recordedEntriesCount(int count);
+
+  /// No description provided for @morningEveningBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning: {morning} L  •  Evening: {evening} L'**
+  String morningEveningBreakdown(String morning, String evening);
+
+  /// No description provided for @notificationsAndSmartAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications & Smart Alerts'**
+  String get notificationsAndSmartAlerts;
+
+  /// No description provided for @allClear.
+  ///
+  /// In en, this message translates to:
+  /// **'All Clear!'**
+  String get allClear;
+
+  /// No description provided for @noPendingAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending notifications or alerts.'**
+  String get noPendingAlerts;
+
+  /// No description provided for @viewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'VIEW'**
+  String get viewAction;
+
+  /// No description provided for @recordMilkAction.
+  ///
+  /// In en, this message translates to:
+  /// **'RECORD MILK'**
+  String get recordMilkAction;
+
+  /// No description provided for @logCalvingAction.
+  ///
+  /// In en, this message translates to:
+  /// **'LOG CALVING'**
+  String get logCalvingAction;
+
+  /// No description provided for @vaccinateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'VACCINATE'**
+  String get vaccinateAction;
+
+  /// No description provided for @editCattleDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Cattle Details'**
+  String get editCattleDetails;
+
+  /// No description provided for @dateOfBirthAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of Birth (Age)'**
+  String get dateOfBirthAge;
+
+  /// No description provided for @notSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get notSet;
+
+  /// No description provided for @yearsMonthsAge.
+  ///
+  /// In en, this message translates to:
+  /// **'{years} yr{yPlural} {months} mo{mPlural}'**
+  String yearsMonthsAge(int years, String yPlural, int months, String mPlural);
+
+  /// No description provided for @yearsAge.
+  ///
+  /// In en, this message translates to:
+  /// **'{years} yr{yPlural}'**
+  String yearsAge(int years, String yPlural);
+
+  /// No description provided for @monthsAge.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} mo{mPlural}'**
+  String monthsAge(int months, String mPlural);
+
+  /// No description provided for @unknownAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown age'**
+  String get unknownAge;
+
+  /// No description provided for @milkAndLactationProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Milk & Lactation Profile'**
+  String get milkAndLactationProfile;
+
+  /// No description provided for @currentlyMilking.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently Milking'**
+  String get currentlyMilking;
+
+  /// No description provided for @lastCalvingDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Calving Date'**
+  String get lastCalvingDate;
+
+  /// No description provided for @inseminationDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Insemination Date'**
+  String get inseminationDate;
+
+  /// No description provided for @expectedDailyYieldBenchmark.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected Daily Yield (Benchmark)'**
+  String get expectedDailyYieldBenchmark;
+
+  /// No description provided for @benchmarkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 15.0'**
+  String get benchmarkHint;
+
+  /// No description provided for @symptomsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Not eating properly'**
+  String get symptomsHint;
+
+  /// No description provided for @cattleDetailsUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Cattle details updated'**
+  String get cattleDetailsUpdated;
+
+  /// No description provided for @milkProductionTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Milk Production'**
+  String get milkProductionTab;
+
+  /// No description provided for @lactationStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Lactation Status'**
+  String get lactationStatus;
+
+  /// No description provided for @daysInMilk.
+  ///
+  /// In en, this message translates to:
+  /// **'Days in Milk (DIM)'**
+  String get daysInMilk;
+
+  /// No description provided for @daysUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String daysUnit(int count);
+
+  /// No description provided for @lastCalving.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Calving'**
+  String get lastCalving;
+
+  /// No description provided for @estNextCalving.
+  ///
+  /// In en, this message translates to:
+  /// **'Est. Next Calving'**
+  String get estNextCalving;
+
+  /// No description provided for @thirtyDayAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'30-Day Average'**
+  String get thirtyDayAverage;
+
+  /// No description provided for @totalThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Total This Month'**
+  String get totalThisMonth;
+
+  /// No description provided for @recentMilkYieldTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Milk Yield Trend'**
+  String get recentMilkYieldTrend;
+
+  /// No description provided for @dailyMilkRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Milk Records'**
+  String get dailyMilkRecords;
+
+  /// No description provided for @noDailyMilkRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'No daily milk yields recorded for this cow yet.'**
+  String get noDailyMilkRecords;
+
+  /// No description provided for @litersPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{yield} L/day'**
+  String litersPerDay(String yield);
+
+  /// No description provided for @freshStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh'**
+  String get freshStage;
+
+  /// No description provided for @earlyStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Early'**
+  String get earlyStage;
+
+  /// No description provided for @midStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Mid'**
+  String get midStage;
+
+  /// No description provided for @lateStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Late'**
+  String get lateStage;
+
+  /// No description provided for @extendedStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Extended Lactation'**
+  String get extendedStage;
+
+  /// No description provided for @dryStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Dry'**
+  String get dryStage;
+
+  /// No description provided for @stageSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'{stage} Stage'**
+  String stageSuffix(String stage);
+
+  /// No description provided for @calvingDateOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Calving Date Overdue'**
+  String get calvingDateOverdue;
+
+  /// No description provided for @calvingOverdueMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected calving ({date}) has passed. Update calving information or pregnancy status.'**
+  String calvingOverdueMessage(String date);
+
+  /// No description provided for @logCalving.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Calving'**
+  String get logCalving;
+
+  /// No description provided for @predictedBreed.
+  ///
+  /// In en, this message translates to:
+  /// **'Predicted Breed'**
+  String get predictedBreed;
+
+  /// No description provided for @noMilkChartRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'No milk records yet.\nStart recording to see production trends.'**
+  String get noMilkChartRecords;
+
+  /// No description provided for @setAsUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as Unknown'**
+  String get setAsUnknown;
+
+  /// No description provided for @breedPredictionItem.
+  ///
+  /// In en, this message translates to:
+  /// **'• {name} — {percent}%'**
+  String breedPredictionItem(String name, int percent);
+
+  /// No description provided for @sexRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex *'**
+  String get sexRequired;
+
+  /// No description provided for @optionalNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Pregnant'**
+  String get optionalNoteHint;
+
+  /// No description provided for @missingMilkEntryToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing Milk Entry Today'**
+  String get missingMilkEntryToday;
+
+  /// No description provided for @missingMilkEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing Milk Entry ({date})'**
+  String missingMilkEntryTitle(String date);
+
+  /// No description provided for @noMilkRecordEntered.
+  ///
+  /// In en, this message translates to:
+  /// **'No milk record entered {dateLabel} for #{id}.'**
+  String noMilkRecordEntered(String dateLabel, String id);
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'yesterday'**
+  String get yesterday;
+
+  /// No description provided for @onDate.
+  ///
+  /// In en, this message translates to:
+  /// **'on {date}'**
+  String onDate(String date);
+
+  /// No description provided for @lowYieldAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Yield Alert'**
+  String get lowYieldAlertTitle;
+
+  /// No description provided for @lowYieldAlertMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'#{id} milk production dropped {percent}% ({latest} L vs {avg} L avg).'**
+  String lowYieldAlertMessage(
+    String id,
+    String percent,
+    String latest,
+    String avg,
+  );
+
+  /// No description provided for @dryOffReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dry-Off Reminder'**
+  String get dryOffReminderTitle;
+
+  /// No description provided for @dryOffReminderMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'#{id} is expected to calve in {days} days. Prepare cow for dry period.'**
+  String dryOffReminderMessage(String id, int days);
+
+  /// No description provided for @calvingDateOverdueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calving Date Overdue'**
+  String get calvingDateOverdueTitle;
+
+  /// No description provided for @calvingDateOverdueMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'#{id} expected calving date was {days} day{plural} ago ({date}). Update calving information or pregnancy status.'**
+  String calvingDateOverdueMessage(
+    String id,
+    int days,
+    String plural,
+    String date,
+  );
+
+  /// No description provided for @calvingReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calving Reminder'**
+  String get calvingReminderTitle;
+
+  /// No description provided for @calvingReminderMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'#{id} is due for calving in {days} day{plural}. Prepare maternity pen.'**
+  String calvingReminderMessage(String id, int days, String plural);
+
+  /// No description provided for @vaccinationOverdueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaccination Overdue'**
+  String get vaccinationOverdueTitle;
+
+  /// No description provided for @vaccinationOverdueMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'#{id} — {vacName} was due {days} day{plural} ago ({date}).'**
+  String vaccinationOverdueMessage(
+    String id,
+    String vacName,
+    int days,
+    String plural,
+    String date,
+  );
+
+  /// No description provided for @vaccinationDueSoonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaccination Due Soon'**
+  String get vaccinationDueSoonTitle;
+
+  /// No description provided for @vaccinationDueSoonMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'#{id} — {vacName} due in {days} day{plural} ({date}).'**
+  String vaccinationDueSoonMessage(
+    String id,
+    String vacName,
+    int days,
+    String plural,
+    String date,
+  );
 }
 
 class _AppLocalizationsDelegate

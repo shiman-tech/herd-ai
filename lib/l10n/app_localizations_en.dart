@@ -750,4 +750,616 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noSymptomsNoted => 'No symptoms noted';
+
+  @override
+  String get milkYieldTab => 'Milk Yield';
+
+  @override
+  String get milkAndLactationTitle => 'Milk & Lactation';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get filterButton => 'Filter';
+
+  @override
+  String get clearAll => 'Clear all';
+
+  @override
+  String showingCattleCount(int filtered, int total) {
+    return 'Showing $filtered of $total cattle';
+  }
+
+  @override
+  String get noCattleMatchFilter => 'No cattle match the selected filters.';
+
+  @override
+  String get resetSearchAndFilters => 'Reset Search & Filters';
+
+  @override
+  String get filterAndSortCattle => 'Filter & Sort Cattle';
+
+  @override
+  String get sortOrder => 'Sort Order';
+
+  @override
+  String get resetAll => 'Reset All';
+
+  @override
+  String showMatchingCattle(int count) {
+    return 'Show $count Cattle';
+  }
+
+  @override
+  String get sexLabel => 'Sex';
+
+  @override
+  String get lifeStageLabel => 'Life Stage';
+
+  @override
+  String get healthStatusLabel => 'Health Status';
+
+  @override
+  String get reproductiveStatusLabel => 'Reproductive Status';
+
+  @override
+  String get vaccinationStatusLabel => 'Vaccination';
+
+  @override
+  String get milkAndLactation => 'Milk & Lactation';
+
+  @override
+  String get breedCategory => 'Breed';
+
+  @override
+  String get female => 'Female';
+
+  @override
+  String get male => 'Male';
+
+  @override
+  String get calf => 'Calf';
+
+  @override
+  String get heifer => 'Heifer';
+
+  @override
+  String get cow => 'Cow';
+
+  @override
+  String get bull => 'Bull';
+
+  @override
+  String get steer => 'Steer';
+
+  @override
+  String get healthy => 'Healthy';
+
+  @override
+  String get underObservation => 'Under Observation';
+
+  @override
+  String get diseased => 'Diseased';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get pregnant => 'Pregnant';
+
+  @override
+  String get notPregnant => 'Not Pregnant';
+
+  @override
+  String get upToDate => 'Up to Date';
+
+  @override
+  String get dueSoon => 'Due Soon';
+
+  @override
+  String get overdue => 'Overdue';
+
+  @override
+  String get noRecord => 'No Record';
+
+  @override
+  String get milkingCows => 'Milking Cows';
+
+  @override
+  String get dryCows => 'Dry Cows';
+
+  @override
+  String get highProducers => 'High Producers (>15 L/day)';
+
+  @override
+  String get mediumProducers => 'Medium Producers (8–15 L/day)';
+
+  @override
+  String get lowProducers => 'Low Producers (<8 L/day)';
+
+  @override
+  String get recentlyCalved => 'Recently Calved';
+
+  @override
+  String get sortRecentlyAdded => 'Recently Added';
+
+  @override
+  String get sortOldestAdded => 'Oldest Added';
+
+  @override
+  String get sortNameAsc => 'ID (A → Z)';
+
+  @override
+  String get sortNameDesc => 'ID (Z → A)';
+
+  @override
+  String get sortAgeAsc => 'Age (Youngest)';
+
+  @override
+  String get sortAgeDesc => 'Age (Oldest)';
+
+  @override
+  String get todaysMilkProduction => 'Today\'s Milk Production';
+
+  @override
+  String cowsMilked(int count) {
+    return '$count cows milked';
+  }
+
+  @override
+  String get liters => 'Liters';
+
+  @override
+  String get averagePerCow => 'Average / Cow';
+
+  @override
+  String topProducer(String id, String yield) {
+    return 'Top: #$id ($yield L)';
+  }
+
+  @override
+  String get topProducerNone => 'Top Producer: None yet';
+
+  @override
+  String lowestProducer(String id, String yield) {
+    return 'Low: #$id ($yield L)';
+  }
+
+  @override
+  String get thisWeek => 'This Week';
+
+  @override
+  String get thisMonth => 'This Month';
+
+  @override
+  String get milkingHerd => 'Milking Herd';
+
+  @override
+  String cowsCount(int count) {
+    return '$count cows';
+  }
+
+  @override
+  String get recordMilk => 'Record Milk';
+
+  @override
+  String get reports => 'Reports';
+
+  @override
+  String get productionAnalytics => 'Production Analytics';
+
+  @override
+  String get milkHistory => 'Milk History';
+
+  @override
+  String daysLogged(int count) {
+    return '$count days logged';
+  }
+
+  @override
+  String get noMilkRecordsSavedYet =>
+      'No milk records saved yet. Tap \"Record Milk\" to start.';
+
+  @override
+  String get breedAnalyticsFilter => 'Breed Analytics Filter:';
+
+  @override
+  String get allBreeds => 'All Breeds';
+
+  @override
+  String cowsRecordedCount(int count, String plural) {
+    return '$count cow$plural recorded';
+  }
+
+  @override
+  String get morningShort => 'M';
+
+  @override
+  String get eveningShort => 'E';
+
+  @override
+  String get editMilkRecord => 'Edit Milk Record';
+
+  @override
+  String get recordMilkYield => 'Record Milk Yield';
+
+  @override
+  String get recordExistsWarning =>
+      'A record for this cow on this date already exists. Saving will update it.';
+
+  @override
+  String get cattleLabel => 'Cattle';
+
+  @override
+  String get selectCow => 'Select Cow';
+
+  @override
+  String get milkingBadge => 'Milking';
+
+  @override
+  String get recordDate => 'Record Date';
+
+  @override
+  String get morningLiters => 'Morning (L)';
+
+  @override
+  String get eveningLiters => 'Evening (L)';
+
+  @override
+  String get totalDailyYield => 'Total Daily Yield';
+
+  @override
+  String get notesOptionalMilk => 'Notes (Optional)';
+
+  @override
+  String get notesHintMilk => 'e.g. Fed silage, normal appetite';
+
+  @override
+  String get updateRecord => 'Update Record';
+
+  @override
+  String get saveRecordButton => 'Save Record';
+
+  @override
+  String get pleaseSelectCattle => 'Please select a cattle';
+
+  @override
+  String get milkProductionReports => 'Milk Production Reports';
+
+  @override
+  String breedFilterBadge(String breed) {
+    return 'Breed Filter: $breed';
+  }
+
+  @override
+  String get dailyTab => 'Daily';
+
+  @override
+  String get weeklyTab => 'Weekly';
+
+  @override
+  String get monthlyTab => 'Monthly';
+
+  @override
+  String get reportDateLabel => 'Report Date: ';
+
+  @override
+  String get weekStartLabel => 'Week Start: ';
+
+  @override
+  String downloadCsvReport(String type) {
+    return 'Download $type CSV Report';
+  }
+
+  @override
+  String reportSaved(String fileName) {
+    return 'Report saved: $fileName';
+  }
+
+  @override
+  String get reportCopied => 'Report copied to clipboard!';
+
+  @override
+  String get dailyAvg => 'Daily Avg';
+
+  @override
+  String get totalYieldLabel => 'Total Yield';
+
+  @override
+  String get bestLabel => 'Best';
+
+  @override
+  String get worstLabel => 'Worst';
+
+  @override
+  String get orderLabel => 'Order:';
+
+  @override
+  String get bestToWorst => 'Best → Worst';
+
+  @override
+  String get worstToBest => 'Worst → Best';
+
+  @override
+  String noMilkRecordsForPeriod(String breedText) {
+    return 'No milk records found for this period$breedText.';
+  }
+
+  @override
+  String recordedOutOfDays(int recorded, int total) {
+    return 'Recorded: $recorded/$total days';
+  }
+
+  @override
+  String recordedEntriesCount(int count) {
+    return 'Recorded: $count entries';
+  }
+
+  @override
+  String morningEveningBreakdown(String morning, String evening) {
+    return 'Morning: $morning L  •  Evening: $evening L';
+  }
+
+  @override
+  String get notificationsAndSmartAlerts => 'Notifications & Smart Alerts';
+
+  @override
+  String get allClear => 'All Clear!';
+
+  @override
+  String get noPendingAlerts => 'No pending notifications or alerts.';
+
+  @override
+  String get viewAction => 'VIEW';
+
+  @override
+  String get recordMilkAction => 'RECORD MILK';
+
+  @override
+  String get logCalvingAction => 'LOG CALVING';
+
+  @override
+  String get vaccinateAction => 'VACCINATE';
+
+  @override
+  String get editCattleDetails => 'Edit Cattle Details';
+
+  @override
+  String get dateOfBirthAge => 'Date of Birth (Age)';
+
+  @override
+  String get notSet => 'Not set';
+
+  @override
+  String yearsMonthsAge(int years, String yPlural, int months, String mPlural) {
+    return '$years yr$yPlural $months mo$mPlural';
+  }
+
+  @override
+  String yearsAge(int years, String yPlural) {
+    return '$years yr$yPlural';
+  }
+
+  @override
+  String monthsAge(int months, String mPlural) {
+    return '$months mo$mPlural';
+  }
+
+  @override
+  String get unknownAge => 'Unknown age';
+
+  @override
+  String get milkAndLactationProfile => 'Milk & Lactation Profile';
+
+  @override
+  String get currentlyMilking => 'Currently Milking';
+
+  @override
+  String get lastCalvingDate => 'Last Calving Date';
+
+  @override
+  String get inseminationDate => 'Insemination Date';
+
+  @override
+  String get expectedDailyYieldBenchmark => 'Expected Daily Yield (Benchmark)';
+
+  @override
+  String get benchmarkHint => 'e.g. 15.0';
+
+  @override
+  String get symptomsHint => 'e.g. Not eating properly';
+
+  @override
+  String get cattleDetailsUpdated => 'Cattle details updated';
+
+  @override
+  String get milkProductionTab => 'Milk Production';
+
+  @override
+  String get lactationStatus => 'Lactation Status';
+
+  @override
+  String get daysInMilk => 'Days in Milk (DIM)';
+
+  @override
+  String daysUnit(int count) {
+    return '$count days';
+  }
+
+  @override
+  String get lastCalving => 'Last Calving';
+
+  @override
+  String get estNextCalving => 'Est. Next Calving';
+
+  @override
+  String get thirtyDayAverage => '30-Day Average';
+
+  @override
+  String get totalThisMonth => 'Total This Month';
+
+  @override
+  String get recentMilkYieldTrend => 'Recent Milk Yield Trend';
+
+  @override
+  String get dailyMilkRecords => 'Daily Milk Records';
+
+  @override
+  String get noDailyMilkRecords =>
+      'No daily milk yields recorded for this cow yet.';
+
+  @override
+  String litersPerDay(String yield) {
+    return '$yield L/day';
+  }
+
+  @override
+  String get freshStage => 'Fresh';
+
+  @override
+  String get earlyStage => 'Early';
+
+  @override
+  String get midStage => 'Mid';
+
+  @override
+  String get lateStage => 'Late';
+
+  @override
+  String get extendedStage => 'Extended Lactation';
+
+  @override
+  String get dryStage => 'Dry';
+
+  @override
+  String stageSuffix(String stage) {
+    return '$stage Stage';
+  }
+
+  @override
+  String get calvingDateOverdue => 'Calving Date Overdue';
+
+  @override
+  String calvingOverdueMessage(String date) {
+    return 'Expected calving ($date) has passed. Update calving information or pregnancy status.';
+  }
+
+  @override
+  String get logCalving => 'Log Calving';
+
+  @override
+  String get predictedBreed => 'Predicted Breed';
+
+  @override
+  String get noMilkChartRecords =>
+      'No milk records yet.\nStart recording to see production trends.';
+
+  @override
+  String get setAsUnknown => 'Set as Unknown';
+
+  @override
+  String breedPredictionItem(String name, int percent) {
+    return '• $name — $percent%';
+  }
+
+  @override
+  String get sexRequired => 'Sex *';
+
+  @override
+  String get optionalNoteHint => 'e.g. Pregnant';
+
+  @override
+  String get missingMilkEntryToday => 'Missing Milk Entry Today';
+
+  @override
+  String missingMilkEntryTitle(String date) {
+    return 'Missing Milk Entry ($date)';
+  }
+
+  @override
+  String noMilkRecordEntered(String dateLabel, String id) {
+    return 'No milk record entered $dateLabel for #$id.';
+  }
+
+  @override
+  String get today => 'today';
+
+  @override
+  String get yesterday => 'yesterday';
+
+  @override
+  String onDate(String date) {
+    return 'on $date';
+  }
+
+  @override
+  String get lowYieldAlertTitle => 'Low Yield Alert';
+
+  @override
+  String lowYieldAlertMessage(
+    String id,
+    String percent,
+    String latest,
+    String avg,
+  ) {
+    return '#$id milk production dropped $percent% ($latest L vs $avg L avg).';
+  }
+
+  @override
+  String get dryOffReminderTitle => 'Dry-Off Reminder';
+
+  @override
+  String dryOffReminderMessage(String id, int days) {
+    return '#$id is expected to calve in $days days. Prepare cow for dry period.';
+  }
+
+  @override
+  String get calvingDateOverdueTitle => 'Calving Date Overdue';
+
+  @override
+  String calvingDateOverdueMessage(
+    String id,
+    int days,
+    String plural,
+    String date,
+  ) {
+    return '#$id expected calving date was $days day$plural ago ($date). Update calving information or pregnancy status.';
+  }
+
+  @override
+  String get calvingReminderTitle => 'Calving Reminder';
+
+  @override
+  String calvingReminderMessage(String id, int days, String plural) {
+    return '#$id is due for calving in $days day$plural. Prepare maternity pen.';
+  }
+
+  @override
+  String get vaccinationOverdueTitle => 'Vaccination Overdue';
+
+  @override
+  String vaccinationOverdueMessage(
+    String id,
+    String vacName,
+    int days,
+    String plural,
+    String date,
+  ) {
+    return '#$id — $vacName was due $days day$plural ago ($date).';
+  }
+
+  @override
+  String get vaccinationDueSoonTitle => 'Vaccination Due Soon';
+
+  @override
+  String vaccinationDueSoonMessage(
+    String id,
+    String vacName,
+    int days,
+    String plural,
+    String date,
+  ) {
+    return '#$id — $vacName due in $days day$plural ($date).';
+  }
 }

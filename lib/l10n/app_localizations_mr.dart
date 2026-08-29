@@ -352,17 +352,17 @@ class AppLocalizationsMr extends AppLocalizations {
   String get noteSaved => 'टीप जतन केली';
 
   @override
-  String get cattleIdentification => 'Cattle Identification';
+  String get cattleIdentification => 'पशू ओळख';
 
   @override
   String get cattleIdentificationDesc =>
-      'Add facial photos used to recognize this cattle.';
+      'हा पशू ओळखण्यासाठी चेहऱ्याचे फोटो जोडा.';
 
   @override
-  String get noIdentityPhotos => 'No facial photos added yet.';
+  String get noIdentityPhotos => 'अद्याप चेहऱ्याचा कोणताही फोटो जोडलेला नाही.';
 
   @override
-  String get addFacialPhoto => 'Add Photo';
+  String get addFacialPhoto => 'फोटो जोडा';
 
   @override
   String get photos => 'फोटो';
@@ -414,7 +414,7 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get galleryPhotoConfirm =>
-      'This photo will be saved to track this cattle\'s appearance over time.';
+      'काळाच्या ओघात या पशूची वाढ आणि स्वरूप ट्रॅक करण्यासाठी हा फोटो जतन केला जाईल.';
 
   @override
   String get photoAdded => 'फोटो जोडला गेला';
@@ -678,7 +678,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get ongoing => 'सक्रिय';
 
   @override
-  String get recovered => 'बरी झालेली';
+  String get recovered => 'बरे झाले';
 
   @override
   String get symptomsOptional => 'लक्षणे (पर्यायी)';
@@ -751,4 +751,617 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get noSymptomsNoted => 'कोणत्याही लक्षणांची नोंद नाही';
+
+  @override
+  String get milkYieldTab => 'दूध उत्पादन';
+
+  @override
+  String get milkAndLactationTitle => 'दूध व दुग्धकाळ';
+
+  @override
+  String get notifications => 'सूचना';
+
+  @override
+  String get filterButton => 'फिल्टर';
+
+  @override
+  String get clearAll => 'सर्व साफ करा';
+
+  @override
+  String showingCattleCount(int filtered, int total) {
+    return '$total पैकी $filtered पशू दाखवत आहे';
+  }
+
+  @override
+  String get noCattleMatchFilter =>
+      'निवडलेल्या फिल्टरनुसार कोणताही पशू आढळला नाही.';
+
+  @override
+  String get resetSearchAndFilters => 'शोध आणि फिल्टर रीसेट करा';
+
+  @override
+  String get filterAndSortCattle => 'पशू फिल्टर व क्रमवारी';
+
+  @override
+  String get sortOrder => 'क्रमवारी';
+
+  @override
+  String get resetAll => 'सर्व रीसेट करा';
+
+  @override
+  String showMatchingCattle(int count) {
+    return '$count पशू दाखवा';
+  }
+
+  @override
+  String get sexLabel => 'लिंग';
+
+  @override
+  String get lifeStageLabel => 'जीवन टप्पा';
+
+  @override
+  String get healthStatusLabel => 'आरोग्य स्थिती';
+
+  @override
+  String get reproductiveStatusLabel => 'प्रजनन स्थिती';
+
+  @override
+  String get vaccinationStatusLabel => 'लसीकरण';
+
+  @override
+  String get milkAndLactation => 'दूध व दुग्धकाळ';
+
+  @override
+  String get breedCategory => 'जात';
+
+  @override
+  String get female => 'मादी';
+
+  @override
+  String get male => 'नर';
+
+  @override
+  String get calf => 'वासरू';
+
+  @override
+  String get heifer => 'कालवड';
+
+  @override
+  String get cow => 'गाय';
+
+  @override
+  String get bull => 'वळू';
+
+  @override
+  String get steer => 'बैल';
+
+  @override
+  String get healthy => 'निरोगी';
+
+  @override
+  String get underObservation => 'निरीक्षणाखाली';
+
+  @override
+  String get diseased => 'आजारी';
+
+  @override
+  String get unknown => 'अज्ञात';
+
+  @override
+  String get pregnant => 'गाभण';
+
+  @override
+  String get notPregnant => 'गाभण नाही';
+
+  @override
+  String get upToDate => 'अद्ययावत';
+
+  @override
+  String get dueSoon => 'लवकरच देय';
+
+  @override
+  String get overdue => 'मुदत संपलेली';
+
+  @override
+  String get noRecord => 'नोंद नाही';
+
+  @override
+  String get milkingCows => 'दुभत्या गायी';
+
+  @override
+  String get dryCows => 'आटलेल्या गायी';
+
+  @override
+  String get highProducers => 'उच्च उत्पादक (>15 लि/दिवस)';
+
+  @override
+  String get mediumProducers => 'मध्यम उत्पादक (8–15 लि/दिवस)';
+
+  @override
+  String get lowProducers => 'कमी उत्पादक (<8 लि/दिवस)';
+
+  @override
+  String get recentlyCalved => 'नुकतीच व्यायलेली';
+
+  @override
+  String get sortRecentlyAdded => 'नुकतेच जोडलेले';
+
+  @override
+  String get sortOldestAdded => 'सर्वात जुने';
+
+  @override
+  String get sortNameAsc => 'आयडी (A → Z)';
+
+  @override
+  String get sortNameDesc => 'आयडी (Z → A)';
+
+  @override
+  String get sortAgeAsc => 'वय (लहानांपासून मोठे)';
+
+  @override
+  String get sortAgeDesc => 'वय (मोठ्यांपासून लहान)';
+
+  @override
+  String get todaysMilkProduction => 'आजचे दूध उत्पादन';
+
+  @override
+  String cowsMilked(int count) {
+    return '$count गायींचे दूध काढले';
+  }
+
+  @override
+  String get liters => 'लिटर';
+
+  @override
+  String get averagePerCow => 'सरासरी / गाय';
+
+  @override
+  String topProducer(String id, String yield) {
+    return 'अव्वल: #$id ($yield लि)';
+  }
+
+  @override
+  String get topProducerNone => 'अव्वल उत्पादक: अद्याप कोणी नाही';
+
+  @override
+  String lowestProducer(String id, String yield) {
+    return 'किमान: #$id ($yield लि)';
+  }
+
+  @override
+  String get thisWeek => 'या आठवड्यात';
+
+  @override
+  String get thisMonth => 'या महिन्यात';
+
+  @override
+  String get milkingHerd => 'दुभता कळप';
+
+  @override
+  String cowsCount(int count) {
+    return '$count गायी';
+  }
+
+  @override
+  String get recordMilk => 'दूध नोंदवा';
+
+  @override
+  String get reports => 'अहवाल';
+
+  @override
+  String get productionAnalytics => 'उत्पादन विश्लेषण';
+
+  @override
+  String get milkHistory => 'दुधाचा इतिहास';
+
+  @override
+  String daysLogged(int count) {
+    return '$count दिवस नोंदवले';
+  }
+
+  @override
+  String get noMilkRecordsSavedYet =>
+      'अद्याप दुधाची कोणतीही नोंद नाही. सुरू करण्यासाठी \'दूध नोंदवा\' वर टॅप करा.';
+
+  @override
+  String get breedAnalyticsFilter => 'जात विश्लेषण फिल्टर:';
+
+  @override
+  String get allBreeds => 'सर्व जाती';
+
+  @override
+  String cowsRecordedCount(int count, String plural) {
+    return '$count गाई नोंदवल्या';
+  }
+
+  @override
+  String get morningShort => 'सकाळ';
+
+  @override
+  String get eveningShort => 'संध्याकाळ';
+
+  @override
+  String get editMilkRecord => 'दूध नोंद संपादित करा';
+
+  @override
+  String get recordMilkYield => 'दूध उत्पादन नोंदवा';
+
+  @override
+  String get recordExistsWarning =>
+      'या गायीची या तारखेची नोंद आधीच अस्तित्वात आहे. जतन केल्यास ती अपडेट होईल.';
+
+  @override
+  String get cattleLabel => 'पशू';
+
+  @override
+  String get selectCow => 'गाय निवडा';
+
+  @override
+  String get milkingBadge => 'दुभती';
+
+  @override
+  String get recordDate => 'नोंदीची तारीख';
+
+  @override
+  String get morningLiters => 'सकाळ (लिटर)';
+
+  @override
+  String get eveningLiters => 'संध्याकाळ (लिटर)';
+
+  @override
+  String get totalDailyYield => 'एकूण दैनिक उत्पादन';
+
+  @override
+  String get notesOptionalMilk => 'टीप (पर्यायी)';
+
+  @override
+  String get notesHintMilk => 'उदा. हिरवा चारा दिला, सामान्य भूक';
+
+  @override
+  String get updateRecord => 'नोंद अपडेट करा';
+
+  @override
+  String get saveRecordButton => 'नोंद जतन करा';
+
+  @override
+  String get pleaseSelectCattle => 'कृपया एक पशू निवडा';
+
+  @override
+  String get milkProductionReports => 'दूध उत्पादन अहवाल';
+
+  @override
+  String breedFilterBadge(String breed) {
+    return 'जात फिल्टर: $breed';
+  }
+
+  @override
+  String get dailyTab => 'दैनिक';
+
+  @override
+  String get weeklyTab => 'साप्ताहिक';
+
+  @override
+  String get monthlyTab => 'मासिक';
+
+  @override
+  String get reportDateLabel => 'अहवाल तारीख: ';
+
+  @override
+  String get weekStartLabel => 'आठवडा सुरू: ';
+
+  @override
+  String downloadCsvReport(String type) {
+    return '$type CSV अहवाल डाउनलोड करा';
+  }
+
+  @override
+  String reportSaved(String fileName) {
+    return 'अहवाल जतन केला: $fileName';
+  }
+
+  @override
+  String get reportCopied => 'अहवाल क्लिपबोर्डवर कॉपी केला!';
+
+  @override
+  String get dailyAvg => 'दैनिक सरासरी';
+
+  @override
+  String get totalYieldLabel => 'एकूण उत्पादन';
+
+  @override
+  String get bestLabel => 'उत्कृष्ट';
+
+  @override
+  String get worstLabel => 'किमान';
+
+  @override
+  String get orderLabel => 'क्रम:';
+
+  @override
+  String get bestToWorst => 'उत्कृष्ट → किमान';
+
+  @override
+  String get worstToBest => 'किमान → उत्कृष्ट';
+
+  @override
+  String noMilkRecordsForPeriod(String breedText) {
+    return 'या कालावधीसाठी कोणतीही दुधाची नोंद आढळली नाही$breedText.';
+  }
+
+  @override
+  String recordedOutOfDays(int recorded, int total) {
+    return 'नोंदवले: $recorded/$total दिवस';
+  }
+
+  @override
+  String recordedEntriesCount(int count) {
+    return 'नोंदवले: $count नोंदी';
+  }
+
+  @override
+  String morningEveningBreakdown(String morning, String evening) {
+    return 'सकाळ: $morning लि  •  संध्याकाळ: $evening लि';
+  }
+
+  @override
+  String get notificationsAndSmartAlerts => 'सूचना आणि स्मार्ट अलर्ट';
+
+  @override
+  String get allClear => 'सर्व ठीक आहे!';
+
+  @override
+  String get noPendingAlerts => 'कोणतीही प्रलंबित सूचना किंवा अलर्ट नाही.';
+
+  @override
+  String get viewAction => 'पहा';
+
+  @override
+  String get recordMilkAction => 'दूध नोंदवा';
+
+  @override
+  String get logCalvingAction => 'प्रसूती नोंदवा';
+
+  @override
+  String get vaccinateAction => 'लस द्या';
+
+  @override
+  String get editCattleDetails => 'पशू तपशील संपादित करा';
+
+  @override
+  String get dateOfBirthAge => 'जन्म तारीख (वय)';
+
+  @override
+  String get notSet => 'सेट नाही';
+
+  @override
+  String yearsMonthsAge(int years, String yPlural, int months, String mPlural) {
+    return '$years वर्षे $months महिने';
+  }
+
+  @override
+  String yearsAge(int years, String yPlural) {
+    return '$years वर्षे';
+  }
+
+  @override
+  String monthsAge(int months, String mPlural) {
+    return '$months महिने';
+  }
+
+  @override
+  String get unknownAge => 'अज्ञात वय';
+
+  @override
+  String get milkAndLactationProfile => 'दूध व दुग्धकाळ प्रोफाइल';
+
+  @override
+  String get currentlyMilking => 'सध्या दूध देत आहे';
+
+  @override
+  String get lastCalvingDate => 'शेवटची प्रसूती तारीख';
+
+  @override
+  String get inseminationDate => 'कृत्रिम रेतन/गाभण तारीख';
+
+  @override
+  String get expectedDailyYieldBenchmark => 'अपेक्षित दैनिक उत्पादन (मानक)';
+
+  @override
+  String get benchmarkHint => 'उदा. 15.0';
+
+  @override
+  String get symptomsHint => 'उदा. नीट चारा खात नाही';
+
+  @override
+  String get cattleDetailsUpdated => 'पशू तपशील अपडेट केले';
+
+  @override
+  String get milkProductionTab => 'दूध उत्पादन';
+
+  @override
+  String get lactationStatus => 'दुग्धकाळ स्थिती';
+
+  @override
+  String get daysInMilk => 'दूध देण्याचे दिवस (DIM)';
+
+  @override
+  String daysUnit(int count) {
+    return '$count दिवस';
+  }
+
+  @override
+  String get lastCalving => 'शेवटची प्रसूती';
+
+  @override
+  String get estNextCalving => 'अंदाजित पुढील प्रसूती';
+
+  @override
+  String get thirtyDayAverage => '30 दिवसांची सरासरी';
+
+  @override
+  String get totalThisMonth => 'या महिन्यातील एकूण';
+
+  @override
+  String get recentMilkYieldTrend => 'अलीकडील दूध उत्पादन कल';
+
+  @override
+  String get dailyMilkRecords => 'दैनिक दूध नोंदी';
+
+  @override
+  String get noDailyMilkRecords =>
+      'या गायीसाठी अद्याप कोणतीही दैनिक दुधाची नोंद नाही.';
+
+  @override
+  String litersPerDay(String yield) {
+    return '$yield लि/दिवस';
+  }
+
+  @override
+  String get freshStage => 'ताजे (Fresh)';
+
+  @override
+  String get earlyStage => 'प्रारंभिक (Early)';
+
+  @override
+  String get midStage => 'मध्य (Mid)';
+
+  @override
+  String get lateStage => 'अंतिम (Late)';
+
+  @override
+  String get extendedStage => 'विस्तारित दुग्धकाळ';
+
+  @override
+  String get dryStage => 'आटलेला काळ (Dry)';
+
+  @override
+  String stageSuffix(String stage) {
+    return '$stage टप्पा';
+  }
+
+  @override
+  String get calvingDateOverdue => 'प्रसूती तारीख उलटून गेली';
+
+  @override
+  String calvingOverdueMessage(String date) {
+    return 'अपेक्षित प्रसूती तारीख ($date) उलटून गेली आहे. प्रसूती तपशील किंवा गाभण स्थिती अपडेट करा.';
+  }
+
+  @override
+  String get logCalving => 'प्रसूती नोंदवा';
+
+  @override
+  String get predictedBreed => 'अंदाजित जात';
+
+  @override
+  String get noMilkChartRecords =>
+      'अद्याप दुधाची कोणतीही नोंद नाही.\nउत्पादन कल पाहण्यासाठी नोंदणी सुरू करा.';
+
+  @override
+  String get setAsUnknown => 'अज्ञात म्हणून सेट करा';
+
+  @override
+  String breedPredictionItem(String name, int percent) {
+    return '• $name — $percent%';
+  }
+
+  @override
+  String get sexRequired => 'लिंग *';
+
+  @override
+  String get optionalNoteHint => 'उदा. गाभण';
+
+  @override
+  String get missingMilkEntryToday => 'आजची दूध नोंद राहिली';
+
+  @override
+  String missingMilkEntryTitle(String date) {
+    return 'दूध नोंद राहिली ($date)';
+  }
+
+  @override
+  String noMilkRecordEntered(String dateLabel, String id) {
+    return '$dateLabel #$id साठी कोणतीही दूध नोंद केलेली नाही.';
+  }
+
+  @override
+  String get today => 'आज';
+
+  @override
+  String get yesterday => 'काल';
+
+  @override
+  String onDate(String date) {
+    return '$date रोजी';
+  }
+
+  @override
+  String get lowYieldAlertTitle => 'कमी उत्पादनाचा इशारा';
+
+  @override
+  String lowYieldAlertMessage(
+    String id,
+    String percent,
+    String latest,
+    String avg,
+  ) {
+    return '#$id चे दूध उत्पादन $percent% घटले ($latest ली विरूद्ध $avg ली सरासरी).';
+  }
+
+  @override
+  String get dryOffReminderTitle => 'दूध सुकवण्याचा आठवण संदेश';
+
+  @override
+  String dryOffReminderMessage(String id, int days) {
+    return '#$id कडून $days दिवसांत विण्याचे अपेक्षित आहे. ड्राय कालावधीसाठी तयार करा.';
+  }
+
+  @override
+  String get calvingDateOverdueTitle => 'विण्याची तारीख उलटून गेली';
+
+  @override
+  String calvingDateOverdueMessage(
+    String id,
+    int days,
+    String plural,
+    String date,
+  ) {
+    return '#$id ची अपेक्षित विण्याची तारीख $days दिवसांपूर्वी होती ($date). माहिती अपडेट करा.';
+  }
+
+  @override
+  String get calvingReminderTitle => 'विण्याचा आठवण संदेश';
+
+  @override
+  String calvingReminderMessage(String id, int days, String plural) {
+    return '#$id कडून $days दिवसांत विणे अपेक्षित आहे. तयारी करा.';
+  }
+
+  @override
+  String get vaccinationOverdueTitle => 'लसीकरण थकीत';
+
+  @override
+  String vaccinationOverdueMessage(
+    String id,
+    String vacName,
+    int days,
+    String plural,
+    String date,
+  ) {
+    return '#$id — $vacName $days दिवसांपूर्वी देणे आवश्यक होते ($date).';
+  }
+
+  @override
+  String get vaccinationDueSoonTitle => 'लसीकरण लवकरच देणे आहे';
+
+  @override
+  String vaccinationDueSoonMessage(
+    String id,
+    String vacName,
+    int days,
+    String plural,
+    String date,
+  ) {
+    return '#$id — $vacName $days दिवसांत देणे आहे ($date).';
+  }
 }

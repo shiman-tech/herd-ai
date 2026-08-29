@@ -15,12 +15,10 @@
   "wrongPin": "Wrong PIN",
   "usePinToUnlock": "Use PIN to unlock",
   "tryFingerprintFace": "Try fingerprint/face",
-  
   "settings": "Settings",
   "changePin": "Change PIN",
   "language": "Language",
   "selectLanguage": "Select Language",
-  
   "currentPin": "Current PIN",
   "newPin": "New PIN",
   "confirmNewPin": "Confirm new PIN",
@@ -31,7 +29,6 @@
   "pinsDoNotMatch": "New PINs do not match",
   "enterAllFields": "Please fill in all fields",
   "invalidPinLength": "PIN must be 4 digits",
-  
   "cattleNotebook": "Cattle Notebook",
   "noCattles": "No cattle registered yet.",
   "searchHint": "Search your herd...",
@@ -71,7 +68,6 @@
   "registering": "Registering...",
   "cattleRegistered": "Cattle registered",
   "failedToRegister": "Could not register cattle",
-  
   "basicInfo": "Basic info",
   "registeredOn": "Registered: {date}",
   "@registeredOn": {
@@ -122,7 +118,6 @@
   "confirmCustomBreed": "Confirm custom breed",
   "customBreedHint": "e.g. Jersey Cross",
   "breedSetUnknown": "Breed set to Unknown / Mixed",
-  
   "healthRecords": "Health Records",
   "addHealthRecord": "Add Health Record",
   "editHealthRecord": "Edit Health Record",
@@ -137,7 +132,6 @@
   "deleteHealthRecordConfirm": "Delete this health record?",
   "healthRecordDeleted": "Health record deleted",
   "healthRecordSaved": "Health record saved",
-  
   "vaccinationRecords": "Vaccination Records",
   "addVaccination": "Add Vaccination",
   "editVaccination": "Edit Vaccination",
@@ -149,7 +143,6 @@
   "deleteVaccinationConfirm": "Delete this vaccination record?",
   "vaccinationDeleted": "Vaccination deleted",
   "vaccinationSaved": "Vaccination saved",
-  
   "notes": "Notes",
   "addNote": "Add Note",
   "editNote": "Edit Note",
@@ -158,12 +151,10 @@
   "deleteNoteConfirm": "Delete this note?",
   "noteDeleted": "Note deleted",
   "noteSaved": "Note saved",
-  
   "cattleIdentification": "Cattle Identification",
   "cattleIdentificationDesc": "Add facial photos used to recognize this cattle.",
   "noIdentityPhotos": "No facial photos added yet.",
   "addFacialPhoto": "Add Photo",
-
   "photos": "Photo Gallery",
   "addPhoto": "Add Photo",
   "photoDesc": "Add photos to track this cattle's appearance over time.",
@@ -195,7 +186,6 @@
   "classifyThisPhotoConfirm": "A clear, well-lit full-body photo gives the best breed prediction.",
   "classify": "Classify",
   "takeOrChooseFullBody": "Take or choose a clear full-body photo of this cattle.",
-  
   "deleteCattleRecord": "Delete Cattle Record",
   "deleteCattleRecordConfirm": "Delete {id} and all related records?",
   "@deleteCattleRecordConfirm": {
@@ -216,7 +206,6 @@
       }
     }
   },
-  
   "identifyCattle": "Identify Cattle",
   "identifyTab": "Identify",
   "cattleTab": "My Cattle",
@@ -246,11 +235,9 @@
       }
     }
   },
-  
   "tabOverview": "Overview",
   "tabMedical": "Medical",
   "tabGalleryNotes": "Gallery & Notes",
-  
   "dialogIdentifyAs": "Identify as {id}?",
   "@dialogIdentifyAs": {
     "placeholders": {
@@ -279,7 +266,6 @@
     }
   },
   "dialogIdentifyNewCattle": "No, it's a new cattle",
-  
   "checkingPhotoBeforeReg": "Checking photo before registration...",
   "alreadyInHerd": "{id} is already in your herd",
   "@alreadyInHerd": {
@@ -341,7 +327,6 @@
   "cancelled": "Cancelled.",
   "couldNotCheckPhoto": "Could not check this photo before registration.",
   "couldNotPrepareReg": "Could not prepare registration",
-  
   "captureImage": "Capture Image",
   "uploadImage": "Upload Image",
   "identificationResult": "Identification result",
@@ -385,7 +370,6 @@
       }
     }
   },
-  
   "diseaseNameLabel": "Disease name",
   "ongoing": "Ongoing",
   "recovered": "Recovered",
@@ -431,5 +415,493 @@
       }
     }
   },
-  "noSymptomsNoted": "No symptoms noted"
+  "noSymptomsNoted": "No symptoms noted",
+  "milkYieldTab": "Milk Yield",
+  "milkAndLactationTitle": "Milk & Lactation",
+  "notifications": "Notifications",
+  "filterButton": "Filter",
+  "clearAll": "Clear all",
+  "showingCattleCount": "Showing {filtered} of {total} cattle",
+  "@showingCattleCount": {
+    "placeholders": {
+      "filtered": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noCattleMatchFilter": "No cattle match the selected filters.",
+  "resetSearchAndFilters": "Reset Search & Filters",
+  "filterAndSortCattle": "Filter & Sort Cattle",
+  "sortOrder": "Sort Order",
+  "resetAll": "Reset All",
+  "showMatchingCattle": "Show {count} Cattle",
+  "@showMatchingCattle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sexLabel": "Sex",
+  "lifeStageLabel": "Life Stage",
+  "healthStatusLabel": "Health Status",
+  "reproductiveStatusLabel": "Reproductive Status",
+  "vaccinationStatusLabel": "Vaccination",
+  "milkAndLactation": "Milk & Lactation",
+  "breedCategory": "Breed",
+  "female": "Female",
+  "male": "Male",
+  "calf": "Calf",
+  "heifer": "Heifer",
+  "cow": "Cow",
+  "bull": "Bull",
+  "steer": "Steer",
+  "healthy": "Healthy",
+  "underObservation": "Under Observation",
+  "diseased": "Diseased",
+  "unknown": "Unknown",
+  "pregnant": "Pregnant",
+  "notPregnant": "Not Pregnant",
+  "upToDate": "Up to Date",
+  "dueSoon": "Due Soon",
+  "overdue": "Overdue",
+  "noRecord": "No Record",
+  "milkingCows": "Milking Cows",
+  "dryCows": "Dry Cows",
+  "highProducers": "High Producers (>15 L/day)",
+  "mediumProducers": "Medium Producers (8–15 L/day)",
+  "lowProducers": "Low Producers (<8 L/day)",
+  "recentlyCalved": "Recently Calved",
+  "sortRecentlyAdded": "Recently Added",
+  "sortOldestAdded": "Oldest Added",
+  "sortNameAsc": "ID (A → Z)",
+  "sortNameDesc": "ID (Z → A)",
+  "sortAgeAsc": "Age (Youngest)",
+  "sortAgeDesc": "Age (Oldest)",
+  "todaysMilkProduction": "Today's Milk Production",
+  "cowsMilked": "{count} cows milked",
+  "@cowsMilked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liters": "Liters",
+  "averagePerCow": "Average / Cow",
+  "topProducer": "Top: #{id} ({yield} L)",
+  "@topProducer": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "yield": {
+        "type": "String"
+      }
+    }
+  },
+  "topProducerNone": "Top Producer: None yet",
+  "lowestProducer": "Low: #{id} ({yield} L)",
+  "@lowestProducer": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "yield": {
+        "type": "String"
+      }
+    }
+  },
+  "thisWeek": "This Week",
+  "thisMonth": "This Month",
+  "milkingHerd": "Milking Herd",
+  "cowsCount": "{count} cows",
+  "@cowsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recordMilk": "Record Milk",
+  "reports": "Reports",
+  "productionAnalytics": "Production Analytics",
+  "milkHistory": "Milk History",
+  "daysLogged": "{count} days logged",
+  "@daysLogged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noMilkRecordsSavedYet": "No milk records saved yet. Tap \"Record Milk\" to start.",
+  "breedAnalyticsFilter": "Breed Analytics Filter:",
+  "allBreeds": "All Breeds",
+  "cowsRecordedCount": "{count} cow{plural} recorded",
+  "@cowsRecordedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "morningShort": "M",
+  "eveningShort": "E",
+  "editMilkRecord": "Edit Milk Record",
+  "recordMilkYield": "Record Milk Yield",
+  "recordExistsWarning": "A record for this cow on this date already exists. Saving will update it.",
+  "cattleLabel": "Cattle",
+  "selectCow": "Select Cow",
+  "milkingBadge": "Milking",
+  "recordDate": "Record Date",
+  "morningLiters": "Morning (L)",
+  "eveningLiters": "Evening (L)",
+  "totalDailyYield": "Total Daily Yield",
+  "notesOptionalMilk": "Notes (Optional)",
+  "notesHintMilk": "e.g. Fed silage, normal appetite",
+  "updateRecord": "Update Record",
+  "saveRecordButton": "Save Record",
+  "pleaseSelectCattle": "Please select a cattle",
+  "milkProductionReports": "Milk Production Reports",
+  "breedFilterBadge": "Breed Filter: {breed}",
+  "@breedFilterBadge": {
+    "placeholders": {
+      "breed": {
+        "type": "String"
+      }
+    }
+  },
+  "dailyTab": "Daily",
+  "weeklyTab": "Weekly",
+  "monthlyTab": "Monthly",
+  "reportDateLabel": "Report Date: ",
+  "weekStartLabel": "Week Start: ",
+  "downloadCsvReport": "Download {type} CSV Report",
+  "@downloadCsvReport": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "reportSaved": "Report saved: {fileName}",
+  "@reportSaved": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "reportCopied": "Report copied to clipboard!",
+  "dailyAvg": "Daily Avg",
+  "totalYieldLabel": "Total Yield",
+  "bestLabel": "Best",
+  "worstLabel": "Worst",
+  "orderLabel": "Order:",
+  "bestToWorst": "Best → Worst",
+  "worstToBest": "Worst → Best",
+  "noMilkRecordsForPeriod": "No milk records found for this period{breedText}.",
+  "@noMilkRecordsForPeriod": {
+    "placeholders": {
+      "breedText": {
+        "type": "String"
+      }
+    }
+  },
+  "recordedOutOfDays": "Recorded: {recorded}/{total} days",
+  "@recordedOutOfDays": {
+    "placeholders": {
+      "recorded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "recordedEntriesCount": "Recorded: {count} entries",
+  "@recordedEntriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "morningEveningBreakdown": "Morning: {morning} L  •  Evening: {evening} L",
+  "@morningEveningBreakdown": {
+    "placeholders": {
+      "morning": {
+        "type": "String"
+      },
+      "evening": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsAndSmartAlerts": "Notifications & Smart Alerts",
+  "allClear": "All Clear!",
+  "noPendingAlerts": "No pending notifications or alerts.",
+  "viewAction": "VIEW",
+  "recordMilkAction": "RECORD MILK",
+  "logCalvingAction": "LOG CALVING",
+  "vaccinateAction": "VACCINATE",
+  "editCattleDetails": "Edit Cattle Details",
+  "dateOfBirthAge": "Date of Birth (Age)",
+  "notSet": "Not set",
+  "yearsMonthsAge": "{years} yr{yPlural} {months} mo{mPlural}",
+  "@yearsMonthsAge": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      },
+      "yPlural": {
+        "type": "String"
+      },
+      "months": {
+        "type": "int"
+      },
+      "mPlural": {
+        "type": "String"
+      }
+    }
+  },
+  "yearsAge": "{years} yr{yPlural}",
+  "@yearsAge": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      },
+      "yPlural": {
+        "type": "String"
+      }
+    }
+  },
+  "monthsAge": "{months} mo{mPlural}",
+  "@monthsAge": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      },
+      "mPlural": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownAge": "Unknown age",
+  "milkAndLactationProfile": "Milk & Lactation Profile",
+  "currentlyMilking": "Currently Milking",
+  "lastCalvingDate": "Last Calving Date",
+  "inseminationDate": "Insemination Date",
+  "expectedDailyYieldBenchmark": "Expected Daily Yield (Benchmark)",
+  "benchmarkHint": "e.g. 15.0",
+  "symptomsHint": "e.g. Not eating properly",
+  "cattleDetailsUpdated": "Cattle details updated",
+  "milkProductionTab": "Milk Production",
+  "lactationStatus": "Lactation Status",
+  "daysInMilk": "Days in Milk (DIM)",
+  "daysUnit": "{count} days",
+  "@daysUnit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lastCalving": "Last Calving",
+  "estNextCalving": "Est. Next Calving",
+  "thirtyDayAverage": "30-Day Average",
+  "totalThisMonth": "Total This Month",
+  "recentMilkYieldTrend": "Recent Milk Yield Trend",
+  "dailyMilkRecords": "Daily Milk Records",
+  "noDailyMilkRecords": "No daily milk yields recorded for this cow yet.",
+  "litersPerDay": "{yield} L/day",
+  "@litersPerDay": {
+    "placeholders": {
+      "yield": {
+        "type": "String"
+      }
+    }
+  },
+  "freshStage": "Fresh",
+  "earlyStage": "Early",
+  "midStage": "Mid",
+  "lateStage": "Late",
+  "extendedStage": "Extended Lactation",
+  "dryStage": "Dry",
+  "stageSuffix": "{stage} Stage",
+  "@stageSuffix": {
+    "placeholders": {
+      "stage": {
+        "type": "String"
+      }
+    }
+  },
+  "calvingDateOverdue": "Calving Date Overdue",
+  "calvingOverdueMessage": "Expected calving ({date}) has passed. Update calving information or pregnancy status.",
+  "@calvingOverdueMessage": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "logCalving": "Log Calving",
+  "predictedBreed": "Predicted Breed",
+  "noMilkChartRecords": "No milk records yet.\nStart recording to see production trends.",
+  "setAsUnknown": "Set as Unknown",
+  "breedPredictionItem": "• {name} — {percent}%",
+  "@breedPredictionItem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "sexRequired": "Sex *",
+  "optionalNoteHint": "e.g. Pregnant",
+  "missingMilkEntryToday": "Missing Milk Entry Today",
+  "missingMilkEntryTitle": "Missing Milk Entry ({date})",
+  "@missingMilkEntryTitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "noMilkRecordEntered": "No milk record entered {dateLabel} for #{id}.",
+  "@noMilkRecordEntered": {
+    "placeholders": {
+      "dateLabel": {
+        "type": "String"
+      },
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "today": "today",
+  "yesterday": "yesterday",
+  "onDate": "on {date}",
+  "@onDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "lowYieldAlertTitle": "Low Yield Alert",
+  "lowYieldAlertMessage": "#{id} milk production dropped {percent}% ({latest} L vs {avg} L avg).",
+  "@lowYieldAlertMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      },
+      "latest": {
+        "type": "String"
+      },
+      "avg": {
+        "type": "String"
+      }
+    }
+  },
+  "dryOffReminderTitle": "Dry-Off Reminder",
+  "dryOffReminderMessage": "#{id} is expected to calve in {days} days. Prepare cow for dry period.",
+  "@dryOffReminderMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "calvingDateOverdueTitle": "Calving Date Overdue",
+  "calvingDateOverdueMessage": "#{id} expected calving date was {days} day{plural} ago ({date}). Update calving information or pregnancy status.",
+  "@calvingDateOverdueMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "calvingReminderTitle": "Calving Reminder",
+  "calvingReminderMessage": "#{id} is due for calving in {days} day{plural}. Prepare maternity pen.",
+  "@calvingReminderMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "vaccinationOverdueTitle": "Vaccination Overdue",
+  "vaccinationOverdueMessage": "#{id} — {vacName} was due {days} day{plural} ago ({date}).",
+  "@vaccinationOverdueMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "vacName": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "vaccinationDueSoonTitle": "Vaccination Due Soon",
+  "vaccinationDueSoonMessage": "#{id} — {vacName} due in {days} day{plural} ({date}).",
+  "@vaccinationDueSoonMessage": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "vacName": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      },
+      "plural": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }
