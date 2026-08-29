@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import '../l10n/app_localizations.dart';
 import '../services/embedding_database.dart';
 import '../services/milk_report_service.dart';
 
@@ -123,12 +124,13 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    const List<String> monthNames = <String>[
+    final l10n = AppLocalizations.of(context)!;
+    final List<String> monthNames = <String>[
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
 
-    final String breedLabel = widget.breed ?? 'All Breeds';
+    final String breedLabel = widget.breed ?? l10n.allBreeds;
 
     return Container(
       constraints: BoxConstraints(
@@ -166,7 +168,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        'Milk Production Reports',
+                        l10n.milkProductionReports,
                         style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -197,7 +199,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
                     const Icon(Icons.filter_alt, size: 13, color: Color(0xFF2D6A4F)),
                     const SizedBox(width: 4),
                     Text(
-                      'Breed Filter: $breedLabel',
+                      l10n.breedFilterBadge(breedLabel),
                       style: const TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.bold,
@@ -213,10 +215,10 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
 
           // Segmented Toggle: Daily / Weekly / Monthly
           SegmentedButton<int>(
-            segments: const <ButtonSegment<int>>[
-              ButtonSegment<int>(value: 0, label: Text('Daily'), icon: Icon(Icons.today, size: 16)),
-              ButtonSegment<int>(value: 1, label: Text('Weekly'), icon: Icon(Icons.view_week, size: 16)),
-              ButtonSegment<int>(value: 2, label: Text('Monthly'), icon: Icon(Icons.calendar_month, size: 16)),
+            segments: <ButtonSegment<int>>[
+              ButtonSegment<int>(value: 0, label: Text(l10n.dailyTab), icon: const Icon(Icons.today, size: 16)),
+              ButtonSegment<int>(value: 1, label: Text(l10n.weeklyTab), icon: const Icon(Icons.view_week, size: 16)),
+              ButtonSegment<int>(value: 2, label: Text(l10n.monthlyTab), icon: const Icon(Icons.calendar_month, size: 16)),
             ],
             selected: <int>{_reportTypeIndex},
             onSelectionChanged: (Set<int> newSelection) {
@@ -231,7 +233,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           if (_reportTypeIndex == 0) ...<Widget>[
             Row(
               children: <Widget>[
-                const Text('Report Date: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                Text(l10n.reportDateLabel, style: const TextStyle(fontWeight: FontWeight.w600)),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: _pickDate,
@@ -246,7 +248,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           ] else if (_reportTypeIndex == 1) ...<Widget>[
             Row(
               children: <Widget>[
-                const Text('Week Start: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                Text(l10n.weekStartLabel, style: const TextStyle(fontWeight: FontWeight.w600)),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: _pickWeekStart,
@@ -292,10 +294,10 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           // Report Content Body
           Expanded(
             child: _reportTypeIndex == 0
-                ? _buildDailyReportView()
+                ? _buildDailyReportView(l10n)
                 : (_reportTypeIndex == 1
-                    ? _buildWeeklyReportView()
-                    : _buildMonthlyReportView(monthNames[_selectedMonth - 1])),
+                    ? _buildWeeklyReportView(l10n)
+                    : _buildMonthlyReportView(monthNames[_selectedMonth - 1], l10n)),
           ),
 
           const SizedBox(height: 12),
@@ -304,7 +306,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           FilledButton.icon(
             onPressed: _downloadCsv,
             icon: const Icon(Icons.download_rounded),
-            label: Text('Download ${_getReportTypeName()} CSV Report'),
+            label: Text(l10n.downloadCsvReport(_getReportTypeName())),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF2D6A4F),
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -316,11 +318,11 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
     );
   }
 
-  Widget _buildDailyReportView() {
+  Widget _buildDailyReportView(AppLocalizations l10n) {
     final List<DailyReportItem> rawItems = _reportService.getDailyReport(_selectedDate, breed: widget.breed);
 
     if (rawItems.isEmpty) {
-      return _emptyReportState();
+      return _emptyReportState(l10n);
     }
 
     // rawItems already sorted best→worst; reverse if ascending
@@ -344,10 +346,11 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           worstYield: worstYield,
           cowCount: items.length,
           periodLabel: '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-          avgLabel: 'Daily Avg',
+          avgLabel: l10n.dailyAvg,
+          l10n: l10n,
         ),
         const SizedBox(height: 10),
-        _buildSortToggle(),
+        _buildSortToggle(l10n),
         const SizedBox(height: 4),
         Expanded(
           child: ListView.separated(
@@ -361,7 +364,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
                 rank: _sortAscending ? (items.length - i) : (i + 1),
                 cattleId: item.cattleId,
                 totalYield: item.totalYield,
-                detailText: 'Morning: ${item.morningYield.toStringAsFixed(1)} L  •  Evening: ${item.eveningYield.toStringAsFixed(1)} L',
+                detailText: l10n.morningEveningBreakdown(item.morningYield.toStringAsFixed(1), item.eveningYield.toStringAsFixed(1)),
                 isBest: isBest,
                 isWorst: isWorst,
               );
@@ -372,13 +375,13 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
     );
   }
 
-  Widget _buildWeeklyReportView() {
+  Widget _buildWeeklyReportView(AppLocalizations l10n) {
     final WeeklyReportSummary summary = _reportService.getWeeklyReportSummary(_selectedWeekStart, breed: widget.breed);
     final String startStr = '${summary.startDate.day}/${summary.startDate.month}/${summary.startDate.year}';
     final String endStr = '${summary.endDate.day}/${summary.endDate.month}/${summary.endDate.year}';
 
     if (summary.rankedCows.isEmpty) {
-      return _emptyReportState();
+      return _emptyReportState(l10n);
     }
 
     final List<CowPerformanceItem> items = _sortAscending
@@ -397,10 +400,11 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           worstYield: summary.lowestProducingCowYield,
           cowCount: summary.activeMilkingCowsCount,
           periodLabel: '$startStr – $endStr',
-          avgLabel: 'Daily Avg',
+          avgLabel: l10n.dailyAvg,
+          l10n: l10n,
         ),
         const SizedBox(height: 10),
-        _buildSortToggle(),
+        _buildSortToggle(l10n),
         const SizedBox(height: 4),
         Expanded(
           child: ListView.separated(
@@ -414,7 +418,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
                 rank: _sortAscending ? (items.length - i) : (i + 1),
                 cattleId: item.cattleId,
                 totalYield: item.totalYield,
-                detailText: 'Recorded: ${item.daysRecorded}/7 days  •  Avg: ${item.averageDailyYield.toStringAsFixed(1)} L/day',
+                detailText: '${l10n.recordedOutOfDays(item.daysRecorded, 7)}  •  ${l10n.litersPerDay(item.averageDailyYield.toStringAsFixed(1))}',
                 isBest: isBest,
                 isWorst: isWorst,
               );
@@ -425,11 +429,11 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
     );
   }
 
-  Widget _buildMonthlyReportView(String monthName) {
+  Widget _buildMonthlyReportView(String monthName, AppLocalizations l10n) {
     final MonthlyReportSummary summary = _reportService.getMonthlyReportSummary(_selectedYear, _selectedMonth, breed: widget.breed);
 
     if (summary.rankedCows.isEmpty) {
-      return _emptyReportState();
+      return _emptyReportState(l10n);
     }
 
     final List<CowPerformanceItem> items = _sortAscending
@@ -448,10 +452,11 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           worstYield: summary.lowestProducingCowYield,
           cowCount: summary.activeMilkingCowsCount,
           periodLabel: '$monthName $_selectedYear',
-          avgLabel: 'Daily Avg',
+          avgLabel: l10n.dailyAvg,
+          l10n: l10n,
         ),
         const SizedBox(height: 10),
-        _buildSortToggle(),
+        _buildSortToggle(l10n),
         const SizedBox(height: 4),
         Expanded(
           child: ListView.separated(
@@ -465,7 +470,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
                 rank: _sortAscending ? (items.length - i) : (i + 1),
                 cattleId: item.cattleId,
                 totalYield: item.totalYield,
-                detailText: 'Recorded: ${item.daysRecorded} entries  •  Avg: ${item.averageDailyYield.toStringAsFixed(1)} L/day',
+                detailText: '${l10n.recordedEntriesCount(item.daysRecorded)}  •  ${l10n.litersPerDay(item.averageDailyYield.toStringAsFixed(1))}',
                 isBest: isBest,
                 isWorst: isWorst,
               );
@@ -484,6 +489,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
     required String? worstCow,
     required double worstYield,
     required int cowCount,
+    required AppLocalizations l10n,
     String periodLabel = 'Herd Total',
     String avgLabel = 'Daily Avg',
   }) {
@@ -512,7 +518,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
                   ),
                 ),
                 Text(
-                  '$cowCount cows recorded',
+                  l10n.cowsRecordedCount(cowCount, cowCount == 1 ? '' : 's'),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -525,7 +531,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: _statBox('Total Yield', '${totalYield.toStringAsFixed(1)} L', Colors.black87),
+                  child: _statBox(l10n.totalYieldLabel, '${totalYield.toStringAsFixed(1)} L', Colors.black87),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -548,7 +554,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            const Text('Best', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+                            Text(l10n.bestLabel, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
                             Text(
                               bestCow != null ? '#$bestCow  •  ${bestYield.toStringAsFixed(1)} L' : 'N/A',
                               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
@@ -569,7 +575,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            const Text('Worst', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+                            Text(l10n.worstLabel, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
                             Text(
                               worstCow != null ? '#$worstCow  •  ${worstYield.toStringAsFixed(1)} L' : 'N/A',
                               style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red.shade600),
@@ -678,12 +684,12 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
     );
   }
 
-  Widget _buildSortToggle() {
+  Widget _buildSortToggle(AppLocalizations l10n) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: <Widget>[
         Text(
-          'Order:',
+          l10n.orderLabel,
           style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
         ),
         const SizedBox(width: 6),
@@ -713,7 +719,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  _sortAscending ? 'Worst → Best' : 'Best → Worst',
+                  _sortAscending ? l10n.worstToBest : l10n.bestToWorst,
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.bold,
@@ -728,7 +734,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
     );
   }
 
-  Widget _emptyReportState() {
+  Widget _emptyReportState(AppLocalizations l10n) {
     final String breedText = widget.breed != null ? ' for ${widget.breed}' : '';
     return Center(
       child: Column(
@@ -737,7 +743,7 @@ class _MilkReportsSheetState extends State<MilkReportsSheet> {
           Icon(Icons.notes_outlined, size: 48, color: Colors.grey.shade400),
           const SizedBox(height: 8),
           Text(
-            'No milk records found for this period$breedText.',
+            l10n.noMilkRecordsForPeriod(breedText),
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey.shade600),
           ),
