@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/cattle_filter.dart';
 import '../models/cattle_record.dart';
+import '../utils/localized_labels.dart';
 
 class CattleFilterSheet extends StatefulWidget {
   const CattleFilterSheet({
@@ -153,6 +155,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final int matching = _matchingCount;
 
     return Container(
@@ -178,9 +181,9 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
               children: <Widget>[
                 const Icon(Icons.tune, color: Color(0xFF2D6A4F)),
                 const SizedBox(width: 8),
-                const Text(
-                  'Filter & Sort Cattle',
-                  style: TextStyle(
+                Text(
+                  l10n.filterAndSortCattle,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
@@ -194,7 +197,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                         _filter.reset();
                       });
                     },
-                    child: const Text('Reset All'),
+                    child: Text(l10n.resetAll),
                   ),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -210,13 +213,13 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               children: <Widget>[
                 // 1. Sort Options
-                _buildSectionHeader('Sort Order', icon: Icons.sort),
+                _buildSectionHeader(l10n.sortOrder, icon: Icons.sort),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
                   children: CattleSortOption.values.map((CattleSortOption opt) {
                     return _buildChoiceChip(
-                      label: opt.label,
+                      label: opt.localizedLabel(context),
                       isSelected: _filter.sortOption == opt,
                       onSelected: () {
                         setState(() {
@@ -228,13 +231,13 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                 ),
 
                 // 2. Sex
-                _buildSectionHeader('Sex', icon: Icons.transgender),
+                _buildSectionHeader(l10n.sexLabel, icon: Icons.transgender),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
                   children: <String>['Female', 'Male'].map((String sex) {
                     return _buildChip(
-                      label: sex,
+                      label: LocalizedLabels.sex(context, sex),
                       isSelected: _filter.selectedSexes.contains(sex),
                       onSelected: () => _toggleSetItem(_filter.selectedSexes, sex),
                     );
@@ -242,13 +245,13 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                 ),
 
                 // 3. Life Stage
-                _buildSectionHeader('Life Stage', icon: Icons.timeline),
+                _buildSectionHeader(l10n.lifeStageLabel, icon: Icons.timeline),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
                   children: <String>['Calf', 'Heifer', 'Steer', 'Unknown'].map((String stage) {
                     return _buildChip(
-                      label: stage,
+                      label: LocalizedLabels.lifeStage(context, stage),
                       isSelected: _filter.selectedLifeStages.contains(stage),
                       onSelected: () => _toggleSetItem(_filter.selectedLifeStages, stage),
                     );
@@ -256,7 +259,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                 ),
 
                 // 4. Health Status
-                _buildSectionHeader('Health Status', icon: Icons.favorite),
+                _buildSectionHeader(l10n.healthStatusLabel, icon: Icons.favorite),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
@@ -276,7 +279,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                       activeColor = const Color(0xFFC62828);
                     }
                     return _buildChip(
-                      label: status,
+                      label: LocalizedLabels.healthStatus(context, status),
                       activeColor: activeColor,
                       isSelected: _filter.selectedHealthStatuses.contains(status),
                       onSelected: () =>
@@ -286,7 +289,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                 ),
 
                 // 5. Reproductive Status
-                _buildSectionHeader('Reproductive Status', icon: Icons.pregnant_woman),
+                _buildSectionHeader(l10n.reproductiveStatusLabel, icon: Icons.pregnant_woman),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
@@ -296,7 +299,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                       activeColor = const Color(0xFF8E24AA);
                     }
                     return _buildChip(
-                      label: repro,
+                      label: LocalizedLabels.reproductiveStatus(context, repro),
                       activeColor: activeColor,
                       isSelected: _filter.selectedReproductiveStatuses.contains(repro),
                       onSelected: () =>
@@ -306,7 +309,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                 ),
 
                 // 6. Vaccination Status
-                _buildSectionHeader('Vaccination', icon: Icons.vaccines),
+                _buildSectionHeader(l10n.vaccinationStatusLabel, icon: Icons.vaccines),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
@@ -325,7 +328,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                       activeColor = const Color(0xFFC62828);
                     }
                     return _buildChip(
-                      label: vax,
+                      label: LocalizedLabels.vaccinationStatus(context, vax),
                       activeColor: activeColor,
                       isSelected: _filter.selectedVaccinationStatuses.contains(vax),
                       onSelected: () =>
@@ -335,7 +338,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                 ),
 
                 // 7. Milk & Lactation Status
-                _buildSectionHeader('Milk & Lactation', icon: Icons.water_drop_outlined),
+                _buildSectionHeader(l10n.milkAndLactation, icon: Icons.water_drop_outlined),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
@@ -362,7 +365,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                       activeColor = const Color(0xFF6A1B9A);
                     }
                     return _buildChip(
-                      label: milkStatus,
+                      label: LocalizedLabels.milkStatus(context, milkStatus),
                       activeColor: activeColor,
                       isSelected: _filter.selectedMilkStatuses.contains(milkStatus),
                       onSelected: () =>
@@ -372,13 +375,13 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                 ),
 
                 // 8. Breed
-                _buildSectionHeader('Breed', icon: Icons.category),
+                _buildSectionHeader(l10n.breedCategory, icon: Icons.category),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
                   children: _availableBreeds.map((String breed) {
                     return _buildChip(
-                      label: breed,
+                      label: breed == 'Unknown' ? l10n.unknown : breed,
                       isSelected: _filter.selectedBreeds.contains(breed),
                       onSelected: () => _toggleSetItem(_filter.selectedBreeds, breed),
                     );
@@ -423,7 +426,7 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
                 },
                 icon: const Icon(Icons.check),
                 label: Text(
-                  'Show $matching Cattle',
+                  l10n.showMatchingCattle(matching),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -437,3 +440,4 @@ class _CattleFilterSheetState extends State<CattleFilterSheet> {
     );
   }
 }
+
