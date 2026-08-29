@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../models/cattle_record.dart';
 import '../models/milk_record.dart';
 import '../services/embedding_database.dart';
@@ -117,6 +118,7 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final List<CattleRecord> allCattle = widget.database.getAllCattle();
     final String dateDisplay = '${_selectedDate.day.toString().padLeft(2, '0')}/'
         '${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year}';
@@ -127,7 +129,7 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
           const Icon(Icons.water_drop, color: Color(0xFF2D6A4F)),
           const SizedBox(width: 8),
           Text(
-            _isEditingExisting ? 'Edit Milk Record' : 'Record Milk Yield',
+            _isEditingExisting ? l10n.editMilkRecord : l10n.recordMilkYield,
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
           ),
         ],
@@ -152,7 +154,7 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        'A record for this cow on this date already exists. Saving will update it.',
+                        l10n.recordExistsWarning,
                         style: TextStyle(fontSize: 11.5, color: Colors.amber.shade900, fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -162,9 +164,9 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
 
             // Cow Selector / Name Display
             if (widget.initialCattleId != null) ...<Widget>[
-              const Text(
-                'Cattle',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
+              Text(
+                l10n.cattleLabel,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
               ),
               const SizedBox(height: 4),
               Builder(
@@ -194,9 +196,9 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
                 },
               ),
             ] else ...<Widget>[
-              const Text(
-                'Select Cow',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
+              Text(
+                l10n.selectCow,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
               ),
               const SizedBox(height: 4),
               DropdownButtonFormField<String>(
@@ -221,9 +223,9 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
                               color: const Color(0xFFE8F5E9),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
-                              'Milking',
-                              style: TextStyle(fontSize: 10, color: Color(0xFF2D6A4F), fontWeight: FontWeight.bold),
+                            child: Text(
+                              l10n.milkingBadge,
+                              style: const TextStyle(fontSize: 10, color: Color(0xFF2D6A4F), fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -250,9 +252,9 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const Text(
-                        'Record Date',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
+                      Text(
+                        l10n.recordDate,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
                       ),
                       const SizedBox(height: 4),
                       OutlinedButton.icon(
@@ -279,9 +281,9 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const Text(
-                        'Morning (L)',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
+                      Text(
+                        l10n.morningLiters,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
                       ),
                       const SizedBox(height: 4),
                       TextField(
@@ -302,9 +304,9 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const Text(
-                        'Evening (L)',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
+                      Text(
+                        l10n.eveningLiters,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
                       ),
                       const SizedBox(height: 4),
                       TextField(
@@ -335,12 +337,12 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  const Text(
-                    'Total Daily Yield',
-                    style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF2D6A4F), fontSize: 13),
+                  Text(
+                    l10n.totalDailyYield,
+                    style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF2D6A4F), fontSize: 13),
                   ),
                   Text(
-                    '${_calculatedTotal.toStringAsFixed(1)} Liters',
+                    '${_calculatedTotal.toStringAsFixed(1)} ${l10n.liters}',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2D6A4F)),
                   ),
                 ],
@@ -349,16 +351,16 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
             const SizedBox(height: 12),
 
             // Notes
-            const Text(
-              'Notes (Optional)',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
+            Text(
+              l10n.notesOptionalMilk,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
             ),
             const SizedBox(height: 4),
             TextField(
               controller: _notesController,
-              decoration: const InputDecoration(
-                hintText: 'e.g. Fed silage, normal appetite',
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: InputDecoration(
+                hintText: l10n.notesHintMilk,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
               maxLines: 2,
             ),
@@ -368,14 +370,14 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
       actions: <Widget>[
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: _saveRecord,
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF2D6A4F),
           ),
-          child: Text(_isEditingExisting ? 'Update Record' : 'Save Record'),
+          child: Text(_isEditingExisting ? l10n.updateRecord : l10n.saveRecordButton),
         ),
       ],
     );
