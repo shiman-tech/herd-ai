@@ -22,6 +22,7 @@ import 'widgets/notifications_sheet.dart';
 
 import 'l10n/app_localizations.dart';
 import 'services/app_language_service.dart';
+import 'utils/localized_labels.dart';
 
 const Color kFarmPrimary = Color(0xFF2D6A4F);
 const Color kFarmSecondary = Color(0xFF95A97F);
@@ -128,8 +129,14 @@ class HerdAiApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const AuthGate(child: HerdHomePage()),
+      builder: (BuildContext context, Widget? child) {
+        return Directionality(
+          textDirection: TextDirection.ltr,
+          child: child!,
         );
+      },
+      home: const AuthGate(child: HerdHomePage()),
+    );
       },
     );
   }
@@ -404,12 +411,12 @@ class _HerdHomePageState extends State<HerdHomePage> {
                   DropdownButtonFormField<String>(
                     isExpanded: true,
                     initialValue: selectedSex,
-                    decoration: const InputDecoration(
-                      labelText: 'Sex *',
+                    decoration: InputDecoration(
+                      labelText: localizations.sexRequired,
                     ),
-                    items: const <DropdownMenuItem<String>>[
-                      DropdownMenuItem(value: 'Female', child: Text('Female')),
-                      DropdownMenuItem(value: 'Male', child: Text('Male')),
+                    items: <DropdownMenuItem<String>>[
+                      DropdownMenuItem(value: 'Female', child: Text(LocalizedLabels.sex(context, 'Female'))),
+                      DropdownMenuItem(value: 'Male', child: Text(LocalizedLabels.sex(context, 'Male'))),
                     ],
                     onChanged: (String? val) {
                       if (val != null) {
@@ -422,7 +429,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
                     controller: noteController,
                     decoration: InputDecoration(
                       labelText: localizations.optionalNote,
-                      hintText: 'e.g. Pregnant',
+                      hintText: localizations.optionalNoteHint,
                     ),
                   ),
                 ],
@@ -1183,7 +1190,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
                     color: activeCount > 0 ? const Color(0xFF2D6A4F) : Colors.black87,
                   ),
                   label: Text(
-                    'Filter',
+                    localizations.filterButton,
                     style: TextStyle(
                       color: activeCount > 0 ? const Color(0xFF2D6A4F) : Colors.black87,
                       fontWeight: activeCount > 0 ? FontWeight.w700 : FontWeight.normal,
@@ -1282,9 +1289,9 @@ class _HerdHomePageState extends State<HerdHomePage> {
                         children: <Widget>[
                           Icon(Icons.search_off, size: 48, color: Colors.grey.shade400),
                           const SizedBox(height: 12),
-                          const Text(
-                            'No cattle match the selected filters.',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                          Text(
+                            localizations.noCattleMatchFilter,
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                           ),
                           const SizedBox(height: 8),
                           FilledButton.tonal(
@@ -1294,7 +1301,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
                                 _filterCriteria.reset();
                               });
                             },
-                            child: const Text('Reset Search & Filters'),
+                            child: Text(localizations.resetSearchAndFilters),
                           ),
                         ],
                       ),
@@ -1388,7 +1395,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
           title: Text(
             _currentTab == 0
                 ? localizations.identifyCattle
-                : (_currentTab == 1 ? localizations.yourHerd : 'Milk & Lactation'),
+                : (_currentTab == 1 ? localizations.yourHerd : localizations.milkAndLactationTitle),
           ),
           actions: <Widget>[
             Builder(
@@ -1404,7 +1411,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
                         alertCount > 0 ? Icons.notifications_active : Icons.notifications_outlined,
                         color: const Color(0xFF2D6A4F),
                       ),
-                      tooltip: 'Notifications',
+                      tooltip: localizations.notifications,
                     ),
                     if (alertCount > 0)
                       Positioned(
@@ -1467,7 +1474,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
           destinations: <NavigationDestination>[
             NavigationDestination(icon: const Icon(Icons.search), label: localizations.identifyTab),
             NavigationDestination(icon: const Icon(Icons.list_alt), label: localizations.cattleTab),
-            const NavigationDestination(icon: Icon(Icons.water_drop_outlined), selectedIcon: Icon(Icons.water_drop), label: 'Milk Yield'),
+            NavigationDestination(icon: const Icon(Icons.water_drop_outlined), selectedIcon: const Icon(Icons.water_drop), label: localizations.milkYieldTab),
           ],
         ),
       ),
