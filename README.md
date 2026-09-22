@@ -1,292 +1,291 @@
 # Herd AI
 
-A fully offline Flutter application for AI-powered livestock identification and herd management. Point your camera at a cow, and the app identifies it from your registered herd using on-device machine learning — no internet connection required.
+A fully offline, production-grade Flutter application for AI-powered livestock identification, indigenous breed recognition, and end-to-end dairy herd management. Point your camera at a cow or buffalo to identify it from your registered herd using on-device machine learning, detect its breed across 34 classes, track daily milk yield & lactation cycles, manage health and vaccination schedules, and receive proactive alerts — 100% offline with zero cloud dependency.
 
 ---
 
 ## Table of Contents
 
 - [Overview](#overview)
-- [How It Works](#how-it-works)
-- [ML Pipeline](#ml-pipeline)
-  - [1. Training the Model (Python)](#1-training-the-model-python)
-  - [2. Exporting to TFLite](#2-exporting-to-tflite)
-  - [3. On-Device Inference (Flutter)](#3-on-device-inference-flutter)
-  - [4. Cosine Similarity Matching](#4-cosine-similarity-matching)
-- [App Features](#app-features)
+- [Key Features](#key-features)
+  - [1. AI Identification & Breed Recognition](#1-ai-identification--breed-recognition)
+  - [2. Herd Registry & Multi-Faceted Filtering](#2-herd-registry--multi-faceted-filtering)
+  - [3. Cattle Detail & Lifecycle Management](#3-cattle-detail--lifecycle-management)
+  - [4. Milk Yield Management & Lactation Analytics](#4-milk-yield-management--lactation-analytics)
+  - [5. Smart Notifications & Proactive Alerts](#5-smart-notifications--proactive-alerts)
+  - [6. Multi-Language Support (10 Indian Languages)](#6-multi-language-support-10-indian-languages)
+- [Dual On-Device ML Pipeline](#dual-on-device-ml-pipeline)
+  - [1. Facial Identification Model (MobileNetV2 Embedding)](#1-facial-identification-model-mobilenetv2-embedding)
+  - [2. Breed Classification Model (EfficientNet)](#2-breed-classification-model-efficientnet)
+  - [3. Cosine Similarity Matching Engine](#3-cosine-similarity-matching-engine)
 - [Authentication & Security](#authentication--security)
-- [Database & Storage](#database--storage)
+- [Database Architecture & Storage](#database-architecture--storage)
+  - [SQLite Schema (v8)](#sqlite-schema-v8)
+  - [In-Memory Cache & Threading](#in-memory-cache--threading)
+  - [Media Management & Integrity](#media-management--integrity)
 - [Project Structure](#project-structure)
 - [Dependencies](#dependencies)
-- [Setup & Running](#setup--running)
+- [Setup & Getting Started](#setup--getting-started)
 - [Platform Notes](#platform-notes)
-- [Troubleshooting](#troubleshooting)
+  - [Android](#android)
+  - [iOS](#ios)
+  - [Desktop (Windows / macOS / Linux)](#desktop-windows--macos--linux)
 - [Tuning & Configuration](#tuning--configuration)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Overview
 
-Herd AI solves a real farming problem: reliably identifying individual cows without tags or barcodes. Each cow's visual appearance is encoded into a compact 128-dimensional numerical vector (an *embedding*). When you photograph a cow, the app runs the same encoding on-device and compares the result against every stored embedding using cosine similarity. If the best match exceeds a configurable threshold, the cow is identified; otherwise it is flagged as unknown and can be registered.
+Herd AI is built for farmers, dairy cooperatives, veterinarians, and livestock managers operating in rural and remote environments without reliable cellular connectivity. By leveraging on-device TensorFlow Lite neural networks, Herd AI turns any standard smartphone into an intelligent livestock biometric terminal and herd record-keeper.
 
-All data — embeddings, health records, vaccination history, images, and notes — is stored locally on the device using SQLite. Nothing leaves the phone.
-
----
-
-## How It Works
-
-```
-Photo  →  Resize 224×224  →  Normalize pixels [0,1]  →  TFLite model
-                                                               ↓
-                                                     128-dim embedding
-                                                               ↓
-                                                     L2 normalization
-                                                               ↓
-                                              Cosine similarity vs. database
-                                                               ↓
-                                               Best match  /  Unknown
-```
-
-1. The user captures or uploads a photo.
-2. The image is decoded, resized to `224×224`, and each RGB pixel is divided by `255.0`.
-3. The preprocessed tensor `[1, 224, 224, 3]` is fed into the on-device TFLite model.
-4. The model outputs a `[1, 128]` tensor — the raw embedding.
-5. The embedding is L2-normalized so that all stored vectors sit on the unit hypersphere.
-6. Cosine similarity is computed between the query embedding and every stored embedding.
-7. If the best similarity score is ≥ the threshold (`0.75` by default), the cow is identified. Otherwise the result is `Unknown`.
+### Core Capabilities
+- **Biometric Face Identification:** Replaces physical tags, RFID chips, and barcodes with 128-dimensional facial embedding vectors.
+- **Indigenous Breed Classification:** Identifies 34 prominent cattle and buffalo breeds (e.g., Gir, Sahiwal, Red Sindhi, Tharparkar, Ongole, Kankrej) with confidence scoring.
+- **Lactation & Milk Yield Tracking:** Morning/evening yield logging, Days in Milk (DIM), Gestation tracking, Dry-off calculators, and interactive analytics charts.
+- **Health & Preventative Care:** Diagnostic history, symptom records, and automated vaccination status (Up to Date, Due Soon, Overdue).
+- **Proactive Farm Alerts:** Missing milk entry detection, sudden yield drops, upcoming dry-off, and calving reminders.
+- **100% Offline & Private:** All ML inference and data persistence run entirely on the local device via SQLite and secure storage.
 
 ---
 
-## ML Pipeline
+## Key Features
 
-### 1. Training the Model (Python)
+### 1. AI Identification & Breed Recognition
+- **Live Camera / Gallery Picker:** Capture or select cattle portraits with automatic image downsampling and quality optimization.
+- **Simultaneous Dual Inference:** Runs face embedding extraction and breed classification concurrently.
+- **Confidence Scoring & Warnings:** Visual confidence badges with borderline similarity alerts to prevent accidental duplicates.
+- **Quick Registration:** Seamlessly register unknown cattle with auto-populated AI breed predictions, custom tags, and notes.
 
-**File:** [`identification_model.py`](identification_model.py)
+### 2. Herd Registry & Multi-Faceted Filtering
+- **Interactive Search:** Instant search by cattle ID, breed, or custom tags.
+- **Multi-Parameter Filtering Sheet:** Filter herd by:
+  - **Sex:** Male, Female, Unknown
+  - **Life Stage:** Calf (<12 mo auto-assigned), Heifer, Cow, Bull, Steer
+  - **Health Status:** Healthy, Under Observation, Diseased, Recovered
+  - **Reproductive Status:** Pregnant, Not Pregnant, Unknown
+  - **Vaccination Status:** Up to Date, Due Soon, Overdue, No Record
+  - **Breed:** Filter by specific indigenous or cross breeds
+- **Smart Sorting:** Sort by Registration Date, ID, Age, or Milk Yield.
 
-The reference training script uses TensorFlow/Keras with transfer learning on MobileNetV2:
+### 3. Cattle Detail & Lifecycle Management
+- **Demographics:** Age calculation (years & months), life stage, sex, and reproductive health.
+- **Breed Verification:** View top-5 AI predicted breeds with confidence bars; allows user manual override and confirmation.
+- **Multi-Photo Gallery:** Attach multiple reference photos per animal; manage linked embedding vectors per photo to continuously improve identification accuracy over time.
+- **Health & Treatment Log:** Log disease incidents, active symptoms, resolution status, and veterinary treatment notes.
+- **Vaccination Manager:** Track administered vaccines, schedule next due dates, and view auto-calculated overdue alerts.
+- **Cascading ID Renaming & Deletion:** Safely rename or delete cattle with full relational integrity across all database tables.
 
-| Step | Detail |
-|------|--------|
-| **Dataset** | [Cattely Cattle Face Images Dataset](https://github.com/aideep1400/Cattely-Cattle-Face-Images-Dataset) — ~50 cows, ~2,500 frontal images |
-| **Augmentation** | Horizontal flip, 30% zoom, ±20° rotation, brightness ±20% |
-| **Base model** | `MobileNetV2` pre-trained on ImageNet; last 20 layers unfrozen for fine-tuning |
-| **Head** | `GlobalAveragePooling2D` → `Dense(128, relu)` → `Dropout(0.5)` → `Dense(num_classes, softmax)` |
-| **Optimizer** | Adam, lr = 0.0001 |
-| **Loss** | Categorical cross-entropy |
-| **Embedding** | The 128-unit dense layer (second-to-last) is extracted as the embedding model |
+### 4. Milk Yield Management & Lactation Analytics
+- **Dedicated Milk Dashboard:** 
+  - Today's Total Yield (Liters)
+  - Active Milking Cows Count & Herd Average per Cow
+  - Top and Lowest Producing Cows of the day
+  - Weekly and Monthly Cumulative Totals
+- **Lactation Cycle Tracking:**
+  - **Days in Milk (DIM):** Auto-computed from calving date.
+  - **Lactation Stages:** Automated classification into *Fresh* (0–30 d), *Early* (31–100 d), *Mid* (101–200 d), *Late* (201–305 d), *Extended* (>305 d), and *Dry*.
+  - **Gestation & Dry-Off Calculations:** Estimated calving date (~283 days post-insemination) and target dry-off date (~220 days).
+- **Interactive Visualizations:** 7-day milk yield trends, lactation stage distribution, and herd performance curves.
+- **Reporting & CSV Export:** Generate Daily, Weekly, and Monthly milk reports with cow performance rankings and export to CSV files for cooperative record-keeping.
 
-After training, the full classifier model is saved. The embedding branch — everything up to and including the 128-dim dense layer — is then extracted and exported separately.
+### 5. Smart Notifications & Proactive Alerts
+- **Notification Drawer:** Accessible from the main app bar with badge counters for active alerts.
+- **Alert Types:**
+  - ⚠️ **Missing Daily Entry:** Alerts when an active milking cow has no yield recorded for today.
+  - 📉 **Low Yield Warning:** Triggers when yield drops significantly below 30-day averages or target benchmarks.
+  - ⏳ **Upcoming Dry-Off:** Reminders when cows approach target dry-off dates before calving.
+  - 🍼 **Calving Reminders:** Alerts when pregnant cows reach their expected calving window.
+  - 💉 **Vaccination Due / Overdue:** Notifications for pending preventative vaccines.
+- **Persistent Dismissal:** Dismiss alerts individually or in bulk, with state saved in `SharedPreferences`.
 
-### 2. Exporting to TFLite
+### 6. Multi-Language Support (10 Indian Languages)
+Fully localized UI strings and farm terminology across 10 official languages:
+- **English** (`en`)
+- **हिन्दी** (Hindi - `hi`)
+- **বাংলা** (Bengali - `bn`)
+- **ગુજરાતી** (Gujarati - `gu`)
+- **ಕನ್ನಡ** (Kannada - `kn`)
+- **मराठी** (Marathi - `mr`)
+- **ଓଡ଼ିଆ** (Odia - `or`)
+- **தமிழ்** (Tamil - `ta`)
+- **తెలుగు** (Telugu - `te`)
+- **اردو** (Urdu - `ur`)
 
-**File:** [`export_embedding_tflite.py`](export_embedding_tflite.py)
-
-```bash
-# Save your trained model first, then run:
-python export_embedding_tflite.py
-```
-
-This script:
-1. Loads the saved Keras model from `artifacts/cow_identifier.keras`.
-2. Reconstructs an embedding-only model using `model.layers[-2].output` (the 128-dim Dense layer).
-3. Converts it to TFLite with `DEFAULT` optimizations (dynamic-range quantization).
-4. Writes the result to `assets/models/cow_identifier.tflite`.
-
-The app expects:
-
-| Property | Value |
-|----------|-------|
-| Input tensor shape | `[1, 224, 224, 3]` — float32 |
-| Output tensor shape | `[1, 128]` — float32 |
-| Asset path | `assets/models/cow_identifier.tflite` |
-
-### 3. On-Device Inference (Flutter)
-
-**File:** [`lib/services/tflite_embedding_service.dart`](lib/services/tflite_embedding_service.dart)
-
-`TfliteEmbeddingService` manages the TFLite interpreter lifecycle:
-
-- **`loadModel()`** — tries two candidate asset paths in order:
-  1. `assets/models/cow_identifier.tflite`
-  2. `models/cow_identifier.tflite` (fallback)
-  
-  Validates that input/output tensor shapes match `[1,224,224,3]` / `[1,128]` before returning.
-
-- **`getEmbedding(File imageFile)`** — full preprocessing + inference pipeline:
-  1. Reads the file as raw bytes.
-  2. Decodes the image with the `image` package.
-  3. Resizes to `224×224` using bilinear interpolation.
-  4. Builds the input tensor by iterating pixels: `[r/255, g/255, b/255]`.
-  5. Runs `interpreter.run(input, output)`.
-  6. L2-normalizes the 128-element output vector before returning.
-
-- **`dispose()`** — closes the interpreter to free native resources.
-
-### 4. Cosine Similarity Matching
-
-**File:** [`lib/utils/math_utils.dart`](lib/utils/math_utils.dart)
-
-Two pure-Dart functions power matching:
-
-```dart
-// L2-normalize a vector so it lives on the unit hypersphere
-List<double> normalizeEmbedding(List<double> embedding)
-
-// Dot product of two unit vectors equals cosine of the angle between them
-double cosineSimilarity(List<double> a, List<double> b)
-```
-
-**File:** [`lib/services/embedding_database.dart`](lib/services/embedding_database.dart) — `predictCow()`
-
-The matcher iterates every stored embedding across every registered cow and tracks the globally highest cosine similarity score. A cow can have **multiple embeddings** (one per registration photo), making identification more robust:
-
-```
-for each CowRecord:
-  for each stored embedding:
-    score = cosineSimilarity(queryEmbedding, storedEmbedding)
-    track best score and corresponding cow ID
-
-if bestScore >= similarityThreshold → identified
-else → Unknown
-```
+Switch languages instantly in the Settings menu with real-time UI refresh.
 
 ---
 
-## App Features
+## Dual On-Device ML Pipeline
 
-### Identify Tab
+```
+                                  Input Image (Camera / Gallery)
+                                                │
+                       ┌────────────────────────┴────────────────────────┐
+                       ▼                                                 ▼
+             [ Preprocessing 224×224 ]                         [ Preprocessing 224×224 ]
+             [  Pixel Norm [0, 1]    ]                         [  Pixel Norm [0, 1]    ]
+                       │                                                 │
+                       ▼                                                 ▼
+            MobileNetV2 Embedding Model                       EfficientNet Breed Model
+          (cow_identifier.tflite)                     (efficientnet_breed_classifier.tflite)
+                       │                                                 │
+                       ▼                                                 ▼
+                128-dim Vector                                 Softmax Probabilities (34 classes)
+                       │                                                 │
+                       ▼                                                 ▼
+                L2 Normalization                               Top-5 Breed Predictions
+                       │                                       (e.g., Gir 94%, Sahiwal 4%)
+                       ▼
+        Cosine Similarity Matching Engine
+         (vs. In-Memory SQLite Vectors)
+                       │
+       ┌───────────────┴───────────────┐
+       ▼                               ▼
+Match ≥ 0.75                    Match < 0.75
+Identified Cow ID               Unknown (New Cattle)
+```
 
-- **Capture Image** — opens the device camera (suspends the app-lock timer while the native picker is active so the app does not re-lock mid-capture).
-- **Upload Image** — opens the device photo gallery.
-- **Identify Cow** — runs on-device TFLite inference and cosine-similarity matching, displaying the predicted cow ID and confidence percentage.
-- **Add this cow** — appears when the result is `Unknown`; opens a dialog to assign an ID and optional note, then stores the embedding and photo permanently.
+### 1. Facial Identification Model (MobileNetV2 Embedding)
+- **Model Path:** `assets/models/cow_identifier.tflite`
+- **Input Tensor:** `[1, 224, 224, 3]` (float32)
+- **Output Tensor:** `[1, 128]` (float32)
+- **Architecture:** MobileNetV2 feature extractor with a 128-dimensional dense projection head trained on cattle face datasets.
 
-### My Cows Tab
+### 2. Breed Classification Model (EfficientNet)
+- **Model Path:** `assets/models/efficientnet_breed_classifier.tflite`
+- **Class Map:** `assets/models/class_names.json` (34 classes)
+- **Input Tensor:** `[1, 224, 224, 3]` (float32)
+- **Output Tensor:** `[1, 34]` (float32 softmax probabilities)
+- **Supported Breeds:** Amritmahal, Ayrshire, Bargur, Dangi, Deoni, Gir, Hallikar, Hariana, Kangayam, Kankrej, Kenkatha, Kosali, Ladakhi, Lakhimi, Mewati, Nari, Ongole, Poda Thirupu, Pulikulam, Punganur, Purnea, Rathi, Red Kandhari, Red Sindhi, Sahiwal, Tharparkar, Vechur, Bachaur, Gaolao, Motu, Nagori, Ponwar, Siri, Thutho.
 
-- Searchable list of all registered cows, sorted by most recently registered.
-- Each row shows the cow's profile photo thumbnail, ID, and counts of health records, vaccinations, and notes.
-- Tap any cow to open the **Cow Detail Page**.
-
-### Cow Detail Page
-
-**File:** [`lib/widgets/cow_detail_page.dart`](lib/widgets/cow_detail_page.dart)
-
-A full record management screen for each individual cow:
-
-| Section | Capabilities |
-|---------|-------------|
-| **Basic info** | Edit cow ID; rename cascades to all child database rows |
-| **Photo gallery** | Add, replace, or delete photos; first photo becomes the profile image |
-| **Health records** | Add / edit / delete records with disease name, date, status (`Ongoing` / `Resolved`), symptoms, and treatment notes |
-| **Vaccination records** | Add / edit / delete entries with vaccine name, date given, optional next-due date, and notes |
-| **Notes** | Add / edit / delete free-text notes |
-
-### Settings
-
-Accessible via the gear icon on the Identify tab:
-
-- **Change PIN** — verifies the current PIN (SHA-256 hash comparison) before accepting a new 4-digit PIN.
+### 3. Cosine Similarity Matching Engine
+- Vectors are L2-normalized upon inference:
+  $$\hat{\mathbf{v}} = \frac{\mathbf{v}}{\|\mathbf{v}\|_2}$$
+- Cosine similarity between query vector $\mathbf{q}$ and stored vector $\mathbf{s}$:
+  $$\text{Similarity}(\mathbf{q}, \mathbf{s}) = \mathbf{q} \cdot \mathbf{s} = \sum_{i=1}^{128} q_i s_i$$
+- Multiple embeddings per animal are evaluated against the query; the maximum similarity across all registered photos determines identification.
+- **Threshold Defaults:**
+  - **Known Match:** $\ge 0.75$
+  - **Borderline Warning:** $0.65 \le \text{Score} < 0.75$
+  - **Unknown:** $< 0.65$
 
 ---
 
 ## Authentication & Security
 
-**Files:** [`lib/widgets/auth_gate.dart`](lib/widgets/auth_gate.dart), [`lib/services/app_auth_service.dart`](lib/services/app_auth_service.dart), [`lib/services/app_lock_controller.dart`](lib/services/app_lock_controller.dart)
-
-The app is protected by a two-factor local authentication flow:
-
-### First Launch — PIN Creation
-
-1. `AuthGate` detects no PIN is stored.
-2. A 4-digit PIN pad is shown; the user enters and confirms their PIN.
-3. The PIN is SHA-256 hashed and stored in `flutter_secure_storage` (iOS Keychain / Android Keystore).
-
-### Subsequent Launches — Unlock Flow
-
-```
-App opens
-    ↓
-Has PIN?  →  No  →  PIN creation flow
-    ↓ Yes
-Try biometrics (fingerprint / Face ID)
-    ↓ Success → Unlock
-    ↓ Fail / unavailable
-Enter PIN pad  →  SHA-256 hash == stored hash?  →  Unlock
-```
-
-### Background Lock
-
-`AuthGate` observes `AppLifecycleState` changes:
-- When the app moves to background/inactive, the timestamp is recorded.
-- On resume, if more than **2.5 seconds** have elapsed, the lock screen is shown again.
-- Short switches (< 2.5 s) are ignored to prevent locking during camera/gallery operations.
-- `AppLockController` (singleton) provides `suspendLock()` / `resumeLock()` so image-picker calls can temporarily prevent the lock from triggering.
-
-### Security Properties
-
-| Property | Implementation |
-|----------|---------------|
-| PIN storage | SHA-256 hash in `flutter_secure_storage` |
-| Biometric | `local_auth` — system-level fingerprint / Face ID |
-| PIN length | Exactly 4 digits |
-| Lock timeout | 2.5 s after backgrounding |
+- **Two-Factor Local Authentication:** Protects sensitive farm and herd data.
+- **Biometric Unlock:** System-level Fingerprint / Face ID integration via `local_auth`.
+- **4-Digit Secure PIN:** First-launch PIN setup and PIN fallback with SHA-256 cryptographic hashing.
+- **Hardware Keystore Storage:** Hashed PIN stored in iOS Keychain / Android Keystore using `flutter_secure_storage`.
+- **Intelligent Background Auto-Lock:** Re-locks the application after 2.5 seconds of background inactivity, while seamlessly suspending the lock timer during native camera and file picker actions (`AppLockController`).
 
 ---
 
-## Database & Storage
+## Database Architecture & Storage
 
-**File:** [`lib/services/embedding_database.dart`](lib/services/embedding_database.dart)
+All data is stored locally in SQLite (`herd_ai.db`) using `sqflite`.
 
-### SQLite Schema
+### SQLite Schema (v8)
 
-All data is persisted in `herd_ai.db` inside the app's documents directory using `sqflite`:
+```sql
+-- Cattle Primary Table
+CREATE TABLE cattle (
+  id TEXT PRIMARY KEY,
+  registration_date TEXT NOT NULL,
+  profile_image_path TEXT,
+  breed_name TEXT,
+  breed_confidence REAL,
+  breed_alternatives_json TEXT,
+  confirmed_breed TEXT,
+  breed_confirmed_by_user INTEGER NOT NULL DEFAULT 0,
+  sex TEXT,
+  date_of_birth TEXT,
+  life_stage TEXT,
+  health_status TEXT,
+  reproductive_status TEXT,
+  is_milking INTEGER DEFAULT 0,
+  is_pregnant INTEGER DEFAULT 0,
+  calving_date TEXT,
+  insemination_date TEXT,
+  dry_off_date TEXT,
+  expected_daily_yield REAL
+);
 
+-- Milk Yield Records
+CREATE TABLE milk_records (
+  id TEXT PRIMARY KEY,
+  cattle_id TEXT NOT NULL,
+  date TEXT NOT NULL,
+  morning_yield REAL NOT NULL DEFAULT 0.0,
+  evening_yield REAL NOT NULL DEFAULT 0.0,
+  total_yield REAL NOT NULL DEFAULT 0.0,
+  notes TEXT,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE,
+  UNIQUE(cattle_id, date)
+);
+
+-- 128-dim Facial Embeddings
+CREATE TABLE embeddings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  cattle_id TEXT NOT NULL,
+  vector TEXT NOT NULL,
+  source_image_path TEXT,
+  image_id INTEGER,
+  FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE,
+  FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE
+);
+
+-- Health Diagnostic Records
+CREATE TABLE health_records (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  cattle_id TEXT NOT NULL,
+  disease_name TEXT NOT NULL DEFAULT '',
+  date TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Ongoing',
+  symptoms TEXT NOT NULL DEFAULT '',
+  treatment_notes TEXT NOT NULL DEFAULT '',
+  FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE
+);
+
+-- Vaccinations
+CREATE TABLE vaccinations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  cattle_id TEXT NOT NULL,
+  vaccine_name TEXT NOT NULL DEFAULT '',
+  date_given TEXT NOT NULL,
+  next_due_date TEXT,
+  notes TEXT NOT NULL DEFAULT '',
+  FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE
+);
+
+-- Free-Text Notes
+CREATE TABLE notes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  cattle_id TEXT NOT NULL,
+  content TEXT NOT NULL,
+  FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE
+);
+
+-- Multi-Photo Gallery
+CREATE TABLE images (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  cattle_id TEXT NOT NULL,
+  path TEXT NOT NULL,
+  uploaded_at TEXT NOT NULL,
+  FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE
+);
 ```
-cows
-  id TEXT PRIMARY KEY
-  registration_date TEXT
-  profile_image_path TEXT
 
-embeddings
-  id INTEGER PRIMARY KEY AUTOINCREMENT
-  cow_id TEXT → cows(id) ON DELETE CASCADE
-  vector TEXT  ← JSON-encoded List<double>[128]
+### In-Memory Cache & Threading
+- On app launch, the database loads all records and embedding vectors into memory (`Map<String, CattleRecord>` and `List<MilkRecord>`).
+- Similarity matching runs across in-memory vector arrays for sub-millisecond response times.
+- Writes and updates synchronize simultaneously to memory and SQLite within database transactions.
 
-health_records
-  id, cow_id, disease_name, date, status, symptoms, treatment_notes
-
-vaccinations
-  id, cow_id, vaccine_name, date_given, next_due_date, notes
-
-notes
-  id, cow_id, content
-
-images
-  id, cow_id, path
-```
-
-### In-Memory Cache
-
-At startup the entire database is loaded into a `Map<String, CowRecord>` in RAM. All read operations (`getAllCows()`, `getCow()`, `predictCow()`) hit memory only; writes go to both the in-memory map and SQLite atomically.
-
-### Image Persistence
-
-When a photo is added, `_persistImage()` copies it from the temporary picker path into a permanent `cow_images/` subdirectory inside the app's documents directory. The file is renamed with a microsecond timestamp to avoid collisions. Broken image paths are pruned from the database on every app start via `_repairImagePaths()`.
-
-### Legacy Migration
-
-On first run after an upgrade from an older JSON-based format (`cow_records.json`), the database automatically migrates all records into SQLite and renames the old file to `cow_records.json.migrated`. Both the newer `{ "records": {...} }` envelope format and the older flat `{ cowId: [[embeddings]] }` format are supported.
-
-### Data Models
-
-**File:** [`lib/models/cow_record.dart`](lib/models/cow_record.dart)
-
-| Model | Fields |
-|-------|--------|
-| `CowRecord` | `id`, `registrationDate`, `profileImagePath`, `embeddings`, `healthRecords`, `vaccinations`, `notes`, `images` |
-| `HealthRecord` | `diseaseName`, `date`, `status`, `symptoms`, `treatmentNotes` |
-| `VaccinationRecord` | `vaccineName`, `dateGiven`, `nextDueDate`, `notes` |
-| `IdentificationResult` | `predictedCowId`, `similarity`, `isKnown` |
+### Media Management & Integrity
+- Captured photos are copied into an isolated `cattle_images/` directory in the app documents storage.
+- Startup integrity routine (`_repairImagePaths`, `_purgeEmbeddingsForMissingPhotos`, `_removeOrphanEmbeddings`) purges dangling references and reconciles photo-embedding links.
 
 ---
 
@@ -294,168 +293,180 @@ On first run after an upgrade from an older JSON-based format (`cow_records.json
 
 ```
 herd-ai/
-├── identification_model.py          # Reference Keras training script (MobileNetV2)
-├── export_embedding_tflite.py       # Converts trained Keras model → .tflite
 ├── assets/
-│   ├── logo.png                     # App launcher icon
+│   ├── logo.png                                # App launcher icon
 │   └── models/
-│       └── cow_identifier.tflite    # Exported TFLite model (place here)
-├── models/
-│   └── cow_identifier.tflite        # Fallback model path (optional)
-└── lib/
-    ├── main.dart                    # App entry point, theme, home page, tabs
-    ├── models/
-    │   ├── cow_record.dart          # CowRecord, HealthRecord, VaccinationRecord
-    │   └── identification_result.dart
-    ├── services/
-    │   ├── tflite_embedding_service.dart  # TFLite loader, preprocessor, inferencer
-    │   ├── embedding_database.dart        # SQLite persistence + cosine matching
-    │   ├── app_auth_service.dart          # PIN (SHA-256) + biometric auth
-    │   └── app_lock_controller.dart       # Background lock suspend/resume logic
-    ├── utils/
-    │   └── math_utils.dart          # L2 norm, normalizeEmbedding, cosineSimilarity
-    └── widgets/
-        ├── auth_gate.dart           # Lock screen, PIN pad, lifecycle observer
-        └── cow_detail_page.dart     # Per-cow record management UI
+│       ├── cow_identifier.tflite               # Facial embedding TFLite model (128-dim)
+│       ├── efficientnet_breed_classifier.tflite# Breed classification TFLite model (34 classes)
+│       └── class_names.json                    # Class labels for breed model
+├── lib/
+│   ├── main.dart                               # Entry point, theme, App navigation, Identify & Herd tabs
+│   ├── l10n/                                   # ARB files & generated localization delegates
+│   │   ├── app_en.arb                          # English
+│   │   ├── app_hi.arb                          # Hindi
+│   │   ├── app_bn.arb                          # Bengali
+│   │   ├── app_gu.arb                          # Gujarati
+│   │   ├── app_kn.arb                          # Kannada
+│   │   ├── app_mr.arb                          # Marathi
+│   │   ├── app_or.arb                          # Odia
+│   │   ├── app_ta.arb                          # Tamil
+│   │   ├── app_te.arb                          # Telugu
+│   │   └── app_ur.arb                          # Urdu
+│   ├── models/
+│   │   ├── breed_prediction.dart               # BreedPrediction model
+│   │   ├── cattle_filter.dart                  # CattleFilterCriteria & multi-sort model
+│   │   ├── cattle_image.dart                   # CattleImage metadata model
+│   │   ├── cattle_record.dart                  # CattleRecord, HealthRecord, VaccinationRecord
+│   │   ├── embedding_reference.dart            # EmbeddingReference vector container
+│   │   ├── identification_result.dart          # IdentificationResult scoring model
+│   │   └── milk_record.dart                    # MilkRecord daily yield model
+│   ├── services/
+│   │   ├── app_auth_service.dart               # PIN (SHA-256) & Biometric auth service
+│   │   ├── app_language_service.dart           # Locale management & persistence
+│   │   ├── app_lock_controller.dart            # Background lock suspend/resume coordinator
+│   │   ├── embedding_database.dart             # SQLite persistence, cache & cosine matching engine
+│   │   ├── milk_analytics_service.dart         # Herd milk summaries, stats & smart alerts engine
+│   │   ├── milk_report_service.dart            # Daily/Weekly/Monthly reports & CSV generator
+│   │   ├── tflite_breed_service.dart           # EfficientNet breed inference service
+│   │   └── tflite_embedding_service.dart       # MobileNetV2 embedding inference service
+│   ├── utils/
+│   │   ├── localized_alerts.dart               # Localized string formatters for notification alerts
+│   │   ├── localized_labels.dart               # Localized status & enum label helpers
+│   │   └── math_utils.dart                     # L2 normalization & vector cosine similarity
+│   └── widgets/
+│       ├── auth_gate.dart                      # Lock screen, PIN pad, & lifecycle observer
+│       ├── cattle_detail_page.dart             # Comprehensive cattle management profile
+│       ├── cattle_filter_sheet.dart            # Multi-parameter bottom sheet filter
+│       ├── milk_chart_widgets.dart             # Custom paint milk yield trend & distribution charts
+│       ├── milk_entry_dialog.dart              # Morning/Evening milk entry logging dialog
+│       ├── milk_reports_sheet.dart             # Periodic milk reports & CSV export sheet
+│       ├── milk_yield_management_page.dart     # Dedicated Milk Yield tab & lactation dashboard
+│       └── notifications_sheet.dart            # Proactive smart farm alerts drawer
+├── identification_model.py                     # Python training script (MobileNetV2 feature extractor)
+├── export_embedding_tflite.py                  # Python TFLite export & quantization script
+├── pubspec.yaml                                # Dependencies & asset declarations
+└── l10n.yaml                                   # Flutter localization generator configuration
 ```
 
 ---
 
 ## Dependencies
 
-| Package | Purpose |
-|---------|---------|
-| `tflite_flutter ^0.12.1` | Run the `.tflite` model on-device |
-| `image ^4.5.4` | Decode and resize images in Dart |
-| `image_picker ^1.1.2` | Camera capture and gallery access |
-| `sqflite ^2.4.2` | Local SQLite database |
-| `path_provider ^2.1.5` | Locate the app documents directory |
-| `path ^1.9.1` | Cross-platform path joining |
-| `flutter_secure_storage ^9.2.4` | Securely store the hashed PIN |
-| `local_auth ^2.3.0` | Fingerprint / Face ID biometric unlock |
-| `crypto ^3.0.6` | SHA-256 PIN hashing |
-| `flutter_launcher_icons ^0.13.1` | Generate platform launcher icons from `assets/logo.png` |
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `tflite_flutter` | `^0.12.1` | High-performance on-device TensorFlow Lite neural inference |
+| `sqflite` | `^2.4.2` | Local SQLite relational database persistence |
+| `image` | `^4.5.4` | Image decoding, bilinear resizing, and pixel tensor extraction |
+| `image_picker` | `^1.1.2` | Camera capture and gallery image selection |
+| `local_auth` | `^2.3.0` | Biometric authentication (Fingerprint, Touch ID, Face ID) |
+| `flutter_secure_storage` | `^9.2.4` | Keychain/Keystore encrypted PIN storage |
+| `shared_preferences` | `^2.5.5` | Persistent language selection and dismissed alert settings |
+| `crypto` | `^3.0.6` | Cryptographic SHA-256 PIN hashing |
+| `intl` | `0.20.2` | Date formatting and localization utilities |
+| `flutter_localizations` | SDK | Multi-language localization delegates |
+| `path_provider` | `^2.1.5` | File system location provider for local database and images |
+| `path` | `^1.9.1` | Cross-platform file path manipulation |
+| `flutter_launcher_icons` | `^0.13.1` | Generates Android/iOS platform launcher icons |
 
 ---
 
-## Setup & Running
+## Setup & Getting Started
 
 ### Prerequisites
+- **Flutter SDK:** `>= 3.9.2` (Channel stable)
+- **Dart SDK:** `>= 3.9.2`
+- **Platform Toolchains:** Android Studio (SDK 21+) / Xcode (iOS 13+)
 
-- Flutter SDK (Dart SDK `^3.9.2`)
-- Python 3.x + TensorFlow (for model training/export only)
-- A trained and exported `.tflite` model file
+### Installation & Launch
 
-### 1. Get the TFLite model
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/shiman-tech/herd-ai.git
+   cd herd-ai
+   ```
 
-**Option A — Use a pre-trained model:** Place `cow_identifier.tflite` directly at `assets/models/cow_identifier.tflite`.
+2. **Ensure TFLite models are placed in `assets/models/`:**
+   - `assets/models/cow_identifier.tflite`
+   - `assets/models/efficientnet_breed_classifier.tflite`
+   - `assets/models/class_names.json`
 
-**Option B — Train and export your own:**
+3. **Install dependencies and generate localization delegates:**
+   ```bash
+   flutter pub get
+   flutter gen-l10n
+   ```
 
-```bash
-# Train the classifier (edit paths in identification_model.py as needed)
-python identification_model.py
+4. **Run the application:**
+   ```bash
+   flutter run
+   ```
 
-# Export the embedding branch to TFLite
-python export_embedding_tflite.py
-# Output: assets/models/cow_identifier.tflite
-```
-
-### 2. Install Flutter dependencies
-
-```bash
-flutter pub get
-```
-
-### 3. Run the app
-
-```bash
-flutter run
-```
-
-> **Important:** After adding or replacing the `.tflite` file, always do a full app restart (not hot reload). Hot reload does not re-bundle assets.
+> **Note on hot reload:** After modifying assets, TFLite binaries, or localization ARB files, perform a full app restart (`R` in terminal or stop and rerun).
 
 ---
 
 ## Platform Notes
 
 ### Android
-
-No special steps required. Camera and storage permissions are requested at runtime.
+- Permissions for Camera and Storage are handled at runtime.
+- Minimum SDK: `minSdkVersion 21`.
 
 ### iOS
-
-Add the following keys to `ios/Runner/Info.plist` if not already present:
-
+Ensure the following permission strings are present in `ios/Runner/Info.plist`:
 ```xml
 <key>NSCameraUsageDescription</key>
-<string>Used to photograph cows for identification</string>
+<string>Used to photograph cattle for biometric identification and gallery records.</string>
 <key>NSPhotoLibraryUsageDescription</key>
-<string>Used to select cow photos from your library</string>
+<string>Used to select cattle photos from your photo library.</string>
 <key>NSFaceIDUsageDescription</key>
-<string>Used to unlock the app</string>
+<string>Used to authenticate and unlock your farm herd records.</string>
 ```
 
-### Windows Desktop
-
-`tflite_flutter` requires a native TensorFlow Lite DLL in addition to the `.tflite` asset file:
-
-- **Required:** `blobs/libtensorflowlite_c-win.dll`
-
-If this DLL is missing, the app will launch and allow image selection, but model inference (`Identify` / `Register`) will fail during initialization.
-
-### macOS Desktop
-
-`tflite_flutter` requires a TensorFlow Lite `.dylib` bundled with the app. Refer to the [tflite_flutter documentation](https://pub.dev/packages/tflite_flutter) for the correct setup steps.
-
-### Linux Desktop
-
-Requires a TensorFlow Lite `.so` shared library bundled with the app.
-
----
-
-## Troubleshooting
-
-### Identify / Add cow buttons do nothing after selecting a photo
-
-The TFLite model was not loaded. Work through this checklist:
-
-1. Confirm the file exists at `assets/models/cow_identifier.tflite`.
-2. Confirm `pubspec.yaml` lists the asset:
-   ```yaml
-   flutter:
-     assets:
-       - assets/models/
-   ```
-3. Run `flutter pub get` and do a **full restart** (stop and re-run, not hot reload).
-4. Check the app's status card on the Identify tab — any initialization error is displayed there with a **Try again** button.
-
-### Wrong tensor shape error
-
-Your exported model must match exactly:
-
-| Tensor | Shape |
-|--------|-------|
-| Input | `[1, 224, 224, 3]` |
-| Output | `[1, 128]` |
-
-Re-export using `export_embedding_tflite.py` and confirm the penultimate layer is a 128-unit Dense layer.
-
-### Biometric unlock not appearing
-
-- Biometric hardware must be enrolled at the OS level.
-- If no biometrics are enrolled or the device does not support them, the PIN pad is shown directly.
-- Use the **Try fingerprint/face** button on the PIN screen to retry biometrics.
+### Desktop (Windows / macOS / Linux)
+- **Windows:** Requires TensorFlow Lite C library `blobs/libtensorflowlite_c-win.dll` bundled or in the system PATH.
+- **macOS / Linux:** Requires respective `.dylib` or `.so` libraries configured according to `tflite_flutter` guidelines.
 
 ---
 
 ## Tuning & Configuration
 
-| Parameter | Location | Default | Effect |
-|-----------|----------|---------|--------|
-| Similarity threshold | `EmbeddingDatabase` constructor | `0.75` | Lower → more lenient matching (more false positives); higher → stricter (more unknowns) |
-| Lock timeout | `auth_gate.dart` | `2500 ms` | How long the app can be backgrounded before re-locking |
-| Image quality | `main.dart` `_pickImage()` | `95` | JPEG quality for captured photos (1–100) |
-| Max image width | `main.dart` `_pickImage()` | `1600 px` | Downscales very large captures to save memory |
-| Model input size | `TfliteEmbeddingService.inputSize` | `224` | Must match the training resolution |
-| Embedding size | `TfliteEmbeddingService.embeddingSize` | `128` | Must match the model's penultimate dense layer |
+Key configuration variables can be customized in the codebase:
+
+| Parameter | Location | Default | Description |
+|-----------|----------|---------|-------------|
+| Identification Threshold | `EmbeddingDatabase(similarityThreshold:)` | `0.75` | Minimum cosine similarity required to identify a registered animal |
+| Borderline Warning | `IdentificationResult.borderlineThreshold` | `0.65` | Similarity threshold that prompts potential duplicate warnings |
+| Breed Top-N Results | `TfliteBreedService.topN` | `5` | Number of candidate breed predictions returned |
+| Background Lock Timeout | `AuthGateState._lockTimeout` | `2500 ms` | Inactivity threshold before prompting PIN/biometric re-lock |
+| Image Capture Quality | `main.dart` `_pickImage()` | `95%` | JPEG compression quality |
+| Max Image Resolution | `main.dart` `_pickImage()` | `1600 px` | Max dimension downscaling for captured photos |
+| Gestation Duration | `CattleRecord.expectedCalvingDate` | `283 days` | Standard bovine gestation period |
+| Target Dry-Off Period | `CattleRecord.targetDryOffDate` | `220 days` | Days post-insemination (~60 days pre-calving) for dry-off |
+
+---
+
+## Troubleshooting
+
+### "Model not loaded" or buttons disabled
+1. Confirm both `.tflite` files and `class_names.json` exist in `assets/models/`.
+2. Verify `pubspec.yaml` contains:
+   ```yaml
+   flutter:
+     assets:
+       - assets/models/
+   ```
+3. Run `flutter pub get` and do a full restart.
+
+### Biometric unlock does not trigger
+- Ensure at least one fingerprint or Face ID profile is enrolled on the physical test device.
+- Emulators without biometric enrollment will default to the 4-digit PIN screen.
+- Tap **Try fingerprint/face** on the PIN screen to retry.
+
+### CSV Export or Reports Sheet not opening
+- Ensure at least one milk record exists in the database.
+- Generated CSV text can be previewed directly in the sheet or shared to other applications.
+
+---
+
+## License
+Private and Proprietary. All rights reserved.
