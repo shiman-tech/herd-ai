@@ -25,9 +25,14 @@ A fully offline, production-grade Flutter application for AI-powered livestock i
   - [Milk Yield Management & Lactation Dashboard](#milk-yield-management--lactation-dashboard)
   - [Smart Notifications & Proactive Farm Alerts](#smart-notifications--proactive-farm-alerts)
   - [Multi-Language Support (11 Indian Languages)](#multi-language-support-11-indian-languages)
+- [Optional Cloud Sync & Disaster Recovery](#optional-cloud-sync--disaster-recovery)
+  - [1. Offline-First Synchronization](#1-offline-first-synchronization)
+  - [2. Hybrid Device Recovery (Phone OTP + Farm Code & PIN)](#2-hybrid-device-recovery-phone-otp--farm-code--pin)
+  - [3. Media & Facial Embedding Cloud Storage](#3-media--facial-embedding-cloud-storage)
+  - [4. Firebase Configuration Setup](#4-firebase-configuration-setup)
 - [Authentication & Security](#authentication--security)
 - [Database Architecture & SQLite Schema](#database-architecture--sqlite-schema)
-  - [SQLite Schema (v8)](#sqlite-schema-v8)
+  - [SQLite Schema (v9)](#sqlite-schema-v9)
   - [In-Memory Cache & Media Integrity](#in-memory-cache--media-integrity)
 - [Project Structure](#project-structure)
 - [Dependencies](#dependencies)
@@ -51,7 +56,8 @@ Herd AI is engineered for dairy farmers, livestock cooperatives, veterinarians, 
 - **Lactation & Milk Yield Tracking:** Daily morning/evening logs, Days in Milk (DIM), lactation stage classification, gestation calculators, and target dry-off alerts.
 - **Preventative Health & Care:** Diagnostic histories, disease statuses, and automated vaccination status indicators (Up to Date, Due Soon, Overdue).
 - **Proactive Farm Alerts:** Missing milk entry detection, sudden yield drops, upcoming dry-off, and calving reminders.
-- **100% Offline & Private:** All neural network inference and data persistence run entirely locally using SQLite, `flutter_secure_storage`, and on-device TFLite runtimes.
+- **100% Offline-First by Default:** All AI inference, records, milk logs, and images work locally without requiring cellular connection.
+- **Optional Cloud Sync & Disaster Recovery:** Non-blocking background backup to Firebase (Firestore & Storage) when internet is available, enabling zero-loss herd recovery on replacement devices via Phone Number OTP or Farm Code & 4-Digit PIN.
 
 ---
 
@@ -356,6 +362,66 @@ Real-time in-app switching across 11 languages:
 
 ---
 
+## Optional Cloud Sync & Disaster Recovery
+
+While Herd AI is engineered to operate 100% offline in rural farms, physical mobile devices can be lost, broken, damaged, or upgraded. Herd AI includes an **optional, non-blocking cloud backup and restore system** powered by Firebase (Firestore, Storage, and Phone Auth) with automated network detection (`connectivity_plus`).
+
+```
+                    ┌────────────────────────────────────────┐
+                    │               Herd AI                  │
+                    │  (100% Offline-First SQLite & Storage) │
+                    └───────────────────┬────────────────────┘
+                                        │
+                  Network Detection via connectivity_plus
+                  (Triggers only when internet is detected)
+                                        │
+                                        ▼
+                    ┌────────────────────────────────────────┐
+                    │         CloudSyncService               │
+                    │  - Non-blocking background worker      │
+                    │  - Tombstone tracking for deletes      │
+                    │  - Compressed image uploads to Storage │
+                    │  - Atomic Firestore herd document sync │
+                    └───────────────────┬────────────────────┘
+                                        │
+                      ┌─────────────────┴─────────────────┐
+                      ▼                                   ▼
+         Primary Auth: Phone Number OTP       Backup Auth: Farm Code + 4-Digit PIN
+         (For standard phone replacement)     (For lost/broken device without SIM)
+```
+
+### 1. Offline-First Synchronization
+- **Zero Network Blocking:** All writes, cattle registrations, facial embedding calculations, and milk logs are committed immediately to the local SQLite database and local disk first.
+- **Automatic Background Sync:** When Wi-Fi, mobile data, or Ethernet connectivity is detected, `CloudSyncService` automatically synchronizes modified records and tombstones in the background.
+- **Reactive Status Badge:** An interactive cloud status badge in the AppBar indicates sync states:
+  - ☁️✓ **Cloud Synced:** All local records and images are backed up.
+  - 🔄 **Syncing...:** Background synchronization in progress.
+  - ☁️✕ **Offline:** Working offline; all changes safely cached locally.
+  - ⚠️ **Sync Issue:** Displays tap-to-retry details.
+
+### 2. Hybrid Device Recovery (Phone OTP + Farm Code & PIN)
+Farmers frequently face unique challenges (e.g., lost devices without active SIM cards, lack of Google accounts). Herd AI solves this with a two-tier recovery model:
+1. **Primary Method — Mobile Phone Number (SMS OTP):**
+   - Farmers can link their 10-digit mobile number in the Cloud Sync Sheet.
+   - On a new phone: Select **Restore Herd** $\rightarrow$ Enter Phone Number $\rightarrow$ Verify with SMS OTP $\rightarrow$ Entire herd is restored.
+2. **Backup Method — Farm Code & 4-Digit PIN:**
+   - Every farm profile is assigned a unique, easily memorable code (e.g., `HERD-482910`).
+   - If a device is lost, stolen, or destroyed, and the SIM card is not yet replaced, the farmer enters their **Farm Code + their existing 4-digit PIN**.
+   - The cloud validates the SHA-256 PIN hash and restores all data immediately without requiring an SMS OTP.
+
+### 3. Media & Facial Embedding Cloud Storage
+- **Image Optimization:** Cattle face photos are automatically resized (max 1280px) and compressed using 85% JPEG encoding before uploading to Firebase Storage (`farms/{farmId}/images/`).
+- **Path Portability:** On device restoration, photos are downloaded directly into the new phone's local `cattle_images/` directory, seamlessly re-linking image file paths in SQLite so all facial identification models work offline immediately.
+- **Facial Embeddings:** 128-dimensional biometric vectors are synchronized in Firestore documents, allowing zero-shot facial identification on the replacement device.
+
+### 4. Firebase Configuration Setup
+Cloud sync is completely optional and includes safe fallbacks if Firebase credentials are not yet supplied:
+1. Place `google-services.json` in `android/app/` for Android.
+2. Place `GoogleService-Info.plist` in `ios/Runner/` for iOS.
+3. Enable **Cloud Firestore**, **Firebase Storage**, and **Phone Authentication** in your Firebase Console.
+
+---
+
 ## Authentication & Security
 
 - **Two-Factor Local Authentication:** Protects sensitive farm and herd data.
@@ -370,7 +436,7 @@ Real-time in-app switching across 11 languages:
 
 All records are stored locally in `herd_ai.db` via `sqflite`.
 
-### SQLite Schema (v8)
+### SQLite Schema (v9)
 
 ```sql
 -- Cattle Master Table
@@ -460,6 +526,14 @@ CREATE TABLE images (
   uploaded_at TEXT NOT NULL,
   FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE
 );
+
+-- Cloud Sync Tombstones (Tracks offline deletions for cloud reconciliation)
+CREATE TABLE sync_tombstones (
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  deleted_at TEXT NOT NULL,
+  PRIMARY KEY (entity_type, entity_id)
+);
 ```
 
 ### In-Memory Cache & Media Integrity
@@ -499,13 +573,16 @@ herd-ai/
 │   │   ├── cattle_image.dart                   # Photo record model
 │   │   ├── cattle_record.dart                  # CattleRecord, HealthRecord, VaccinationRecord
 │   │   ├── embedding_reference.dart            # Embedding container & legacy parser
+│   │   ├── farm_profile.dart                   # Cloud sync farm identity & metadata model
 │   │   ├── identification_result.dart          # Identification scoring model
 │   │   └── milk_record.dart                    # Daily milk entry model
 │   ├── services/
 │   │   ├── app_auth_service.dart               # PIN (SHA-256) & Biometric auth
 │   │   ├── app_language_service.dart           # Locale persistence & management
 │   │   ├── app_lock_controller.dart            # Background lock suspend/resume logic
+│   │   ├── cloud_sync_service.dart             # Network detection & cloud synchronization coordinator
 │   │   ├── embedding_database.dart             # SQLite persistence & Cosine matching engine
+│   │   ├── firebase_sync_backend.dart          # Firestore, Storage & Phone Auth adapter
 │   │   ├── milk_analytics_service.dart         # Herd summary, lactation stats & alerts engine
 │   │   ├── milk_report_service.dart            # Periodic reports & CSV generator
 │   │   ├── tflite_breed_service.dart           # EfficientNet on-device inference service
@@ -518,11 +595,14 @@ herd-ai/
 │       ├── auth_gate.dart                      # PIN pad, biometric prompt & lifecycle observer
 │       ├── cattle_detail_page.dart             # Cattle profile & lifecycle manager
 │       ├── cattle_filter_sheet.dart            # Multi-parameter filter sheet
+│       ├── cloud_restore_sheet.dart            # Farm Code & Phone OTP cloud restoration sheet
+│       ├── cloud_sync_sheet.dart               # Cloud sync status, Farm Code & backup controls
 │       ├── milk_chart_widgets.dart             # Custom paint milk yield charts
 │       ├── milk_entry_dialog.dart              # Morning/evening milk log dialog
 │       ├── milk_reports_sheet.dart             # Periodic report viewer & CSV exporter
 │       ├── milk_yield_management_page.dart     # Dedicated Milk Yield tab
-│       └── notifications_sheet.dart            # Proactive smart farm alerts drawer
+│       ├── notifications_sheet.dart            # Proactive smart farm alerts drawer
+│       └── sync_status_badge.dart              # Interactive AppBar cloud sync indicator badge
 ├── identification_model.py                     # Python Keras MobileNetV2 training script
 ├── export_embedding_tflite.py                  # Python TFLite export & quantization script
 ├── pubspec.yaml                                # Dependencies & asset declarations
@@ -537,7 +617,12 @@ herd-ai/
 |---------|---------|---------|
 | `tflite_flutter` | `^0.12.1` | Native TensorFlow Lite runtime for on-device inference |
 | `sqflite` | `^2.4.2` | Local SQLite relational database persistence |
-| `image` | `^4.5.4` | Image decoding, resizing, and pixel extraction |
+| `connectivity_plus` | `^6.1.0` | Automatic network detection (Wi-Fi, mobile, offline) |
+| `firebase_core` | `^3.8.0` | Core Firebase integration for optional cloud sync |
+| `cloud_firestore` | `^5.5.0` | Cloud database for herd records, health logs, and embeddings |
+| `firebase_storage` | `^12.3.6` | Cloud object storage for cattle facial photos |
+| `firebase_auth` | `^5.3.3` | Phone number authentication (SMS OTP) for device linking |
+| `image` | `^4.5.4` | Image decoding, resizing, compression, and pixel extraction |
 | `image_picker` | `^1.1.2` | Native camera capture and photo gallery picker |
 | `local_auth` | `^2.3.0` | Biometric unlock (Fingerprint, Touch ID, Face ID) |
 | `flutter_secure_storage` | `^9.2.4` | Hardware Keystore/Keychain secure PIN storage |

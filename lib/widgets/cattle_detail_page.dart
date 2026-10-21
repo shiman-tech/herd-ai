@@ -16,6 +16,7 @@ import '../services/tflite_breed_service.dart';
 import '../services/tflite_embedding_service.dart';
 import '../utils/localized_labels.dart';
 import '../utils/math_utils.dart';
+import '../services/cloud_sync_service.dart';
 import 'milk_chart_widgets.dart';
 import 'milk_entry_dialog.dart';
 
@@ -54,6 +55,9 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
   }
 
   CattleRecord? get _record => widget.database.getCattle(_cattleId);
+
+  /// Fire-and-forget background cloud sync after any write mutation.
+  void _syncAfterMutation() => CloudSyncService.instance.syncNow();
 
   Widget _imageOrPlaceholder(String? imagePath, {double size = 100}) {
     if (imagePath == null || !File(imagePath).existsSync()) {
@@ -466,6 +470,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                       dryOffDate: selectedDryOffDate,
                       expectedDailyYield: expYield,
                     );
+                    _syncAfterMutation();
                     if (!mounted) {
                       return;
                     }
@@ -633,6 +638,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                               healthRecord: payload,
                             );
                           }
+                          _syncAfterMutation();
                           if (!mounted) {
                             return;
                           }
@@ -781,6 +787,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                               vaccinationRecord: payload,
                             );
                           }
+                          _syncAfterMutation();
                           if (!mounted) {
                             return;
                           }
@@ -845,6 +852,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                     note: noteController.text,
                   );
                 }
+                _syncAfterMutation();
                 if (!mounted) {
                   return;
                 }
@@ -1006,6 +1014,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
         imagePath: selectedImage.path,
         isIdentity: true,
       );
+      _syncAfterMutation();
       if (!mounted) return;
       setState(() {});
       _showSnack(AppLocalizations.of(context)!.photoAdded);
@@ -1094,6 +1103,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
         imagePath: selectedImage.path,
         isIdentity: false,
       );
+      _syncAfterMutation();
       if (!mounted) return;
       setState(() {});
       _showSnack(AppLocalizations.of(context)!.photoAdded);
@@ -1264,6 +1274,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
           _showSnack(AppLocalizations.of(context)!.breedClassified);
         }
       }
+      _syncAfterMutation();
     } catch (error) {
       if (mounted) {
         _showSnack(AppLocalizations.of(context)!.couldNotClassify);
@@ -1280,6 +1291,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
       cattleId: _cattleId,
       confirmedBreed: breedName,
     );
+    _syncAfterMutation();
     if (mounted) {
       setState(() {});
       _showSnack(AppLocalizations.of(context)!.breedConfirmed(breedName));
@@ -1372,6 +1384,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
       cattleId: _cattleId,
       confirmedBreed: 'Unknown',
     );
+    _syncAfterMutation();
     if (mounted) {
       setState(() {});
       _showSnack(AppLocalizations.of(context)!.breedSetUnknown);
@@ -1433,6 +1446,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
         embedding: embedding,
         imagePath: selectedImage.path,
       );
+      _syncAfterMutation();
       if (!mounted) {
         return;
       }
@@ -1474,6 +1488,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
       return;
     }
     await widget.database.deleteHealthRecord(_cattleId, index);
+    _syncAfterMutation();
     if (!mounted) {
       return;
     }
@@ -1506,6 +1521,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
       return;
     }
     await widget.database.deleteVaccinationRecord(_cattleId, index);
+    _syncAfterMutation();
     if (!mounted) {
       return;
     }
@@ -1538,6 +1554,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
       return;
     }
     await widget.database.deleteNote(_cattleId, index);
+    _syncAfterMutation();
     if (!mounted) {
       return;
     }
@@ -1570,6 +1587,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
       return;
     }
     await widget.database.deleteImage(_cattleId, index);
+    _syncAfterMutation();
     if (!mounted) {
       return;
     }
@@ -1609,6 +1627,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
     }
 
     await widget.database.deleteCattle(record.id);
+    _syncAfterMutation();
     if (!mounted) {
       return;
     }
@@ -2821,6 +2840,7 @@ class _CattleDetailPageState extends State<CattleDetailPage> with TickerProvider
                             setState(() {});
                           } else if (action == 'delete') {
                             await widget.database.deleteMilkRecord(r.id);
+                            _syncAfterMutation();
                             setState(() {});
                           }
                         },

@@ -18,7 +18,7 @@ class EmbeddingDatabase {
   static const String _dbFileName = 'herd_ai.db';
   static const String _legacyJsonFileName = 'cattle_records.json';
   static const String _imageDirName = 'cattle_images';
-  static const int _dbVersion = 8;
+  static const int _dbVersion = 9;
 
   /// Global singleton instance
   static final EmbeddingDatabase instance = EmbeddingDatabase();
@@ -137,6 +137,16 @@ class EmbeddingDatabase {
             )
           ''');
         }
+        if (oldVersion < 9) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS sync_tombstones (
+              entity_type TEXT NOT NULL,
+              entity_id TEXT NOT NULL,
+              deleted_at TEXT NOT NULL,
+              PRIMARY KEY (entity_type, entity_id)
+            )
+          ''');
+        }
       },
     );
   }
@@ -229,6 +239,14 @@ class EmbeddingDatabase {
         path TEXT NOT NULL,
         uploaded_at TEXT NOT NULL,
         FOREIGN KEY (cattle_id) REFERENCES cattle(id) ON DELETE CASCADE
+      )
+    ''');
+    batch.execute('''
+      CREATE TABLE IF NOT EXISTS sync_tombstones (
+        entity_type TEXT NOT NULL,
+        entity_id TEXT NOT NULL,
+        deleted_at TEXT NOT NULL,
+        PRIMARY KEY (entity_type, entity_id)
       )
     ''');
     await batch.commit(noResult: true);
@@ -1328,6 +1346,15 @@ class EmbeddingDatabase {
       where: 'id = ?',
       whereArgs: <Object?>[recordId],
     );
+    await db.insert(
+      'sync_tombstones',
+      <String, Object?>{
+        'entity_type': 'milk_record',
+        'entity_id': recordId,
+        'deleted_at': DateTime.now().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -1416,7 +1443,138 @@ class EmbeddingDatabase {
         await txn.delete(table, where: 'cattle_id = ?', whereArgs: <Object?>[cattleId]);
       }
       await txn.delete('cattle', where: 'id = ?', whereArgs: <Object?>[cattleId]);
+      await txn.insert(
+        'sync_tombstones',
+        <String, Object?>{
+          'entity_type': 'cattle',
+          'entity_id': cattleId,
+          'deleted_at': DateTime.now().toIso8601String(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     });
+  }
+
+  Future<List<Map<String, String>>> getTombstones() async {
+    final Database? db = _db;
+    if (db == null) return <Map<String, String>>[];
+    final List<Map<String, Object?>> rows = await db.query('sync_tombstones');
+    return rows.map((Map<String, Object?> r) => <String, String>{
+      'entity_type': r['entity_type'] as String,
+      'entity_id': r['entity_id'] as String,
+      'deleted_at': r['deleted_at'] as String,
+    }).toList();
+  }
+
+  Future<void> clearTombstones(List<String> entityIds) async {
+    final Database? db = _db;
+    if (db == null || entityIds.isEmpty) return;
+    await db.delete(
+      'sync_tombstones',
+      where: 'entity_id IN (${List<String>.filled(entityIds.length, '?').join(',')})',
+      whereArgs: entityIds,
+    );
+  }
+
+  Future<void> importCattleFromCloud(CattleRecord cattle) async {
+    final Database db = _db!;
+    _recordsByCattle[cattle.id] = cattle;
+
+    await db.transaction((Transaction txn) async {
+      await txn.insert(
+        'cattle',
+        <String, Object?>{
+          'id': cattle.id,
+          'registration_date': cattle.registrationDate.toIso8601String(),
+          'profile_image_path': cattle.profileImagePath,
+          'breed_name': cattle.breedName,
+          'breed_confidence': cattle.breedConfidence,
+          'breed_alternatives_json': cattle.breedAlternativesJson,
+          'confirmed_breed': cattle.confirmedBreed,
+          'breed_confirmed_by_user': cattle.breedConfirmedByUser ? 1 : 0,
+          'sex': cattle.sex,
+          'date_of_birth': cattle.dateOfBirth?.toIso8601String(),
+          'life_stage': cattle.lifeStage,
+          'health_status': cattle.healthStatus,
+          'reproductive_status': cattle.reproductiveStatus,
+          'is_milking': cattle.isMilking ? 1 : 0,
+          'is_pregnant': cattle.isPregnant ? 1 : 0,
+          'calving_date': cattle.calvingDate?.toIso8601String(),
+          'insemination_date': cattle.inseminationDate?.toIso8601String(),
+          'dry_off_date': cattle.dryOffDate?.toIso8601String(),
+          'expected_daily_yield': cattle.expectedDailyYield,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      for (final String table in <String>[
+        'embeddings',
+        'health_records',
+        'vaccinations',
+        'notes',
+        'images',
+      ]) {
+        await txn.delete(table, where: 'cattle_id = ?', whereArgs: <Object?>[cattle.id]);
+      }
+
+      for (final EmbeddingReference emb in cattle.embeddings) {
+        await txn.insert('embeddings', <String, Object?>{
+          'cattle_id': cattle.id,
+          'vector': jsonEncode(emb.vector),
+          'source_image_path': emb.sourceImagePath,
+          'image_id': emb.imageId,
+        });
+      }
+
+      for (final HealthRecord hr in cattle.healthRecords) {
+        await txn.insert('health_records', <String, Object?>{
+          'cattle_id': cattle.id,
+          'disease_name': hr.diseaseName,
+          'date': hr.date.toIso8601String(),
+          'status': hr.status,
+          'symptoms': hr.symptoms,
+          'treatment_notes': hr.treatmentNotes,
+        });
+      }
+
+      for (final VaccinationRecord vr in cattle.vaccinations) {
+        await txn.insert('vaccinations', <String, Object?>{
+          'cattle_id': cattle.id,
+          'vaccine_name': vr.vaccineName,
+          'date_given': vr.dateGiven.toIso8601String(),
+          'next_due_date': vr.nextDueDate?.toIso8601String(),
+          'notes': vr.notes,
+        });
+      }
+
+      for (final String note in cattle.notes) {
+        await txn.insert('notes', <String, Object?>{
+          'cattle_id': cattle.id,
+          'content': note,
+        });
+      }
+
+      for (final CattleImage img in cattle.images) {
+        await txn.insert('images', <String, Object?>{
+          'cattle_id': cattle.id,
+          'path': img.path,
+          'uploaded_at': img.uploadedAt.toIso8601String(),
+        });
+      }
+    });
+  }
+
+  Future<void> importMilkRecordFromCloud(MilkRecord record) async {
+    final Database db = _db!;
+    _milkRecords.removeWhere((MilkRecord r) => r.id == record.id);
+    _milkRecords.add(record);
+    _milkRecords.sort((MilkRecord a, MilkRecord b) => b.date.compareTo(a.date));
+
+    await db.insert(
+      'milk_records',
+      record.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   // ---------------------------------------------------------------------------

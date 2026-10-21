@@ -22,7 +22,10 @@ import 'widgets/notifications_sheet.dart';
 
 import 'l10n/app_localizations.dart';
 import 'services/app_language_service.dart';
+import 'services/cloud_sync_service.dart';
 import 'utils/localized_labels.dart';
+import 'widgets/cloud_sync_sheet.dart';
+import 'widgets/sync_status_badge.dart';
 
 const Color kFarmPrimary = Color(0xFF2D6A4F);
 const Color kFarmSecondary = Color(0xFF95A97F);
@@ -36,6 +39,7 @@ void main() async {
     AppLanguageService.instance.loadLocale(),
     EmbeddingDatabase.instance.load(),
     MilkAnalyticsService.init(),
+    CloudSyncService.instance.initialize(),
   ]);
   runApp(const HerdAiApp());
 }
@@ -222,6 +226,12 @@ class _HerdHomePageState extends State<HerdHomePage> {
         child: Icon(Icons.pets),
       ),
     );
+  }
+
+  /// Fire-and-forget background sync after a successful write operation.
+  /// Never awaited — local operations are never blocked by network.
+  void _triggerBackgroundSync() {
+    CloudSyncService.instance.syncNow();
   }
 
   void _showSnack(String message) {
@@ -512,10 +522,12 @@ class _HerdHomePageState extends State<HerdHomePage> {
         embedding: embedding,
       );
     } catch (error) {
-      setState(() {
-        _statusResolver = (context) => AppLocalizations.of(context)!.couldNotCheckPhoto;
-      });
-      _showSnack(AppLocalizations.of(context)!.couldNotPrepareReg);
+      if (mounted) {
+        setState(() {
+          _statusResolver = (context) => AppLocalizations.of(context)!.couldNotCheckPhoto;
+        });
+        _showSnack(AppLocalizations.of(context)!.couldNotPrepareReg);
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -666,20 +678,25 @@ class _HerdHomePageState extends State<HerdHomePage> {
         embedding: resolvedEmbedding,
         imagePath: _selectedImage!.path,
       );
-      setState(() {
-        _statusResolver = (context) => AppLocalizations.of(context)!.photoAddedTo(cattleId);
-        _result = IdentificationResult(
-          predictedCattleId: cattleId,
-          similarity: 1,
-          isKnown: true,
-        );
-      });
-      _showSnack(AppLocalizations.of(context)!.photoAddedTo(cattleId));
+      if (mounted) {
+        setState(() {
+          _statusResolver = (context) => AppLocalizations.of(context)!.photoAddedTo(cattleId);
+          _result = IdentificationResult(
+            predictedCattleId: cattleId,
+            similarity: 1,
+            isKnown: true,
+          );
+        });
+        _showSnack(AppLocalizations.of(context)!.photoAddedTo(cattleId));
+      }
+      _triggerBackgroundSync();
     } catch (error) {
-      setState(() {
-        _statusResolver = (context) => AppLocalizations.of(context)!.couldNotSavePhoto;
-      });
-      _showSnack(AppLocalizations.of(context)!.couldNotAddPhoto);
+      if (mounted) {
+        setState(() {
+          _statusResolver = (context) => AppLocalizations.of(context)!.couldNotSavePhoto;
+        });
+        _showSnack(AppLocalizations.of(context)!.couldNotAddPhoto);
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -714,24 +731,31 @@ class _HerdHomePageState extends State<HerdHomePage> {
         sex: sex,
         note: note,
       );
-      setState(() {
-        _statusResolver = (context) => AppLocalizations.of(context)!.addedToHerd(cattleId);
-        _result = const IdentificationResult(
-          predictedCattleId: 'Registered',
-          similarity: 0,
-          isKnown: true,
-        );
-      });
-      _showSnack(AppLocalizations.of(context)!.addedSuccessfully(cattleId));
+      if (mounted) {
+        setState(() {
+          _statusResolver = (context) => AppLocalizations.of(context)!.addedToHerd(cattleId);
+          _result = const IdentificationResult(
+            predictedCattleId: 'Registered',
+            similarity: 0,
+            isKnown: true,
+          );
+        });
+        _showSnack(AppLocalizations.of(context)!.addedSuccessfully(cattleId));
+      }
+      _triggerBackgroundSync();
     } catch (error) {
-      setState(() {
-        _statusResolver = (context) => AppLocalizations.of(context)!.couldNotIdentify;
-      });
-      _showSnack(AppLocalizations.of(context)!.failedToRegister);
+      if (mounted) {
+        setState(() {
+          _statusResolver = (context) => AppLocalizations.of(context)!.couldNotIdentify;
+        });
+        _showSnack(AppLocalizations.of(context)!.failedToRegister);
+      }
     } finally {
-      setState(() {
-        _isBusy = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isBusy = false;
+        });
+      }
     }
   }
 
@@ -822,6 +846,20 @@ class _HerdHomePageState extends State<HerdHomePage> {
                 onTap: () {
                   Navigator.of(context).pop();
                   _showLanguageDialog();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.cloud_sync_outlined),
+                title: const Text('Cloud Backup & Sync'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  showModalBottomSheet<void>(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (BuildContext context) => const CloudSyncSheet(),
+                  );
                 },
               ),
               const SizedBox(height: 8),
@@ -1444,6 +1482,7 @@ class _HerdHomePageState extends State<HerdHomePage> {
                 );
               },
             ),
+            const SyncStatusBadge(),
             IconButton(
               onPressed: _showSettingsSheet,
               icon: const Icon(Icons.settings_outlined),

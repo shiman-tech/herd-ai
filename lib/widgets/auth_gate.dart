@@ -3,6 +3,7 @@ import '../l10n/app_localizations.dart';
 
 import '../services/app_auth_service.dart';
 import '../services/app_lock_controller.dart';
+import 'cloud_restore_sheet.dart';
 
 const Color kFarmPrimary = Color(0xFF2D6A4F);
 const Color kFarmSecondary = Color(0xFF95A97F);
@@ -375,6 +376,32 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
                                   const SizedBox(height: 8),
                                 ],
                                 _PinPad(onTap: _onKeyTap),
+                                if (_mode == _AuthMode.createPin && !_confirmingPin) ...<Widget>[
+                                  const SizedBox(height: 12),
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      showModalBottomSheet<void>(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (BuildContext sheetContext) => CloudRestoreSheet(
+                                          onRestored: () async {
+                                            final bool hasPin = await _authService.hasPin();
+                                            if (hasPin && mounted) {
+                                              setState(() {
+                                                _mode = _AuthMode.unlocked;
+                                                _pinEntry = '';
+                                                _lastUnlockAt = DateTime.now();
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.cloud_download_outlined, size: 18),
+                                    label: const Text('Restore existing herd from cloud'),
+                                  ),
+                                ],
                               ],
                             ],
                           ),

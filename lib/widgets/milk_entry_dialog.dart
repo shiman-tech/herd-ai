@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/cattle_record.dart';
 import '../models/milk_record.dart';
+import '../services/cloud_sync_service.dart';
 import '../services/embedding_database.dart';
 
 class MilkEntryDialog extends StatefulWidget {
@@ -111,6 +112,7 @@ class _MilkEntryDialogState extends State<MilkEntryDialog> {
     );
 
     await widget.database.saveMilkRecord(record);
+    CloudSyncService.instance.syncNow(); // fire-and-forget background sync
     if (mounted) {
       Navigator.of(context).pop(true);
     }
