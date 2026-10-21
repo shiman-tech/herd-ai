@@ -8,6 +8,9 @@ A fully offline, production-grade Flutter application for AI-powered livestock i
 
 - [Overview](#overview)
 - [How It Works](#how-it-works)
+- [Datasets](#datasets)
+  - [1. Individual Identification Dataset](#1-individual-identification-dataset)
+  - [2. Breed Classification Dataset](#2-breed-classification-dataset)
 - [On-Device ML Architecture & TFLite Inference](#on-device-ml-architecture--tflite-inference)
   - [1. Facial Identification Model (Python Training)](#1-facial-identification-model-python-training)
   - [2. Exporting Embedding Model to TFLite (Python)](#2-exporting-embedding-model-to-tflite-python)
@@ -92,6 +95,24 @@ Herd AI is engineered for dairy farmers, livestock cooperatives, veterinarians, 
 
 ---
 
+## Datasets
+
+Herd AI leverages two distinct bovine image datasets to train and evaluate its on-device machine learning models:
+
+### 1. Individual Identification Dataset
+- **Repository:** [Indian Cattle Image Dataset on Kaggle](https://www.kaggle.com/datasets/atharvadarpude/indian-cattle-image-dataset) (by Atharva Darpude)
+- **Primary Task:** Biometric Facial Feature Extraction & Individual Identification
+- **Overview:** A specialized visual repository designed for computer vision, machine learning, and precision livestock management for indigenous cattle. It provides multi-angle cattle facial imagery under diverse ambient lighting and outdoor farm conditions.
+- **Role in Herd AI:** Serves as the foundation for the MobileNetV2 feature extractor (`assets/models/cow_identifier.tflite`). Images are processed to learn discriminative facial embeddings, generating 128-dimensional L2-normalized vectors that enable tag-free biometric identification via cosine similarity matching.
+
+### 2. Breed Classification Dataset
+- **Repository:** [Cattely-Cattle-Face-Images-Dataset on GitHub](https://github.com/aideep1400/Cattely-Cattle-Face-Images-Dataset) (by aideep1400)
+- **Primary Task:** Bovine Facial Profile & Indigenous Breed Classification
+- **Overview:** An open-source dataset captured from high-resolution video recordings of cattle, offering structured front-profile facial images (~50 individual cattle with 50 images per cow, as well as extracted and preprocessed face bounding regions). It provides clean facial representations suitable for training convolutional neural networks to distinguish facial morphometry across diverse breeds.
+- **Role in Herd AI:** Powers the on-device EfficientNet breed classification model (`assets/models/efficientnet_breed_classifier.tflite`), predicting class probabilities across 34 recognized indigenous and cross breeds mapped in `assets/models/class_names.json`.
+
+---
+
 ## On-Device ML Architecture & TFLite Inference
 
 Herd AI employs a dual on-device neural network pipeline optimized for low-latency mobile inference.
@@ -104,7 +125,7 @@ The reference training pipeline uses transfer learning with MobileNetV2 on bovin
 
 | Parameter | Specification |
 |-----------|---------------|
-| **Dataset** | Cattely Cattle Face Images Dataset (~50 cows, ~2,500 frontal images) |
+| **Dataset** | [Indian Cattle Image Dataset](https://www.kaggle.com/datasets/atharvadarpude/indian-cattle-image-dataset) (Kaggle) |
 | **Augmentation** | Horizontal flip, 30% zoom, $\pm 20^\circ$ rotation, brightness $[0.8, 1.2]$ |
 | **Base Architecture** | `MobileNetV2(input_shape=(224, 224, 3), weights='imagenet', include_top=False)` |
 | **Fine-Tuning** | Base layers frozen except the final 20 layers |
@@ -192,6 +213,7 @@ Future<void> loadModel() async {
 
 `TfliteBreedService` handles indigenous breed classification using an EfficientNet model:
 
+- **Training Dataset:** [Cattely-Cattle-Face-Images-Dataset](https://github.com/aideep1400/Cattely-Cattle-Face-Images-Dataset) (GitHub)
 - **Model Asset:** `assets/models/efficientnet_breed_classifier.tflite`
 - **Classes Asset:** `assets/models/class_names.json` (34 indigenous & cross breeds)
 - **Input Tensor:** `[1, 224, 224, 3]` (`float32`, normalized $[0, 1]$)
