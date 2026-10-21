@@ -24,7 +24,7 @@ A fully offline, production-grade Flutter application for AI-powered livestock i
   - [Cattle Profile & Complete Life History](#cattle-profile--complete-life-history)
   - [Milk Yield Management & Lactation Dashboard](#milk-yield-management--lactation-dashboard)
   - [Smart Notifications & Proactive Farm Alerts](#smart-notifications--proactive-farm-alerts)
-  - [Multi-Language Support (10 Indian Languages)](#multi-language-support-10-indian-languages)
+  - [Multi-Language Support (11 Indian Languages)](#multi-language-support-11-indian-languages)
 - [Authentication & Security](#authentication--security)
 - [Database Architecture & SQLite Schema](#database-architecture--sqlite-schema)
   - [SQLite Schema (v8)](#sqlite-schema-v8)
@@ -340,8 +340,8 @@ To deliver instantaneous UI response on app start and during identification:
 - **Calving Reminders:** Alerts within 14 days of expected calving date.
 - **Vaccination Overdue / Due Soon:** Proactive alerts for preventative vaccinations.
 
-### Multi-Language Support (10 Indian Languages)
-Real-time in-app switching across 10 languages:
+### Multi-Language Support (11 Indian Languages)
+Real-time in-app switching across 11 languages:
 - **English** (`en`)
 - **हिन्दी** (Hindi - `hi`)
 - **বাংলা** (Bengali - `bn`)
@@ -351,6 +351,7 @@ Real-time in-app switching across 10 languages:
 - **ଓଡ଼ିଆ** (Odia - `or`)
 - **தமிழ்** (Tamil - `ta`)
 - **తెలుగు** (Telugu - `te`)
+- **മലയാളം** (Malayalam - `ml`)
 - **اردو** (Urdu - `ur`)
 
 ---
@@ -490,6 +491,7 @@ herd-ai/
 │   │   ├── app_or.arb                          # Odia
 │   │   ├── app_ta.arb                          # Tamil
 │   │   ├── app_te.arb                          # Telugu
+│   │   ├── app_ml.arb                          # Malayalam
 │   │   └── app_ur.arb                          # Urdu
 │   ├── models/
 │   │   ├── breed_prediction.dart               # Breed prediction class

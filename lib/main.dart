@@ -854,6 +854,8 @@ class _HerdHomePageState extends State<HerdHomePage> {
         return 'తెలుగు (Telugu)';
       case 'ur':
         return 'اردو (Urdu)';
+      case 'ml':
+        return 'മലയാളം (Malayalam)';
       default:
         return code;
     }
