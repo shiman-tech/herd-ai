@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/cattle_record.dart';
@@ -15,13 +15,7 @@ class SupabaseSyncBackend {
   SupabaseSyncBackend._();
   static final SupabaseSyncBackend instance = SupabaseSyncBackend._();
 
-  static const String _prefUrlKey = 'supabase_project_url';
-  static const String _prefAnonKey = 'supabase_anon_key';
   static const String storageBucketName = 'cattle-photos';
-
-  // Default credentials (can be overridden via SharedPreferences or configureCredentials)
-  static const String defaultUrl = '';
-  static const String defaultAnonKey = '';
 
   bool _isInitialized = false;
 
@@ -36,17 +30,35 @@ class SupabaseSyncBackend {
     }
   }
 
-  /// Initializes Supabase safely with graceful fallback.
-  Future<bool> initialize({String? customUrl, String? customAnonKey}) async {
+  /// Initializes Supabase from .env (or --dart-define) with graceful fallback.
+  Future<bool> initialize() async {
     if (_isInitialized) return true;
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String url = (customUrl ?? prefs.getString(_prefUrlKey) ?? defaultUrl).trim();
-    final String anonKey = (customAnonKey ?? prefs.getString(_prefAnonKey) ?? defaultAnonKey).trim();
+    String url = '';
+    String anonKey = '';
+
+    // 1. Try loading from .env via flutter_dotenv
+    try {
+      if (!dotenv.isInitialized) {
+        await dotenv.load(fileName: '.env');
+      }
+      url = (dotenv.maybeGet('SUPABASE_URL') ?? '').trim();
+      anonKey = (dotenv.maybeGet('SUPABASE_ANON_KEY') ?? '').trim();
+    } catch (e) {
+      debugPrint('[SupabaseSyncBackend] .env not loaded: $e');
+    }
+
+    // 2. Fallback to --dart-define environment variables
+    if (url.isEmpty) {
+      url = const String.fromEnvironment('SUPABASE_URL').trim();
+    }
+    if (anonKey.isEmpty) {
+      anonKey = const String.fromEnvironment('SUPABASE_ANON_KEY').trim();
+    }
 
     if (url.isEmpty || anonKey.isEmpty) {
       _isInitialized = false;
-      debugPrint('[SupabaseSyncBackend] Supabase not configured (URL or anon key is empty).');
+      debugPrint('[SupabaseSyncBackend] Supabase credentials missing in .env or environment.');
       return false;
     }
 
@@ -57,30 +69,13 @@ class SupabaseSyncBackend {
         anonKey: anonKey,
       );
       _isInitialized = true;
-      debugPrint('[SupabaseSyncBackend] Supabase initialized successfully.');
+      debugPrint('[SupabaseSyncBackend] Supabase initialized successfully from .env.');
       return true;
     } catch (e) {
       _isInitialized = false;
       debugPrint('[SupabaseSyncBackend] Supabase initialization failed: $e');
       return false;
     }
-  }
-
-  /// Saves custom credentials and re-initializes.
-  Future<bool> configureCredentials({required String url, required String anonKey}) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefUrlKey, url.trim());
-    await prefs.setString(_prefAnonKey, anonKey.trim());
-    _isInitialized = false;
-    return initialize(customUrl: url, customAnonKey: anonKey);
-  }
-
-  Future<Map<String, String>> getSavedCredentials() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return <String, String>{
-      'url': prefs.getString(_prefUrlKey) ?? defaultUrl,
-      'anonKey': prefs.getString(_prefAnonKey) ?? defaultAnonKey,
-    };
   }
 
   // ---------------------------------------------------------------------------

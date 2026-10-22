@@ -418,7 +418,12 @@ Farmers frequently face unique challenges (e.g., lost devices without active SIM
 Supabase provides a generous **100% free tier (500 MB database, 1 GB image storage) without requiring any credit card or billing account**:
 1. Create a free project at [supabase.com](https://supabase.com).
 2. Open the **SQL Editor** in your Supabase dashboard and run the [`supabase_schema.sql`](supabase_schema.sql) script to provision tables and the `cattle-photos` storage bucket.
-3. In Herd AI, tap the cloud icon in the AppBar or go to Settings $\rightarrow$ **Cloud Backup** $\rightarrow$ **Configure Supabase Project** and paste your **Project URL** and **Anon Public Key** (from Settings $\rightarrow$ API).
+3. In your project root, open [`.env`](.env) (or copy [`.env.example`](.env.example) to `.env`) and add your project keys:
+   ```env
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_ANON_KEY=your-anon-public-key
+   ```
+   *(The app automatically loads these credentials via `flutter_dotenv`—farmers never see or manage database credentials in the UI).*
 4. *(Optional)* For SMS OTP recovery, enable the Phone provider under Authentication $\rightarrow$ Providers in Supabase. Otherwise, Farm Code + 4-Digit PIN recovery works out of the box with zero third-party SMS setup!
 
 ---
