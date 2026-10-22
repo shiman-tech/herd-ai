@@ -129,19 +129,19 @@ class _CloudSyncSheetState extends State<CloudSyncSheet> {
         final double bottomInset = MediaQuery.of(context).viewInsets.bottom;
         final double availableHeight = MediaQuery.of(context).size.height - bottomInset;
 
-        return AnimatedPadding(
-          padding: EdgeInsets.only(bottom: bottomInset),
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOutCubic,
+        return Padding(
+          padding: EdgeInsets.only(bottom: bottomInset > 0 ? bottomInset + 16 : 0),
           child: Container(
             constraints: BoxConstraints(
-              maxHeight: availableHeight * 0.90,
+              maxHeight: bottomInset > 0
+                  ? availableHeight - 10
+                  : MediaQuery.of(context).size.height * 0.90,
             ),
             decoration: const BoxDecoration(
               color: Color(0xFFFBFAF4),
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            padding: EdgeInsets.fromLTRB(20, 12, 20, bottomInset > 0 ? 28 : 20),
             child: SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: Column(
@@ -436,6 +436,7 @@ class _CloudSyncSheetState extends State<CloudSyncSheet> {
                 icon: const Icon(Icons.settings_backup_restore_rounded),
                 label: const Text('Restore Herd from Cloud Backup'),
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),

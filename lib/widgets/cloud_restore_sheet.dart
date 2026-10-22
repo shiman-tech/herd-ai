@@ -172,21 +172,23 @@ class _CloudRestoreSheetState extends State<CloudRestoreSheet> with SingleTicker
     const Color primaryColor = Color(0xFF2D6A4F);
     final double bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final double availableHeight = MediaQuery.of(context).size.height - bottomInset;
-    final double tabHeight = (availableHeight - 190).clamp(180.0, 340.0);
+    final double tabHeight = bottomInset > 0
+        ? (availableHeight - 160).clamp(280.0, 360.0)
+        : 330.0;
 
-    return AnimatedPadding(
-      padding: EdgeInsets.only(bottom: bottomInset),
-      duration: const Duration(milliseconds: 150),
-      curve: Curves.easeOutCubic,
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset > 0 ? bottomInset + 16 : 0),
       child: Container(
         constraints: BoxConstraints(
-          maxHeight: availableHeight * 0.92,
+          maxHeight: bottomInset > 0
+              ? availableHeight - 10
+              : MediaQuery.of(context).size.height * 0.90,
         ),
         decoration: const BoxDecoration(
           color: Color(0xFFFBFAF4),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        padding: EdgeInsets.fromLTRB(20, 12, 20, bottomInset > 0 ? 24 : 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -267,7 +269,7 @@ class _CloudRestoreSheetState extends State<CloudRestoreSheet> with SingleTicker
                     // Tab 1: Farm Code & PIN
                     SingleChildScrollView(
                       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: <Widget>[
@@ -314,6 +316,7 @@ class _CloudRestoreSheetState extends State<CloudRestoreSheet> with SingleTicker
                                 : const Icon(Icons.cloud_download_rounded),
                             label: Text(_isRestoring ? 'Restoring Herd...' : 'Restore using Farm Code'),
                           ),
+                          const SizedBox(height: 28),
                         ],
                       ),
                     ),
@@ -321,7 +324,7 @@ class _CloudRestoreSheetState extends State<CloudRestoreSheet> with SingleTicker
                     // Tab 2: Phone OTP
                     SingleChildScrollView(
                       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: <Widget>[
@@ -392,6 +395,7 @@ class _CloudRestoreSheetState extends State<CloudRestoreSheet> with SingleTicker
                                   : const Icon(Icons.cloud_download_rounded),
                               label: Text(_isRestoring ? 'Verifying & Restoring...' : 'Verify OTP & Restore'),
                             ),
+                            const SizedBox(height: 28),
                           ],
                         ],
                       ),
