@@ -24,7 +24,6 @@ import 'l10n/app_localizations.dart';
 import 'services/app_language_service.dart';
 import 'services/cloud_sync_service.dart';
 import 'utils/localized_labels.dart';
-import 'widgets/cloud_sync_sheet.dart';
 import 'widgets/sync_status_badge.dart';
 
 const Color kFarmPrimary = Color(0xFF2D6A4F);
@@ -846,20 +845,6 @@ class _HerdHomePageState extends State<HerdHomePage> {
                 onTap: () {
                   Navigator.of(context).pop();
                   _showLanguageDialog();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.cloud_sync_outlined),
-                title: const Text('Cloud Backup & Sync'),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  showModalBottomSheet<void>(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (BuildContext context) => const CloudSyncSheet(),
-                  );
                 },
               ),
               const SizedBox(height: 8),
