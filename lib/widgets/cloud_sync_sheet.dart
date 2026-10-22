@@ -63,12 +63,13 @@ class _CloudSyncSheetState extends State<CloudSyncSheet> {
                 final String phone = _phoneController.text.trim();
                 if (phone.isNotEmpty) {
                   await CloudSyncService.instance.setPhoneNumber(phone);
+                  final String? updatedPhone = CloudSyncService.instance.profile?.phoneNumber;
                   if (dialogContext.mounted) {
                     Navigator.of(dialogContext).pop();
                   }
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Phone number linked: $phone')),
+                      SnackBar(content: Text('Phone number linked: ${updatedPhone ?? phone}')),
                     );
                   }
                 }

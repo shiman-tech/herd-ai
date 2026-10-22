@@ -174,10 +174,22 @@ class CloudSyncService extends ChangeNotifier {
   }
 
   Future<void> setPhoneNumber(String phone) async {
-    await _secureStorage.write(key: _phoneKey, value: phone);
-    _profile = _profile?.copyWith(phoneNumber: phone);
+    String clean = phone.trim().replaceAll(RegExp(r'[\s\-\(\)]'), '');
+    if (!clean.startsWith('+')) {
+      if (clean.startsWith('0')) {
+        clean = '+91${clean.substring(1)}';
+      } else if (clean.length == 10) {
+        clean = '+91$clean';
+      }
+    }
+    await _secureStorage.write(key: _phoneKey, value: clean);
+    _profile = _profile?.copyWith(phoneNumber: clean);
     notifyListeners();
-    if (_isOnline && _backend.isAvailable) {
+
+    if (!_backend.isAvailable) {
+      await _backend.initialize();
+    }
+    if (_backend.isAvailable && _profile != null) {
       await _backend.saveFarmProfile(_profile!);
     }
   }
@@ -323,7 +335,7 @@ class CloudSyncService extends ChangeNotifier {
       final FarmProfile? remoteProfile = await _backend.fetchFarmProfile(farmId.trim().toUpperCase());
       if (remoteProfile == null) {
         _status = SyncStatus.error;
-        _lastError = 'Farm not found with code: $farmId';
+        _lastError = _backend.lastFetchError ?? 'Farm not found with code: $farmId';
         notifyListeners();
         return false;
       }
@@ -398,7 +410,7 @@ class CloudSyncService extends ChangeNotifier {
       final String? farmId = await _backend.findFarmIdByPhone(phoneNumber);
       if (farmId == null) {
         _status = SyncStatus.error;
-        _lastError = 'No farm found registered with this phone number.';
+        _lastError = _backend.lastFetchError ?? 'No farm found registered with this phone number.';
         notifyListeners();
         return false;
       }
@@ -406,7 +418,7 @@ class CloudSyncService extends ChangeNotifier {
       final FarmProfile? remoteProfile = await _backend.fetchFarmProfile(farmId);
       if (remoteProfile == null) {
         _status = SyncStatus.error;
-        _lastError = 'Farm profile could not be loaded.';
+        _lastError = _backend.lastFetchError ?? 'Farm profile could not be loaded.';
         notifyListeners();
         return false;
       }

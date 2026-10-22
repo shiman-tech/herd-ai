@@ -152,15 +152,40 @@ class SupabaseSyncBackend {
     }
   }
 
+  String? _lastFetchError;
+  String? get lastFetchError {
+    final String? err = _lastFetchError;
+    _lastFetchError = null;
+    return err;
+  }
+
+  static String _friendlyNetworkError(Object e) {
+    final String raw = e.toString().toLowerCase();
+    if (raw.contains('socket') ||
+        raw.contains('network') ||
+        raw.contains('connection') ||
+        raw.contains('timeout') ||
+        raw.contains('unreachable') ||
+        raw.contains('permission denied')) {
+      return 'Could not connect to cloud server. Please check your internet connection.';
+    }
+    return 'Could not reach cloud backup. Please try again.';
+  }
+
   Future<FarmProfile?> fetchFarmProfile(String farmId) async {
     final SupabaseClient? client = _client;
-    if (client == null) return null;
+    if (client == null) {
+      _lastFetchError = 'Cloud service is not initialized.';
+      return null;
+    }
 
     try {
+      _lastFetchError = null;
+      final String cleanId = farmId.trim().toUpperCase();
       final Map<String, dynamic>? data = await client
           .from('farms')
           .select()
-          .eq('farm_id', farmId)
+          .eq('farm_id', cleanId)
           .maybeSingle();
 
       if (data == null) return null;
@@ -175,23 +200,44 @@ class SupabaseSyncBackend {
       );
     } catch (e) {
       debugPrint('[SupabaseSyncBackend] Error fetching farm profile: $e');
+      _lastFetchError = _friendlyNetworkError(e);
       return null;
     }
   }
 
   Future<FarmProfile?> findFarmByPhone(String phoneNumber) async {
     final SupabaseClient? client = _client;
-    if (client == null) return null;
+    if (client == null) {
+      _lastFetchError = 'Cloud service is not initialized.';
+      return null;
+    }
 
     try {
-      final String cleanPhone = phoneNumber.replaceAll(RegExp(r'\s+'), '');
-      final Map<String, dynamic>? data = await client
+      _lastFetchError = null;
+      final String clean = phoneNumber.trim().replaceAll(RegExp(r'[\s\-\(\)]'), '');
+      String withPlus91 = clean;
+      String rawDigits = clean;
+
+      if (clean.startsWith('+91')) {
+        rawDigits = clean.substring(3);
+      } else if (clean.startsWith('+')) {
+        rawDigits = clean.substring(1);
+      } else if (clean.startsWith('0')) {
+        rawDigits = clean.substring(1);
+        withPlus91 = '+91$rawDigits';
+      } else {
+        withPlus91 = '+91$clean';
+      }
+
+      // Query farms with matching phone formats (+91XXXXXXXXXX or raw digits)
+      final List<dynamic> rows = await client
           .from('farms')
           .select()
-          .eq('phone_number', cleanPhone)
-          .maybeSingle();
+          .or('phone_number.eq.$withPlus91,phone_number.eq.$rawDigits,phone_number.eq.$clean')
+          .limit(1);
 
-      if (data == null) return null;
+      if (rows.isEmpty) return null;
+      final Map<String, dynamic> data = Map<String, dynamic>.from(rows.first as Map);
 
       return FarmProfile(
         farmId: data['farm_id'] as String,
@@ -203,6 +249,7 @@ class SupabaseSyncBackend {
       );
     } catch (e) {
       debugPrint('[SupabaseSyncBackend] Error finding farm by phone: $e');
+      _lastFetchError = _friendlyNetworkError(e);
       return null;
     }
   }
