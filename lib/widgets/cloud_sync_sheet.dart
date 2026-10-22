@@ -43,6 +43,8 @@ class _CloudSyncSheetState extends State<CloudSyncSheet> {
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
+                autofocus: true,
+                scrollPadding: const EdgeInsets.only(bottom: 80),
                 decoration: const InputDecoration(
                   labelText: 'Mobile Phone Number',
                   hintText: 'e.g. +919876543210',
@@ -123,19 +125,28 @@ class _CloudSyncSheetState extends State<CloudSyncSheet> {
             ? DateFormat('dd MMM yyyy, hh:mm a').format(lastSync)
             : 'Never synced';
 
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.88,
-          ),
-          decoration: const BoxDecoration(
-            color: Color(0xFFFBFAF4),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
+        final double bottomInset = MediaQuery.of(context).viewInsets.bottom;
+        final double availableHeight = MediaQuery.of(context).size.height - bottomInset;
+
+        return AnimatedPadding(
+          padding: EdgeInsets.only(bottom: bottomInset),
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOutCubic,
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: availableHeight * 0.90,
+            ),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFBFAF4),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
               // Handle
               Center(
                 child: Container(
@@ -426,7 +437,9 @@ class _CloudSyncSheetState extends State<CloudSyncSheet> {
               ),
             ],
           ),
-        );
+        ),
+      ),
+    );
       },
     );
   }

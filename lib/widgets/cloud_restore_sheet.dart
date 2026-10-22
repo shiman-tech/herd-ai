@@ -170,198 +170,138 @@ class _CloudRestoreSheetState extends State<CloudRestoreSheet> with SingleTicker
   @override
   Widget build(BuildContext context) {
     const Color primaryColor = Color(0xFF2D6A4F);
+    final double bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final double availableHeight = MediaQuery.of(context).size.height - bottomInset;
+    final double tabHeight = (availableHeight - 190).clamp(180.0, 340.0);
 
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.90,
-      ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFFBFAF4),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          // Drag handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
+    return AnimatedPadding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeOutCubic,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: availableHeight * 0.92,
+        ),
+        decoration: const BoxDecoration(
+          color: Color(0xFFFBFAF4),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            // Drag handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
 
-          const Text(
-            'Restore Herd on this Device',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: primaryColor,
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Retrieve your cattle, milk yields, facial embeddings, and photos from cloud backup.',
-            style: TextStyle(fontSize: 12, color: Colors.black87),
-          ),
-          const SizedBox(height: 14),
-
-          // Tabs
-          TabBar(
-            controller: _tabController,
-            labelColor: primaryColor,
-            unselectedLabelColor: Colors.black54,
-            indicatorColor: primaryColor,
-            indicatorWeight: 3,
-            tabs: const <Widget>[
-              Tab(icon: Icon(Icons.pin_rounded, size: 20), text: 'Farm Code & PIN'),
-              Tab(icon: Icon(Icons.phone_iphone_rounded, size: 20), text: 'Phone OTP'),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          if (_errorMessage != null) ...<Widget>[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red.shade200),
+            const Text(
+              'Restore Herd on this Device',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: primaryColor,
               ),
-              child: Row(
-                children: <Widget>[
-                  const Icon(Icons.error_outline_rounded, color: Colors.red, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _errorMessage!,
-                      style: const TextStyle(fontSize: 12, color: Colors.red),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Retrieve your cattle, milk yields, facial embeddings, and photos from cloud backup.',
+              style: TextStyle(fontSize: 12, color: Colors.black87),
+            ),
+            const SizedBox(height: 14),
+
+            // Tabs
+            TabBar(
+              controller: _tabController,
+              labelColor: primaryColor,
+              unselectedLabelColor: Colors.black54,
+              indicatorColor: primaryColor,
+              indicatorWeight: 3,
+              tabs: const <Widget>[
+                Tab(icon: Icon(Icons.pin_rounded, size: 20), text: 'Farm Code & PIN'),
+                Tab(icon: Icon(Icons.phone_iphone_rounded, size: 20), text: 'Phone OTP'),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            if (_errorMessage != null) ...<Widget>[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.red.shade200),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    const Icon(Icons.error_outline_rounded, color: Colors.red, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(fontSize: 12, color: Colors.red),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-          ],
+              const SizedBox(height: 12),
+            ],
 
-          // Tab content
-          Flexible(
-            child: SingleChildScrollView(
+            // Tab content
+            Flexible(
               child: SizedBox(
-                height: 330,
+                height: tabHeight,
                 child: TabBarView(
                   controller: _tabController,
                   children: <Widget>[
                     // Tab 1: Farm Code & PIN
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        const Text(
-                          'Ideal if your phone was lost and you do not have your SIM active yet.',
-                          style: TextStyle(fontSize: 12, color: Colors.black54),
-                        ),
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _farmIdController,
-                          textCapitalization: TextCapitalization.characters,
-                          decoration: const InputDecoration(
-                            labelText: 'Farm Code',
-                            hintText: 'e.g. HERD-482910',
-                            prefixIcon: Icon(Icons.badge_rounded),
+                    SingleChildScrollView(
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          const Text(
+                            'Ideal if your phone was lost and you do not have your SIM active yet.',
+                            style: TextStyle(fontSize: 12, color: Colors.black54),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _pinController,
-                          keyboardType: TextInputType.number,
-                          maxLength: 4,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: '4-Digit PIN',
-                            hintText: 'Enter your existing PIN',
-                            prefixIcon: Icon(Icons.lock_rounded),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        FilledButton.icon(
-                          onPressed: _isRestoring ? null : _restoreWithFarmCode,
-                          icon: _isRestoring
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.cloud_download_rounded),
-                          label: Text(_isRestoring ? 'Restoring Herd...' : 'Restore using Farm Code'),
-                        ),
-                      ],
-                    ),
-
-                    // Tab 2: Phone OTP
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        const Text(
-                          'Restore using the phone number linked to your farm profile.',
-                          style: TextStyle(fontSize: 12, color: Colors.black54),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: <Widget>[
-                            Expanded(
-                              child: TextField(
-                                controller: _phoneController,
-                                keyboardType: TextInputType.phone,
-                                enabled: !_otpSent,
-                                decoration: const InputDecoration(
-                                  labelText: 'Mobile Number',
-                                  hintText: '+91...',
-                                  prefixIcon: Icon(Icons.phone_rounded),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            OutlinedButton(
-                              onPressed: _isSendingOtp ? null : _sendOtp,
-                              child: Text(_isSendingOtp
-                                  ? 'Sending...'
-                                  : (_otpSent ? 'Resend' : 'Send OTP')),
-                            ),
-                          ],
-                        ),
-                        if (_otpSent) ...<Widget>[
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 14),
                           TextField(
-                            controller: _otpController,
-                            keyboardType: TextInputType.number,
-                            maxLength: 6,
+                            controller: _farmIdController,
+                            textCapitalization: TextCapitalization.characters,
+                            scrollPadding: const EdgeInsets.only(bottom: 80),
                             decoration: const InputDecoration(
-                              labelText: '6-Digit SMS Code',
-                              prefixIcon: Icon(Icons.sms_rounded),
+                              labelText: 'Farm Code',
+                              hintText: 'e.g. HERD-482910',
+                              prefixIcon: Icon(Icons.badge_rounded),
                             ),
                           ),
+                          const SizedBox(height: 12),
                           TextField(
-                            controller: _newPinController,
+                            controller: _pinController,
                             keyboardType: TextInputType.number,
                             maxLength: 4,
                             obscureText: true,
+                            scrollPadding: const EdgeInsets.only(bottom: 80),
                             decoration: const InputDecoration(
-                              labelText: 'Set 4-Digit App PIN for this device',
+                              labelText: '4-Digit PIN',
+                              hintText: 'Enter your existing PIN',
                               prefixIcon: Icon(Icons.lock_rounded),
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 14),
                           FilledButton.icon(
-                            onPressed: _isRestoring ? null : _verifyOtpAndRestore,
+                            onPressed: _isRestoring ? null : _restoreWithFarmCode,
                             icon: _isRestoring
                                 ? const SizedBox(
                                     width: 18,
@@ -372,17 +312,96 @@ class _CloudRestoreSheetState extends State<CloudRestoreSheet> with SingleTicker
                                     ),
                                   )
                                 : const Icon(Icons.cloud_download_rounded),
-                            label: Text(_isRestoring ? 'Verifying & Restoring...' : 'Verify OTP & Restore'),
+                            label: Text(_isRestoring ? 'Restoring Herd...' : 'Restore using Farm Code'),
                           ),
                         ],
-                      ],
+                      ),
+                    ),
+
+                    // Tab 2: Phone OTP
+                    SingleChildScrollView(
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          const Text(
+                            'Restore using the phone number linked to your farm profile.',
+                            style: TextStyle(fontSize: 12, color: Colors.black54),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: TextField(
+                                  controller: _phoneController,
+                                  keyboardType: TextInputType.phone,
+                                  enabled: !_otpSent,
+                                  scrollPadding: const EdgeInsets.only(bottom: 80),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Mobile Number',
+                                    hintText: '+91...',
+                                    prefixIcon: Icon(Icons.phone_rounded),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              OutlinedButton(
+                                onPressed: _isSendingOtp ? null : _sendOtp,
+                                child: Text(_isSendingOtp
+                                    ? 'Sending...'
+                                    : (_otpSent ? 'Resend' : 'Send OTP')),
+                              ),
+                            ],
+                          ),
+                          if (_otpSent) ...<Widget>[
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: _otpController,
+                              keyboardType: TextInputType.number,
+                              maxLength: 6,
+                              scrollPadding: const EdgeInsets.only(bottom: 80),
+                              decoration: const InputDecoration(
+                                labelText: '6-Digit SMS Code',
+                                prefixIcon: Icon(Icons.sms_rounded),
+                              ),
+                            ),
+                            TextField(
+                              controller: _newPinController,
+                              keyboardType: TextInputType.number,
+                              maxLength: 4,
+                              obscureText: true,
+                              scrollPadding: const EdgeInsets.only(bottom: 80),
+                              decoration: const InputDecoration(
+                                labelText: 'Set 4-Digit App PIN for this device',
+                                prefixIcon: Icon(Icons.lock_rounded),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            FilledButton.icon(
+                              onPressed: _isRestoring ? null : _verifyOtpAndRestore,
+                              icon: _isRestoring
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.cloud_download_rounded),
+                              label: Text(_isRestoring ? 'Verifying & Restoring...' : 'Verify OTP & Restore'),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
