@@ -16,7 +16,7 @@ import '../models/farm_profile.dart';
 import '../models/milk_record.dart';
 import 'app_auth_service.dart';
 import 'embedding_database.dart';
-import 'firebase_sync_backend.dart';
+import 'supabase_sync_backend.dart';
 
 enum SyncStatus {
   idle,
@@ -29,18 +29,18 @@ enum SyncStatus {
 
 class CloudSyncService extends ChangeNotifier {
   CloudSyncService._({
-    FirebaseSyncBackend? backend,
+    SupabaseSyncBackend? backend,
     FlutterSecureStorage? secureStorage,
     EmbeddingDatabase? database,
     Connectivity? connectivity,
-  })  : _backend = backend ?? FirebaseSyncBackend.instance,
+  })  : _backend = backend ?? SupabaseSyncBackend.instance,
         _secureStorage = secureStorage ?? const FlutterSecureStorage(),
         _database = database ?? EmbeddingDatabase.instance,
         _connectivity = connectivity ?? Connectivity();
 
   static final CloudSyncService instance = CloudSyncService._();
 
-  final FirebaseSyncBackend _backend;
+  final SupabaseSyncBackend _backend;
   final FlutterSecureStorage _secureStorage;
   final EmbeddingDatabase _database;
   final Connectivity _connectivity;
@@ -69,7 +69,7 @@ class CloudSyncService extends ChangeNotifier {
 
   Future<void> initialize() async {
     await _loadLocalProfile();
-    final bool firebaseOk = await _backend.initialize();
+    final bool backendOk = await _backend.initialize();
 
     // Check initial connectivity
     try {
@@ -79,7 +79,7 @@ class CloudSyncService extends ChangeNotifier {
       _isOnline = false;
     }
 
-    if (!firebaseOk) {
+    if (!backendOk) {
       _status = SyncStatus.unconfigured;
     } else if (!_isOnline) {
       _status = SyncStatus.offline;
@@ -92,7 +92,7 @@ class CloudSyncService extends ChangeNotifier {
     _connectivitySub = _connectivity.onConnectivityChanged.listen(_handleConnectivityChanged);
 
     // Auto-sync on startup if online and enabled
-    if (_isOnline && (_profile?.isAutoSyncEnabled ?? true) && firebaseOk) {
+    if (_isOnline && (_profile?.isAutoSyncEnabled ?? true) && backendOk) {
       syncNow();
     }
   }

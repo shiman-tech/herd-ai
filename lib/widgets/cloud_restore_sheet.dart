@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/cloud_sync_service.dart';
-import '../services/firebase_sync_backend.dart';
+import '../services/supabase_sync_backend.dart';
 
 class CloudRestoreSheet extends StatefulWidget {
   const CloudRestoreSheet({super.key, this.onRestored});
@@ -99,7 +99,7 @@ class _CloudRestoreSheetState extends State<CloudRestoreSheet> with SingleTicker
       _errorMessage = null;
     });
 
-    await FirebaseSyncBackend.instance.sendPhoneOtp(
+    await SupabaseSyncBackend.instance.sendPhoneOtp(
       phoneNumber: phone,
       onCodeSent: (String vId) {
         if (!mounted) return;

@@ -29,7 +29,7 @@ A fully offline, production-grade Flutter application for AI-powered livestock i
   - [1. Offline-First Synchronization](#1-offline-first-synchronization)
   - [2. Hybrid Device Recovery (Phone OTP + Farm Code & PIN)](#2-hybrid-device-recovery-phone-otp--farm-code--pin)
   - [3. Media & Facial Embedding Cloud Storage](#3-media--facial-embedding-cloud-storage)
-  - [4. Firebase Configuration Setup](#4-firebase-configuration-setup)
+  - [4. Supabase Free Cloud Setup](#4-supabase-free-cloud-setup)
 - [Authentication & Security](#authentication--security)
 - [Database Architecture & SQLite Schema](#database-architecture--sqlite-schema)
   - [SQLite Schema (v9)](#sqlite-schema-v9)
@@ -57,7 +57,7 @@ Herd AI is engineered for dairy farmers, livestock cooperatives, veterinarians, 
 - **Preventative Health & Care:** Diagnostic histories, disease statuses, and automated vaccination status indicators (Up to Date, Due Soon, Overdue).
 - **Proactive Farm Alerts:** Missing milk entry detection, sudden yield drops, upcoming dry-off, and calving reminders.
 - **100% Offline-First by Default:** All AI inference, records, milk logs, and images work locally without requiring cellular connection.
-- **Optional Cloud Sync & Disaster Recovery:** Non-blocking background backup to Firebase (Firestore & Storage) when internet is available, enabling zero-loss herd recovery on replacement devices via Phone Number OTP or Farm Code & 4-Digit PIN.
+- **Optional Cloud Sync & Disaster Recovery:** Non-blocking background backup to Supabase (PostgreSQL database & Storage bucket) when internet is available, enabling zero-loss herd recovery on replacement devices via Phone Number OTP or Farm Code & 4-Digit PIN with 100% free tier and no credit card required.
 
 ---
 
@@ -364,7 +364,7 @@ Real-time in-app switching across 11 languages:
 
 ## Optional Cloud Sync & Disaster Recovery
 
-While Herd AI is engineered to operate 100% offline in rural farms, physical mobile devices can be lost, broken, damaged, or upgraded. Herd AI includes an **optional, non-blocking cloud backup and restore system** powered by Firebase (Firestore, Storage, and Phone Auth) with automated network detection (`connectivity_plus`).
+While Herd AI is engineered to operate 100% offline in rural farms, physical mobile devices can be lost, broken, damaged, or upgraded. Herd AI includes an **optional, non-blocking cloud backup and restore system** powered by Supabase (PostgreSQL, Storage buckets, and Phone Auth) with automated network detection (`connectivity_plus`).
 
 ```
                     ┌────────────────────────────────────────┐
@@ -381,7 +381,7 @@ While Herd AI is engineered to operate 100% offline in rural farms, physical mob
                     │  - Non-blocking background worker      │
                     │  - Tombstone tracking for deletes      │
                     │  - Compressed image uploads to Storage │
-                    │  - Atomic Firestore herd document sync │
+                    │  - Atomic Supabase PostgreSQL sync     │
                     └───────────────────┬────────────────────┘
                                         │
                       ┌─────────────────┴─────────────────┐
@@ -410,15 +410,16 @@ Farmers frequently face unique challenges (e.g., lost devices without active SIM
    - The cloud validates the SHA-256 PIN hash and restores all data immediately without requiring an SMS OTP.
 
 ### 3. Media & Facial Embedding Cloud Storage
-- **Image Optimization:** Cattle face photos are automatically resized (max 1280px) and compressed using 85% JPEG encoding before uploading to Firebase Storage (`farms/{farmId}/images/`).
+- **Image Optimization:** Cattle face photos are automatically resized (max 1280px) and compressed using 85% JPEG encoding before uploading to Supabase Storage (`cattle-photos` bucket under `{farmId}/{fileName}`).
 - **Path Portability:** On device restoration, photos are downloaded directly into the new phone's local `cattle_images/` directory, seamlessly re-linking image file paths in SQLite so all facial identification models work offline immediately.
-- **Facial Embeddings:** 128-dimensional biometric vectors are synchronized in Firestore documents, allowing zero-shot facial identification on the replacement device.
+- **Facial Embeddings:** 128-dimensional biometric vectors are synchronized in Supabase PostgreSQL JSONB records, allowing zero-shot facial identification on the replacement device.
 
-### 4. Firebase Configuration Setup
-Cloud sync is completely optional and includes safe fallbacks if Firebase credentials are not yet supplied:
-1. Place `google-services.json` in `android/app/` for Android.
-2. Place `GoogleService-Info.plist` in `ios/Runner/` for iOS.
-3. Enable **Cloud Firestore**, **Firebase Storage**, and **Phone Authentication** in your Firebase Console.
+### 4. Supabase Free Cloud Setup
+Supabase provides a generous **100% free tier (500 MB database, 1 GB image storage) without requiring any credit card or billing account**:
+1. Create a free project at [supabase.com](https://supabase.com).
+2. Open the **SQL Editor** in your Supabase dashboard and run the [`supabase_schema.sql`](supabase_schema.sql) script to provision tables and the `cattle-photos` storage bucket.
+3. In Herd AI, tap the cloud icon in the AppBar or go to Settings $\rightarrow$ **Cloud Backup** $\rightarrow$ **Configure Supabase Project** and paste your **Project URL** and **Anon Public Key** (from Settings $\rightarrow$ API).
+4. *(Optional)* For SMS OTP recovery, enable the Phone provider under Authentication $\rightarrow$ Providers in Supabase. Otherwise, Farm Code + 4-Digit PIN recovery works out of the box with zero third-party SMS setup!
 
 ---
 
@@ -582,7 +583,7 @@ herd-ai/
 │   │   ├── app_lock_controller.dart            # Background lock suspend/resume logic
 │   │   ├── cloud_sync_service.dart             # Network detection & cloud synchronization coordinator
 │   │   ├── embedding_database.dart             # SQLite persistence & Cosine matching engine
-│   │   ├── firebase_sync_backend.dart          # Firestore, Storage & Phone Auth adapter
+│   │   ├── supabase_sync_backend.dart          # Supabase PostgreSQL, Storage & Auth adapter
 │   │   ├── milk_analytics_service.dart         # Herd summary, lactation stats & alerts engine
 │   │   ├── milk_report_service.dart            # Periodic reports & CSV generator
 │   │   ├── tflite_breed_service.dart           # EfficientNet on-device inference service
@@ -617,11 +618,8 @@ herd-ai/
 |---------|---------|---------|
 | `tflite_flutter` | `^0.12.1` | Native TensorFlow Lite runtime for on-device inference |
 | `sqflite` | `^2.4.2` | Local SQLite relational database persistence |
-| `connectivity_plus` | `^6.1.0` | Automatic network detection (Wi-Fi, mobile, offline) |
-| `firebase_core` | `^3.8.0` | Core Firebase integration for optional cloud sync |
-| `cloud_firestore` | `^5.5.0` | Cloud database for herd records, health logs, and embeddings |
-| `firebase_storage` | `^12.3.6` | Cloud object storage for cattle facial photos |
-| `firebase_auth` | `^5.3.3` | Phone number authentication (SMS OTP) for device linking |
+| `connectivity_plus` | `^7.3.2` | Automatic network detection (Wi-Fi, mobile, offline) |
+| `supabase_flutter` | `^2.18.3` | Free PostgreSQL database, 1 GB object storage & auth |
 | `image` | `^4.5.4` | Image decoding, resizing, compression, and pixel extraction |
 | `image_picker` | `^1.1.2` | Native camera capture and photo gallery picker |
 | `local_auth` | `^2.3.0` | Biometric unlock (Fingerprint, Touch ID, Face ID) |

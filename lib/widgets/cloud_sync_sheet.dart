@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../services/cloud_sync_service.dart';
+import '../services/supabase_sync_backend.dart';
 import 'cloud_restore_sheet.dart';
 
 class CloudSyncSheet extends StatefulWidget {
@@ -71,6 +72,90 @@ class _CloudSyncSheetState extends State<CloudSyncSheet> {
                 }
               },
               child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showConfigureSupabaseDialog() async {
+    final Map<String, String> creds = await SupabaseSyncBackend.instance.getSavedCredentials();
+    final TextEditingController urlController = TextEditingController(text: creds['url']);
+    final TextEditingController anonKeyController = TextEditingController(text: creds['anonKey']);
+
+    if (!mounted) return;
+
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: <Widget>[
+              Icon(Icons.cloud_queue_rounded, color: Color(0xFF2D6A4F)),
+              SizedBox(width: 8),
+              Text('Supabase Setup'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const Text(
+                  'Paste your free Supabase project details from Settings -> API in your Supabase dashboard.',
+                  style: TextStyle(fontSize: 13, color: Colors.black87),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: urlController,
+                  decoration: const InputDecoration(
+                    labelText: 'Project URL',
+                    hintText: 'https://xyz.supabase.co',
+                    prefixIcon: Icon(Icons.link_rounded),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: anonKeyController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Anon Public Key',
+                    hintText: 'eyJhbGciOi...',
+                    prefixIcon: Icon(Icons.key_rounded),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final String url = urlController.text.trim();
+                final String key = anonKeyController.text.trim();
+                final NavigatorState nav = Navigator.of(dialogContext);
+                final bool ok = await SupabaseSyncBackend.instance.configureCredentials(
+                  url: url,
+                  anonKey: key,
+                );
+                nav.pop();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        ok ? 'Connected to Supabase successfully!' : 'Configured! Offline or checking connection.',
+                      ),
+                    ),
+                  );
+                  await CloudSyncService.instance.initialize();
+                }
+              },
+              child: const Text('Save & Connect'),
             ),
           ],
         );
@@ -376,6 +461,14 @@ class _CloudSyncSheetState extends State<CloudSyncSheet> {
                 },
                 icon: const Icon(Icons.settings_backup_restore_rounded),
                 label: const Text('Restore Herd from Cloud Backup'),
+              ),
+              const SizedBox(height: 4),
+
+              // Configure Supabase Button
+              TextButton.icon(
+                onPressed: _showConfigureSupabaseDialog,
+                icon: const Icon(Icons.settings_rounded, size: 16),
+                label: const Text('Configure Supabase Project'),
               ),
             ],
           ),
