@@ -160,7 +160,8 @@ class _CloudRestoreSheetState extends State<CloudRestoreSheet> with SingleTicker
       );
     } else {
       setState(() {
-        _errorMessage = CloudSyncService.instance.lastError ??
+        _errorMessage = SupabaseSyncBackend.instance.lastVerifyError ??
+            CloudSyncService.instance.lastError ??
             'Could not restore farm. Please check the code and try again.';
       });
     }

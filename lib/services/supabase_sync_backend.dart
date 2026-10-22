@@ -376,6 +376,93 @@ class SupabaseSyncBackend {
   // Phone Authentication (SMS OTP via Supabase Auth)
   // ---------------------------------------------------------------------------
 
+  // ---------------------------------------------------------------------------
+  // Auth error helper – converts technical exceptions to farmer-friendly text
+  // ---------------------------------------------------------------------------
+
+  static String _friendlyAuthError(Object e, {bool isVerify = false}) {
+    final String raw = e.toString().toLowerCase();
+
+    debugPrint('[SupabaseSyncBackend] Auth error (raw): ${e.toString()}');
+
+    // ---- Rate limiting (must be checked with very specific terms) ----
+    if (raw.contains('rate limit') ||
+        raw.contains('too many requests') ||
+        raw.contains('too many') ||
+        raw.contains('quota exceeded') ||
+        raw.contains('status code: 429') ||
+        raw.contains('429')) {
+      return 'You have requested too many codes in a short time. '
+          'Please wait a minute and try again.';
+    }
+
+    // ---- Twilio / SMS provider: unverified number (trial account) ----
+    if (raw.contains('unverified') ||
+        raw.contains('not a verified') ||
+        raw.contains('trial account') ||
+        raw.contains('verify') && raw.contains('twilio')) {
+      return 'This phone number has not been verified on the SMS provider\'s '
+          'trial account. Please contact support or use a verified number.';
+    }
+
+    // ---- SMS provider not configured / service unavailable ----
+    if ((raw.contains('sms') && raw.contains('provider')) ||
+        raw.contains('not configured') ||
+        raw.contains('provider error') ||
+        raw.contains('service unavailable') ||
+        raw.contains('503') ||
+        raw.contains('502')) {
+      return 'The SMS service is temporarily unavailable. '
+          'Please try again in a few minutes.';
+    }
+
+    // ---- Invalid / unsupported phone number ----
+    if (raw.contains('invalid phone') ||
+        raw.contains('invalid_phone') ||
+        raw.contains('phone number') ||
+        raw.contains('phone_number') ||
+        raw.contains('invalid number') ||
+        raw.contains('21211') || // Twilio invalid number error code
+        raw.contains('21614')) {
+      return 'The phone number you entered is not valid. '
+          'Please include the country code (e.g. +91 for India).';
+    }
+
+    // ---- Phone not registered / not found ----
+    if (raw.contains('user not found') ||
+        raw.contains('no user') ||
+        raw.contains('does not exist')) {
+      return 'No farm backup found for this phone number. '
+          'Make sure you used the same number when you set up cloud backup.';
+    }
+
+    // ---- OTP / token wrong or expired (only on verify step) ----
+    if (isVerify &&
+        (raw.contains('invalid') ||
+            raw.contains('expired') ||
+            raw.contains('token') ||
+            raw.contains('otp') ||
+            raw.contains('verification code'))) {
+      return 'The verification code is wrong or has expired. '
+          'Please request a new code and enter it quickly.';
+    }
+
+    // ---- Network / connectivity ----
+    if (raw.contains('network') ||
+        raw.contains('socket') ||
+        raw.contains('connection') ||
+        raw.contains('timeout') ||
+        raw.contains('unreachable')) {
+      return 'Could not reach the server. '
+          'Please check your internet connection and try again.';
+    }
+
+    // ---- Generic fallback ----
+    return 'Could not send the verification code. '
+        'Please check your number and try again. '
+        'If the problem continues, contact support.';
+  }
+
   Future<void> sendPhoneOtp({
     required String phoneNumber,
     required void Function(String verificationId) onCodeSent,
@@ -383,7 +470,7 @@ class SupabaseSyncBackend {
   }) async {
     final SupabaseClient? client = _client;
     if (client == null) {
-      onError('Supabase authentication service is not configured.');
+      onError('Cloud service is not available right now. Please try again later.');
       return;
     }
 
@@ -393,7 +480,7 @@ class SupabaseSyncBackend {
       onCodeSent(cleanPhone);
     } catch (e) {
       debugPrint('[SupabaseSyncBackend] Error sending phone OTP: $e');
-      onError(e.toString());
+      onError(_friendlyAuthError(e));
     }
   }
 
@@ -416,7 +503,17 @@ class SupabaseSyncBackend {
       return response.user != null;
     } catch (e) {
       debugPrint('[SupabaseSyncBackend] OTP verification error: $e');
+      // Store friendly error so callers can surface it
+      _lastVerifyError = _friendlyAuthError(e, isVerify: true);
       return false;
     }
+  }
+
+  /// Last user-friendly error from [verifyOtp], cleared on next call.
+  String? _lastVerifyError;
+  String? get lastVerifyError {
+    final String? err = _lastVerifyError;
+    _lastVerifyError = null;
+    return err;
   }
 }
