@@ -14,6 +14,7 @@ class CloudSyncSheet extends StatefulWidget {
 
 class _CloudSyncSheetState extends State<CloudSyncSheet> {
   final TextEditingController _phoneController = TextEditingController();
+  bool _farmCodeVisible = false;
 
   @override
   void dispose() {
@@ -218,43 +219,85 @@ class _CloudSyncSheetState extends State<CloudSyncSheet> {
                               color: accentColor,
                             ),
                           ),
-                          InkWell(
-                            onTap: () {
-                              Clipboard.setData(ClipboardData(text: farmId));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Farm Code copied to clipboard!')),
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(12),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  Icon(Icons.copy_rounded, size: 15, color: primaryColor),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'Copy',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: primaryColor,
-                                    ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              // Eye toggle
+                              InkWell(
+                                onTap: () => setState(() => _farmCodeVisible = !_farmCodeVisible),
+                                borderRadius: BorderRadius.circular(12),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  child: Icon(
+                                    _farmCodeVisible
+                                        ? Icons.visibility_off_rounded
+                                        : Icons.visibility_rounded,
+                                    size: 18,
+                                    color: primaryColor,
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
+                              // Copy button
+                              InkWell(
+                                onTap: () {
+                                  Clipboard.setData(ClipboardData(text: farmId));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Farm Code copied to clipboard!')),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(12),
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      Icon(Icons.copy_rounded, size: 15, color: primaryColor),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Copy',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: primaryColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                       const SizedBox(height: 6),
-                      SelectableText(
-                        farmId,
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 2.0,
-                          color: primaryColor,
+                      // Masked or real Farm Code
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Align(
+                          key: ValueKey<bool>(_farmCodeVisible),
+                          alignment: Alignment.centerLeft,
+                          child: _farmCodeVisible
+                              ? SelectableText(
+                                  farmId,
+                                  style: const TextStyle(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 2.0,
+                                    color: primaryColor,
+                                  ),
+                                )
+                              : Text(
+                                  // Show prefix (e.g. "HERD-") then bullets for the digits
+                                  farmId.contains('-')
+                                      ? '${farmId.split('-').first}-${'•' * farmId.split('-').last.length}'
+                                      : '•' * farmId.length,
+                                  style: const TextStyle(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 2.0,
+                                    color: primaryColor,
+                                  ),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 8),
