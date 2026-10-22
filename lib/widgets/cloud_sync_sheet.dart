@@ -108,6 +108,10 @@ class _CloudSyncSheetState extends State<CloudSyncSheet> {
           statusLabel = 'Offline';
           statusColor = accentColor;
           statusIcon = Icons.cloud_off_rounded;
+        } else if (service.status == SyncStatus.unconfigured) {
+          statusLabel = 'Unconfigured';
+          statusColor = Colors.orange.shade700;
+          statusIcon = Icons.cloud_queue_rounded;
         } else if (service.status == SyncStatus.error) {
           statusLabel = 'Sync Issue';
           statusColor = Colors.amber.shade800;

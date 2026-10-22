@@ -120,10 +120,8 @@ class CloudSyncService extends ChangeNotifier {
   }
 
   bool _hasConnection(List<ConnectivityResult> results) {
-    return results.any((ConnectivityResult r) =>
-        r == ConnectivityResult.mobile ||
-        r == ConnectivityResult.wifi ||
-        r == ConnectivityResult.ethernet);
+    if (results.isEmpty) return true;
+    return results.any((ConnectivityResult r) => r != ConnectivityResult.none);
   }
 
   @override
@@ -200,13 +198,25 @@ class CloudSyncService extends ChangeNotifier {
     }
 
     if (!_backend.isAvailable) {
-      _status = SyncStatus.unconfigured;
-      notifyListeners();
-      return false;
+      final bool backendOk = await _backend.initialize();
+      if (!backendOk) {
+        _status = SyncStatus.unconfigured;
+        _lastError = 'Cloud sync is not configured. Please check SUPABASE_URL and SUPABASE_ANON_KEY in .env.';
+        notifyListeners();
+        return false;
+      }
+    }
+
+    try {
+      final List<ConnectivityResult> results = await _connectivity.checkConnectivity();
+      _isOnline = _hasConnection(results);
+    } catch (_) {
+      if (force) _isOnline = true;
     }
 
     if (!_isOnline && !force) {
       _status = SyncStatus.offline;
+      _lastError = 'Device is currently offline.';
       notifyListeners();
       return false;
     }

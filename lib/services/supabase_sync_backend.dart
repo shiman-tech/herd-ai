@@ -15,9 +15,14 @@ class SupabaseSyncBackend {
   SupabaseSyncBackend._();
   static final SupabaseSyncBackend instance = SupabaseSyncBackend._();
 
+  static const String defaultUrl = 'https://zdptkzhcpgnchigshzbk.supabase.co';
+  static const String defaultAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkcHRremhjcGduY2hpZ3NoemJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2NDE5MTQsImV4cCI6MjEwODIxNzkxNH0.Klse8mhuobkIRB2bVi5GVgTBde9VYlvFm3-EGP__yFM';
+
   static const String storageBucketName = 'cattle-photos';
 
   bool _isInitialized = false;
+  bool _bucketChecked = false;
 
   bool get isAvailable => _isInitialized;
 
@@ -30,9 +35,18 @@ class SupabaseSyncBackend {
     }
   }
 
-  /// Initializes Supabase from .env (or --dart-define) with graceful fallback.
+  /// Initializes Supabase from .env, local file, or environment with graceful fallback.
   Future<bool> initialize() async {
     if (_isInitialized) return true;
+
+    // Check if Supabase client is already active
+    try {
+      final SupabaseClient current = Supabase.instance.client;
+      if (current.rest.url.isNotEmpty) {
+        _isInitialized = true;
+        return true;
+      }
+    } catch (_) {}
 
     String url = '';
     String anonKey = '';
@@ -45,10 +59,28 @@ class SupabaseSyncBackend {
       url = (dotenv.maybeGet('SUPABASE_URL') ?? '').trim();
       anonKey = (dotenv.maybeGet('SUPABASE_ANON_KEY') ?? '').trim();
     } catch (e) {
-      debugPrint('[SupabaseSyncBackend] .env not loaded: $e');
+      debugPrint('[SupabaseSyncBackend] .env asset not loaded: $e');
     }
 
-    // 2. Fallback to --dart-define environment variables
+    // 2. Direct file fallback (for running on macOS/Linux/Windows debug)
+    if (url.isEmpty || anonKey.isEmpty) {
+      try {
+        final File envFile = File('.env');
+        if (envFile.existsSync()) {
+          final List<String> lines = await envFile.readAsLines();
+          for (final String line in lines) {
+            final String trimmed = line.trim();
+            if (trimmed.startsWith('SUPABASE_URL=')) {
+              url = trimmed.substring('SUPABASE_URL='.length).trim();
+            } else if (trimmed.startsWith('SUPABASE_ANON_KEY=')) {
+              anonKey = trimmed.substring('SUPABASE_ANON_KEY='.length).trim();
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 3. Fallback to --dart-define environment variables
     if (url.isEmpty) {
       url = const String.fromEnvironment('SUPABASE_URL').trim();
     }
@@ -56,9 +88,21 @@ class SupabaseSyncBackend {
       anonKey = const String.fromEnvironment('SUPABASE_ANON_KEY').trim();
     }
 
+    // 4. Fallback to default constants
+    if (url.isEmpty) {
+      url = defaultUrl;
+    }
+    if (anonKey.isEmpty) {
+      anonKey = defaultAnonKey;
+    }
+
+    // Sanitize URL: strip trailing /rest/v1 or /rest/v1/ or trailing /
+    url = url.replaceAll(RegExp(r'/rest/v1/?$'), '').replaceAll(RegExp(r'/+$'), '');
+    anonKey = anonKey.replaceAll('"', '').replaceAll("'", '').trim();
+
     if (url.isEmpty || anonKey.isEmpty) {
       _isInitialized = false;
-      debugPrint('[SupabaseSyncBackend] Supabase credentials missing in .env or environment.');
+      debugPrint('[SupabaseSyncBackend] Supabase credentials missing.');
       return false;
     }
 
@@ -69,9 +113,15 @@ class SupabaseSyncBackend {
         anonKey: anonKey,
       );
       _isInitialized = true;
-      debugPrint('[SupabaseSyncBackend] Supabase initialized successfully from .env.');
+      debugPrint('[SupabaseSyncBackend] Supabase initialized successfully with $url.');
       return true;
     } catch (e) {
+      if (e.toString().toLowerCase().contains('already initialized') ||
+          e.toString().toLowerCase().contains('already been initialized')) {
+        _isInitialized = true;
+        debugPrint('[SupabaseSyncBackend] Supabase was already initialized.');
+        return true;
+      }
       _isInitialized = false;
       debugPrint('[SupabaseSyncBackend] Supabase initialization failed: $e');
       return false;
@@ -267,15 +317,29 @@ class SupabaseSyncBackend {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Image Storage Management (Supabase Storage Bucket: 'cattle-photos')
-  // ---------------------------------------------------------------------------
+  Future<void> _ensureBucketExists() async {
+    if (_bucketChecked) return;
+    final SupabaseClient? client = _client;
+    if (client == null) return;
+    try {
+      final List<Bucket> buckets = await client.storage.listBuckets();
+      final bool exists = buckets.any((Bucket b) => b.name == storageBucketName || b.id == storageBucketName);
+      if (!exists) {
+        await client.storage.createBucket(
+          storageBucketName,
+          const BucketOptions(public: true),
+        );
+      }
+    } catch (_) {}
+    _bucketChecked = true;
+  }
 
   Future<String?> uploadImageFile(String farmId, String fileName, File file) async {
     final SupabaseClient? client = _client;
     if (client == null) return null;
 
     try {
+      await _ensureBucketExists();
       final String storagePath = '$farmId/$fileName';
       final Uint8List bytes = await file.readAsBytes();
       await client.storage.from(storageBucketName).uploadBinary(
@@ -288,7 +352,7 @@ class SupabaseSyncBackend {
           );
       return client.storage.from(storageBucketName).getPublicUrl(storagePath);
     } catch (e) {
-      debugPrint('[SupabaseSyncBackend] Error uploading image $fileName: $e');
+      debugPrint('[SupabaseSyncBackend] Warning: image upload failed for $fileName: $e');
       return null;
     }
   }

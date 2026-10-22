@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:herd_ai/models/cattle_record.dart';
 import 'package:herd_ai/models/farm_profile.dart';
 import 'package:herd_ai/models/milk_record.dart';
+import 'package:herd_ai/services/supabase_sync_backend.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   group('FarmProfile Model Tests', () {
@@ -90,6 +92,14 @@ void main() {
       expect(restored.cattleId, 'COW-CLOUD-01');
       expect(restored.totalYield, 15.0);
       expect(restored.notes, 'Normal grazing');
+    });
+
+    test('SupabaseSyncBackend initializes successfully with sanitized URL', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final bool ok = await SupabaseSyncBackend.instance.initialize();
+      expect(ok, isTrue);
+      expect(SupabaseSyncBackend.instance.isAvailable, isTrue);
     });
   });
 }
